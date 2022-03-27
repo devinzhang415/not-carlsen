@@ -29,12 +29,12 @@ static const uint64_t BB_SQUARES[64] = {1ULL << A1, 1ULL << B1, 1ULL << C1, 1ULL
                                         1ULL << A7, 1ULL << B7, 1ULL << C7, 1ULL << D7, 1ULL << E7, 1ULL << F7, 1ULL << G7, 1ULL << H7,
                                         1ULL << A8, 1ULL << B8, 1ULL << C8, 1ULL << D8, 1ULL << E8, 1ULL << F8, 1ULL << G8, 1ULL << H8};
 
-static const uint64_t BB_ALL = 0xffffffffffffffff;
+static const uint64_t BB_ALL = 18446744073709551615ULL;
 
-static const uint64_t BB_LIGHT_SQUARES = 0x55aa55aa55aa55aa;
-static const uint64_t BB_DARK_SQUARES = 0xaa55aa55aa55aa55;
+static const uint64_t BB_LIGHT_SQUARES = 6172840429334713770ULL;
+static const uint64_t BB_DARK_SQUARES = 12273903644374837845ULL;
 
-static const uint64_t BB_FILE_A = 0x0101010101010101;
+static const uint64_t BB_FILE_A = 72340172838076673ULL;
 static const uint64_t BB_FILE_B = BB_FILE_A << 1;
 static const uint64_t BB_FILE_C = BB_FILE_A << 2;
 static const uint64_t BB_FILE_D = BB_FILE_A << 3;
@@ -44,7 +44,7 @@ static const uint64_t BB_FILE_G = BB_FILE_A << 6;
 static const uint64_t BB_FILE_H = BB_FILE_A << 7;
 static const uint64_t BB_FILES[8] = {BB_FILE_A, BB_FILE_B, BB_FILE_C, BB_FILE_D, BB_FILE_E, BB_FILE_F, BB_FILE_G, BB_FILE_H};
 
-static const uint64_t BB_RANK_1 = 0xff;
+static const uint64_t BB_RANK_1 = 255ULL;
 static const uint64_t BB_RANK_2 = BB_RANK_1 << 8;
 static const uint64_t BB_RANK_3 = BB_RANK_1 << 16;
 static const uint64_t BB_RANK_4 = BB_RANK_1 << 24;
