@@ -7,6 +7,7 @@
 #include "board.h"
 #include "constants.h"
 
+
 /**
  * Parses a string square (eg, "a1") to an int square.
  * 
@@ -18,6 +19,7 @@ int parse_square(char *square) {
     int rank = square[1] - '0';
     return 8 * (rank - 1) + file;
 }
+
 
 /**
  * Initalizes the board to the given FEN. Assumes the FEN is valid.
@@ -152,6 +154,7 @@ void init_board(Board *board, char *fen) {
     }
 }
 
+
 /**
  * Gets the bit from the bitboard at the given square.
  * 
@@ -162,6 +165,7 @@ void init_board(Board *board, char *fen) {
 bool get_bit(uint64_t bb, int square) {
     return bb & (1ULL << square);
 }
+
 
 /**
  * Prints the binary representation of the bitboard.

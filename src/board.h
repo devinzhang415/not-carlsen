@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+
 /**
  * Representation of the board using:
  * - bitboards for every color and piece type
@@ -45,6 +46,7 @@ typedef struct Board {
     int fullmove_number;
 } Board;
 
+
 int parse_square(char *square);
 
 void init_board(Board *board, char *fen);
@@ -52,5 +54,6 @@ void init_board(Board *board, char *fen);
 bool get_bit(uint64_t bb, int square);
 
 void print_bb(uint64_t bb);
+
 
 #endif
