@@ -9,12 +9,12 @@ Successor of the Not-Magnus chess engine, now written in C(arlsen).
 ------
 
 ## Devlog
-3/27/22 v0.0.3
+3/27/22 v0.1.1
 > Defined bitboard constants for all squares, files, and ranks.
 >
 > Defined bit attack maps for knights, bishops, and rooks from all squares.
 
-3/26/22 v0.0.2
+3/26/22 v0.1
 > Implemented complete board initialization.
 
 3/22/22 v0.0.1
