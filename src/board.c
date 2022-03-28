@@ -48,9 +48,6 @@ void init_board(Board *board, char *fen) {
                 board->b_rooks = 0;
                 board->b_queens = 0;
                 board->b_king = 0;
-                board->occupied = 0;
-                board->w_occupied = 0;
-                board->b_occupied = 0;
 
                 for (int rank = 7; rank >= 0; rank--) {
                     char *fen_board = strtok_r(token, "/", &token);
@@ -64,14 +61,6 @@ void init_board(Board *board, char *fen) {
                             file += piece - '0';
                         } else {
                             int square = 8*rank + file;
-
-                            board->occupied |= 1ULL << square;
-                            if (isupper(piece)) {
-                                board->w_occupied |= 1ULL << square;
-                            } else {
-                                board->b_occupied |= 1ULL << square;
-                            }
-
                             switch (piece) {
                                 case 'P':
                                     board->w_pawns |= 1ULL << square;
@@ -114,6 +103,11 @@ void init_board(Board *board, char *fen) {
                         }
                     }
                 }
+
+                board->w_occupied = board->w_pawns | board->w_knights | board->w_bishops | board->w_rooks | board->w_queens | board->w_king;
+                board->b_occupied = board->b_pawns | board->b_knights | board->b_bishops | board->b_rooks | board->b_queens | board->b_king;
+                board->occupied = board->w_occupied | board->b_occupied;
+
                 break;
             case 1:
                 board->turn = (*token == 'w') ? WHITE : BLACK;
