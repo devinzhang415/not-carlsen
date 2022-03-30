@@ -5,27 +5,14 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "board.h"
-#include "constants.h"
+#include "util.h"
 
 
 /**
- * Parses a string square (eg, "a1") to an int square.
+ * @brief Initalizes the board to the given FEN. Assumes the FEN is valid.
  * 
- * @param square the square name given in string format.
- * @return the square's integer value.
- */
-int parse_square(char *square) {
-    int file = square[0] - 'a';
-    int rank = square[1] - '0';
-    return 8 * (rank - 1) + file;
-}
-
-
-/**
- * Initalizes the board to the given FEN. Assumes the FEN is valid.
- * 
- * @param board the uninitalized board.
- * @param fen the FEN string to initalize the board to.
+ * @param board the uninitalized board structure.
+ * @param fen the FEN string.
  */
 void init_board(Board *board, char *fen) {
     char fen_copy[100];
@@ -146,32 +133,4 @@ void init_board(Board *board, char *fen) {
                 break;
         }
     }
-}
-
-
-/**
- * Gets the bit from the bitboard at the given square.
- * 
- * @param bb the bitboard to get the square from.
- * @param square the square to get the bit from.
- * @return the bit at the square (0 or 1).
- */
-bool get_bit(uint64_t bb, int square) {
-    return bb & (1ULL << square);
-}
-
-
-/**
- * Prints the binary representation of the bitboard.
- * 
- * @param bb the bitboard to be printed.
- */
-void print_bb(uint64_t bb) {
-    for (int rank = 7; rank >= 0; rank--) {
-        for (int file = 0; file <= 7; file++) {
-            printf("%d ", get_bit(bb, 8*rank + file));
-        }
-        printf("\n");
-    }
-    printf("\n");
 }

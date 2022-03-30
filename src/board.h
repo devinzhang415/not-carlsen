@@ -51,13 +51,7 @@ typedef struct Board {
 } Board;
 
 
-int parse_square(char *square);
-
 void init_board(Board *board, char *fen);
-
-bool get_bit(uint64_t bb, int square);
-
-void print_bb(uint64_t bb);
 
 
 #endif

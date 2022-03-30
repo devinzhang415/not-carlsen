@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include "constants.h"
+#include "util.h"
 #include "board.h"
+#include "movegen.h"
 
 int main(void) {
     Board board;
