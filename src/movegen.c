@@ -4,6 +4,7 @@
 #include "board.h"
 
 
+// Pseudo-legal bitboards indexed by square to determine where that piece can attack
 const uint64_t BB_KNIGHT_ATTACKS[64] = {
     0x20400, 0x50800, 0xa1100, 0x142200, 0x284400,
     0x508800, 0xa01000, 0x402000, 0x2040004, 0x5080008,
@@ -105,3 +106,13 @@ const uint64_t ROOK_MAGICS[64] = {
     0x800041000080, 0xfffcddfced714a, 0x7ffcddfced714a, 0x3fffcdffd88096, 0x40810002101,
 	0x1000204080011, 0x1000204000801, 0x1000082000401, 0x1fffaabfad1a2
 };
+
+
+/**
+ * @brief Initalizes the rook attack magic bitboard
+ */
+void init_rook_attacks(void) {
+    for (int square = A1; square <= H8; square++) {
+
+    }
+}
