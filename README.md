@@ -5,10 +5,14 @@ Successor of the Not-Magnus chess engine, now written in C(arlsen).
 
 ## Current Features
 - FEN board initialization
+- Magic bitboard sliding move generation
 
 ------
 
 ## Devlog
+4/27/22 v0.1.2
+> Implemented sliding move generation using magic bitboards.
+
 3/27/22 v0.1.1
 > Defined bitboard constants for all squares, files, and ranks.
 >
