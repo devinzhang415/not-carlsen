@@ -45,6 +45,8 @@ const uint64_t BB_RANK_7 = BB_RANK_1 << 48;
 const uint64_t BB_RANK_8 = BB_RANK_1 << 56;
 const uint64_t BB_RANKS[8] = {BB_RANK_1, BB_RANK_2, BB_RANK_3, BB_RANK_4, BB_RANK_5, BB_RANK_6, BB_RANK_7, BB_RANK_8};
 
+const char DEFAULT_FEN[56] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 
 /**
  * @param square the string of the square name, ie "A1."
@@ -69,7 +71,6 @@ bool get_bit(uint64_t bb, int square) {
 
 /**
  * @brief Prints the binary representation of the bitboard.
- * 
  * @param bb the bitboard.
  */
 void print_bb(uint64_t bb) {
@@ -107,4 +108,18 @@ int get_file(int square) {
  */
 int pop_count(uint64_t bb) {
     return __builtin_popcountll(bb);
+}
+
+
+/**
+ * @param bb the bitboard
+ * @return the reverse of the bitboard. Flips the perspective of the board
+ * @author github.com/nkarve
+ */
+uint64_t get_reverse_bb(uint64_t bb) {
+	bb = (bb & 0x5555555555555555) << 1 | (bb >> 1) & 0x5555555555555555;
+	bb = (bb & 0x3333333333333333) << 2 | (bb >> 2) & 0x3333333333333333;
+	bb = (bb & 0x0f0f0f0f0f0f0f0f) << 4 | (bb >> 4) & 0x0f0f0f0f0f0f0f0f;
+	bb = (bb & 0x00ff00ff00ff00ff) << 8 | (bb >> 8) & 0x00ff00ff00ff00ff;
+	return (bb << 48) | ((bb & 0xffff0000) << 16) | ((bb >> 16) & 0xffff0000) | (bb >> 48);
 }

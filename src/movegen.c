@@ -42,39 +42,7 @@ const uint64_t BB_KING_ATTACKS[64] = {
 };
 
 
-// Rook and bishop attack masks and magic numbers to generate their magic bitboards
-const uint64_t BB_BISHOP_ATTACK_MASKS[64] = {
-    0x8040201008040200, 0x80402010080500, 0x804020110a00, 0x8041221400, 0x182442800,
-    0x10204885000, 0x102040810a000, 0x102040810204000, 0x4020100804020002, 0x8040201008050005,
-    0x804020110a000a, 0x804122140014, 0x18244280028, 0x1020488500050, 0x102040810a000a0,
-    0x204081020400040, 0x2010080402000204, 0x4020100805000508, 0x804020110a000a11, 0x80412214001422,
-    0x1824428002844, 0x102048850005088, 0x2040810a000a010, 0x408102040004020, 0x1008040200020408,
-    0x2010080500050810, 0x4020110a000a1120, 0x8041221400142241, 0x182442800284482, 0x204885000508804,
-    0x40810a000a01008, 0x810204000402010, 0x804020002040810, 0x1008050005081020, 0x20110a000a112040,
-    0x4122140014224180, 0x8244280028448201, 0x488500050880402, 0x810a000a0100804, 0x1020400040201008,
-    0x402000204081020, 0x805000508102040, 0x110a000a11204080, 0x2214001422418000, 0x4428002844820100,
-    0x8850005088040201, 0x10a000a010080402, 0x2040004020100804, 0x200020408102040, 0x500050810204080,
-    0xa000a1120408000, 0x1400142241800000, 0x2800284482010000, 0x5000508804020100, 0xa000a01008040201,
-    0x4000402010080402, 0x2040810204080, 0x5081020408000, 0xa112040800000, 0x14224180000000,
-    0x28448201000000, 0x50880402010000, 0xa0100804020100, 0x40201008040201
-};
-
-const uint64_t BB_ROOK_ATTACK_MASKS[64] = {
-    0x1010101010101fe, 0x2020202020202fd, 0x4040404040404fb, 0x8080808080808f7, 0x10101010101010ef,
-    0x20202020202020df, 0x40404040404040bf, 0x808080808080807f, 0x10101010101fe01, 0x20202020202fd02,
-    0x40404040404fb04, 0x80808080808f708, 0x101010101010ef10, 0x202020202020df20, 0x404040404040bf40,
-    0x8080808080807f80, 0x101010101fe0101, 0x202020202fd0202, 0x404040404fb0404, 0x808080808f70808,
-    0x1010101010ef1010, 0x2020202020df2020, 0x4040404040bf4040, 0x80808080807f8080, 0x1010101fe010101,
-    0x2020202fd020202, 0x4040404fb040404, 0x8080808f7080808, 0x10101010ef101010, 0x20202020df202020,
-    0x40404040bf404040, 0x808080807f808080, 0x10101fe01010101, 0x20202fd02020202, 0x40404fb04040404,
-    0x80808f708080808, 0x101010ef10101010, 0x202020df20202020, 0x404040bf40404040, 0x8080807f80808080,
-    0x101fe0101010101, 0x202fd0202020202, 0x404fb0404040404, 0x808f70808080808, 0x1010ef1010101010,
-    0x2020df2020202020, 0x4040bf4040404040, 0x80807f8080808080, 0x1fe010101010101, 0x2fd020202020202,
-    0x4fb040404040404, 0x8f7080808080808, 0x10ef101010101010, 0x20df202020202020, 0x40bf404040404040,
-    0x807f808080808080, 0xfe01010101010101, 0xfd02020202020202, 0xfb04040404040404, 0xf708080808080808,
-    0xef10101010101010, 0xdf20202020202020, 0xbf40404040404040, 0x7f80808080808080
-};
-
+// Rook and bishop magic numbers to generate their magic bitboards
 const uint64_t BISHOP_MAGICS[64] = {
 	0x2020202020200, 0x2020202020000, 0x4010202000000, 0x4040080000000, 0x1104000000000,
     0x821040000000, 0x410410400000, 0x104104104000, 0x40404040400, 0x20202020200,
@@ -108,11 +76,71 @@ const uint64_t ROOK_MAGICS[64] = {
 };
 
 
+// Attack masks and shifts for magic bitboard move generation
+uint64_t BB_BISHOP_ATTACK_MASKS[64];
+uint64_t BB_ROOK_ATTACK_MASKS[64];
+uint64_t ROOK_ATTACK_SHIFTS[64];
+uint64_t BISHOP_ATTACK_SHIFTS[64];
+
+
+/**
+ * @param square the square the rook is on
+ * @param occupied the bitboard of all pieces
+ * @return where the rook can move from the given square
+ */
+uint64_t get_rook_attacks(int square, uint64_t occupied) {
+    occupied &= BB_ROOK_ATTACK_MASKS[square];
+    uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
+    return BB_ROOK_ATTACKS[square][key];
+}
+
+
 /**
  * @brief Initalizes the rook attack magic bitboard
+ * @author github.com/nkarve
  */
 void init_rook_attacks(void) {
     for (int square = A1; square <= H8; square++) {
+        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[get_rank(square)]) |
+                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[get_file(square)]);
+        BB_ROOK_ATTACK_MASKS[square] = (BB_RANKS[get_rank(square)] ^ BB_FILES[get_file(square)]) & ~edges;
+        uint64_t attack_mask = BB_ROOK_ATTACK_MASKS[square];
 
+        int shift = 64 - pop_count(attack_mask);
+        ROOK_ATTACK_SHIFTS[square] = shift;
+
+        uint64_t subset = 0;
+        do {
+            uint64_t index = subset;
+            index *= ROOK_MAGICS[square];
+            index >>= shift;
+            BB_ROOK_ATTACKS[square][index] = init_rook_attacks_helper(square, subset);
+            subset = (subset - attack_mask) & attack_mask;
+        } while (subset);
     }
+}
+
+
+/**
+ * @brief Helper method to initalizes the rook attack magic bitboard
+ * @param square the current square
+ * @param subset the current occupancy
+ * @param attack_mask the rook's attack mask without edges
+ * @return the rook attack bitboard
+ * @author github.com/nkarve
+ */
+uint64_t init_rook_attacks_helper(int square, uint64_t subset) {
+    uint64_t square_mask = BB_SQUARES[square];
+    uint64_t rank_mask = BB_RANKS[get_rank(square)];
+    uint64_t file_mask = BB_FILES[get_file(square)];
+
+    uint64_t rank_attacks = (((rank_mask & subset) - square_mask * 2) ^
+                            get_reverse_bb(get_reverse_bb(rank_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            rank_mask;
+
+    uint64_t file_attacks = (((file_mask & subset) - square_mask * 2) ^
+                            get_reverse_bb(get_reverse_bb(file_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            file_mask;
+
+    return rank_attacks | file_attacks;
 }

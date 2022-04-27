@@ -20,7 +20,6 @@ extern const bool WHITE;
 extern const bool BLACK;
 
 
-// Bitboards
 extern const uint64_t BB_SQUARES[64];
 
 extern const uint64_t BB_ALL;
@@ -48,6 +47,8 @@ extern const uint64_t BB_RANK_7;
 extern const uint64_t BB_RANK_8;
 extern const uint64_t BB_RANKS[8];
 
+extern const char DEFAULT_FEN[56];
+
 
 int parse_square(char *square);
 
@@ -60,6 +61,8 @@ int get_rank(int square);
 int get_file(int file);
 
 int pop_count(uint64_t bb);
+
+uint64_t get_reverse_bb(uint64_t bb);
 
 
 #endif
