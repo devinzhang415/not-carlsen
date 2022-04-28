@@ -1,5 +1,5 @@
 # Not-Carlsen
-Successor of the Not-Magnus chess engine, now written in C(arlsen).
+Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-Magnus's goal was to learn the popular algorithims and techniques in modern chess engines, this engine will efficently implement them. Thus, the goal of this engine is simply to be strong while providing me an opportunity to solidify my C programming skills.
 
 ------
 
