@@ -6,10 +6,11 @@
 int main(void) {
     Board board;
 
-    init_board(&board, "rnbqkbnr/ppp1pp1p/3p4/8/3RpP2/8/PPPPP1PP/1NBQKBNR w Kkq - 0 1");
+    init_board(&board, "rnbqkbnr/pppppppp/8/8/3B4/8/PPPPPPPP/RN1QKBNR w KQkq - 0 1");
 
     init_rook_attacks();
-    print_bb(get_rook_attacks(D4, board.occupied));
+    init_bishop_attacks();
+    print_bb(get_bishop_attacks(&board, D4, WHITE));
 
     return 0;
 }

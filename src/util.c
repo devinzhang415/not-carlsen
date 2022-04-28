@@ -45,6 +45,44 @@ const uint64_t BB_RANK_7 = BB_RANK_1 << 48;
 const uint64_t BB_RANK_8 = BB_RANK_1 << 56;
 const uint64_t BB_RANKS[8] = {BB_RANK_1, BB_RANK_2, BB_RANK_3, BB_RANK_4, BB_RANK_5, BB_RANK_6, BB_RANK_7, BB_RANK_8};
 
+const uint64_t BB_DIAGONAL_1 = 0x80;
+const uint64_t BB_DIAGONAL_2 = 0x8040;
+const uint64_t BB_DIAGONAL_3 = 0x804020;
+const uint64_t BB_DIAGONAL_4 = 0x80402010;
+const uint64_t BB_DIAGONAL_5 = 0x8040201008;
+const uint64_t BB_DIAGONAL_6 = 0x804020100804;
+const uint64_t BB_DIAGONAL_7 = 0x80402010080402;
+const uint64_t BB_DIAGONAL_8 = 0x8040201008040201;
+const uint64_t BB_DIAGONAL_9 = 0x4020100804020100;
+const uint64_t BB_DIAGONAL_10 = 0x2010080402010000;
+const uint64_t BB_DIAGONAL_11 = 0x1008040201000000;
+const uint64_t BB_DIAGONAL_12 = 0x804020100000000;
+const uint64_t BB_DIAGONAL_13 = 0x402010000000000;
+const uint64_t BB_DIAGONAL_14 = 0x201000000000000;
+const uint64_t BB_DIAGONAL_15 = 0x100000000000000;
+const uint64_t BB_DIAGONALS[15] = {BB_DIAGONAL_1, BB_DIAGONAL_2, BB_DIAGONAL_3, BB_DIAGONAL_4, BB_DIAGONAL_5, BB_DIAGONAL_6, 
+                                   BB_DIAGONAL_7, BB_DIAGONAL_8, BB_DIAGONAL_9, BB_DIAGONAL_10, BB_DIAGONAL_11, BB_DIAGONAL_12,
+                                   BB_DIAGONAL_13, BB_DIAGONAL_14, BB_DIAGONAL_15};
+
+const uint64_t BB_ANTI_DIAGONAL_1 = 0x1;
+const uint64_t BB_ANTI_DIAGONAL_2 = 0x102;
+const uint64_t BB_ANTI_DIAGONAL_3 = 0x10204;
+const uint64_t BB_ANTI_DIAGONAL_4 = 0x1020408;
+const uint64_t BB_ANTI_DIAGONAL_5 = 0x102040810;
+const uint64_t BB_ANTI_DIAGONAL_6 = 0x10204081020;
+const uint64_t BB_ANTI_DIAGONAL_7 = 0x1020408102040;
+const uint64_t BB_ANTI_DIAGONAL_8 = 0x102040810204080;
+const uint64_t BB_ANTI_DIAGONAL_9 = 0x204081020408000;
+const uint64_t BB_ANTI_DIAGONAL_10 = 0x408102040800000;
+const uint64_t BB_ANTI_DIAGONAL_11 = 0x810204080000000;
+const uint64_t BB_ANTI_DIAGONAL_12 = 0x1020408000000000;
+const uint64_t BB_ANTI_DIAGONAL_13 = 0x2040800000000000;
+const uint64_t BB_ANTI_DIAGONAL_14 = 0x4080000000000000;
+const uint64_t BB_ANTI_DIAGONAL_15 = 0x8000000000000000;
+const uint64_t BB_ANTI_DIAGONALS[15] = {BB_ANTI_DIAGONAL_1, BB_ANTI_DIAGONAL_2, BB_ANTI_DIAGONAL_3, BB_ANTI_DIAGONAL_4, BB_ANTI_DIAGONAL_5, BB_ANTI_DIAGONAL_6, 
+                                        BB_ANTI_DIAGONAL_7, BB_ANTI_DIAGONAL_8, BB_ANTI_DIAGONAL_9, BB_ANTI_DIAGONAL_10, BB_ANTI_DIAGONAL_11, BB_ANTI_DIAGONAL_12,
+                                        BB_ANTI_DIAGONAL_13, BB_ANTI_DIAGONAL_14, BB_ANTI_DIAGONAL_15};
+
 const char DEFAULT_FEN[56] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 
@@ -85,8 +123,8 @@ void print_bb(uint64_t bb) {
 
 
 /**
- * @param square the square.
- * @return the rank of the square (0-7).
+ * @param square
+ * @return the rank of the square (0-7)
  */
 int get_rank(int square) {
     return square / 8;
@@ -94,8 +132,8 @@ int get_rank(int square) {
 
 
 /**
- * @param square the square.
- * @return the rank of the square (0-7).
+ * @param square
+ * @return the rank of the square (0-7)
  */
 int get_file(int square) {
     return square % 8;
@@ -103,8 +141,26 @@ int get_file(int square) {
 
 
 /**
- * @param bb the bitboard.
- * @return the number of set bits in the bitboard.
+ * @param square
+ * @return the diagonal the square is on (0-7)
+ */
+int get_diagonal(int square) {
+    return 7 + get_rank(square) - get_file(square);
+}
+
+
+/**
+ * @param square
+ * @return the anti-diagonal the square is on (0-7)
+ */
+int get_anti_diagonal(int square) {
+    return get_rank(square) - get_file(square);
+}
+
+
+/**
+ * @param bb
+ * @return the number of set bits in the bitboard
  */
 int pop_count(uint64_t bb) {
     return __builtin_popcountll(bb);
@@ -112,7 +168,7 @@ int pop_count(uint64_t bb) {
 
 
 /**
- * @param bb the bitboard
+ * @param bb
  * @return the reverse of the bitboard. Flips the perspective of the board
  * @author github.com/nkarve
  */

@@ -75,7 +75,6 @@ const uint64_t ROOK_MAGICS[64] = {
 	0x1000204080011, 0x1000204000801, 0x1000082000401, 0x1fffaabfad1a2
 };
 
-
 // Attack masks and shifts for magic bitboard move generation
 uint64_t BB_BISHOP_ATTACK_MASKS[64];
 uint64_t BB_ROOK_ATTACK_MASKS[64];
@@ -84,14 +83,83 @@ uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
 /**
- * @param square the square the rook is on
- * @param occupied the bitboard of all pieces
- * @return where the rook can move from the given square
+ * @param board
+ * @param square the square the bishop is on
+ * @param piece_color the color of the bishop
+ * @return where the bishop can move from the given square
  */
-uint64_t get_rook_attacks(int square, uint64_t occupied) {
-    occupied &= BB_ROOK_ATTACK_MASKS[square];
+uint64_t get_bishop_attacks(Board *board, int square, bool piece_color) {
+    uint64_t occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
+    uint64_t key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
+    uint64_t attacks = BB_BISHOP_ATTACKS[square][key];
+    
+    return (piece_color == WHITE) ? attacks & ~board->w_occupied : attacks & ~board->b_occupied;
+}
+
+
+/**
+ * @param board
+ * @param square the square the bishop is on
+ * @param piece_color the color of the bishop
+ * @return where the bishop can move from the given square
+ */
+uint64_t get_rook_attacks(Board *board, int square, bool piece_color) {
+    uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
     uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
-    return BB_ROOK_ATTACKS[square][key];
+    uint64_t attacks = BB_ROOK_ATTACKS[square][key];
+    
+    return (piece_color == WHITE) ? attacks & ~board->w_occupied : attacks & ~board->b_occupied;
+}
+
+
+/**
+ * @brief Initalizes the bishop attack magic bitboard
+ * @author github.com/nkarve
+ */
+void init_bishop_attacks(void) {
+    for (int square = A1; square <= H8; square++) {
+        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[get_rank(square)]) |
+                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[get_file(square)]);
+        BB_BISHOP_ATTACK_MASKS[square] = (BB_DIAGONALS[get_diagonal(square)] ^ BB_ANTI_DIAGONALS[get_anti_diagonal(square)]) & ~edges;
+        uint64_t attack_mask = BB_BISHOP_ATTACK_MASKS[square];
+
+        int shift = 64 - pop_count(attack_mask);
+        BISHOP_ATTACK_SHIFTS[square] = shift;
+
+        uint64_t subset = 0;
+        do {
+            uint64_t index = subset;
+            index *= BISHOP_MAGICS[square];
+            index >>= shift;
+            BB_BISHOP_ATTACKS[square][index] = init_bishop_attacks_helper(square, subset);
+            subset = (subset - attack_mask) & attack_mask;
+        } while (subset);
+    }
+}
+
+
+/**
+ * @brief Helper method to initalizes the bishop attack magic bitboard
+ * @param square the current square
+ * @param subset the current occupancy
+ * @param attack_mask the bishop's attack mask without edges
+ * @return the bishop attack bitboard
+ * @author github.com/nkarve
+ */
+uint64_t init_bishop_attacks_helper(int square, uint64_t subset) {
+    uint64_t square_mask = BB_SQUARES[square];
+    uint64_t diagonal_mask = BB_DIAGONALS[get_diagonal(square)];
+    uint64_t anti_diagonal_mask = BB_ANTI_DIAGONALS[get_anti_diagonal(square)];
+
+    uint64_t diagonal_attacks = (((diagonal_mask & subset) - square_mask * 2) ^
+                            get_reverse_bb(get_reverse_bb(diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            diagonal_mask;
+
+    uint64_t anti_diagonal_attacks = (((anti_diagonal_mask & subset) - square_mask * 2) ^
+                            get_reverse_bb(get_reverse_bb(anti_diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            anti_diagonal_mask;
+
+    return diagonal_attacks | anti_diagonal_attacks;
 }
 
 

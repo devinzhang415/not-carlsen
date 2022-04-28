@@ -47,6 +47,40 @@ extern const uint64_t BB_RANK_7;
 extern const uint64_t BB_RANK_8;
 extern const uint64_t BB_RANKS[8];
 
+extern const uint64_t BB_DIAGONAL_1;
+extern const uint64_t BB_DIAGONAL_2;
+extern const uint64_t BB_DIAGONAL_3;
+extern const uint64_t BB_DIAGONAL_4;
+extern const uint64_t BB_DIAGONAL_5;
+extern const uint64_t BB_DIAGONAL_6;
+extern const uint64_t BB_DIAGONAL_7;
+extern const uint64_t BB_DIAGONAL_8;
+extern const uint64_t BB_DIAGONAL_9;
+extern const uint64_t BB_DIAGONAL_10;
+extern const uint64_t BB_DIAGONAL_11;
+extern const uint64_t BB_DIAGONAL_12;
+extern const uint64_t BB_DIAGONAL_13;
+extern const uint64_t BB_DIAGONAL_14;
+extern const uint64_t BB_DIAGONAL_15;
+extern const uint64_t BB_DIAGONALS[15];
+
+extern const uint64_t BB_ANTI_DIAGONAL_1;
+extern const uint64_t BB_ANTI_DIAGONAL_2;
+extern const uint64_t BB_ANTI_DIAGONAL_3;
+extern const uint64_t BB_ANTI_DIAGONAL_4;
+extern const uint64_t BB_ANTI_DIAGONAL_5;
+extern const uint64_t BB_ANTI_DIAGONAL_6;
+extern const uint64_t BB_ANTI_DIAGONAL_7;
+extern const uint64_t BB_ANTI_DIAGONAL_8;
+extern const uint64_t BB_ANTI_DIAGONAL_9;
+extern const uint64_t BB_ANTI_DIAGONAL_10;
+extern const uint64_t BB_ANTI_DIAGONAL_11;
+extern const uint64_t BB_ANTI_DIAGONAL_12;
+extern const uint64_t BB_ANTI_DIAGONAL_13;
+extern const uint64_t BB_ANTI_DIAGONAL_14;
+extern const uint64_t BB_ANTI_DIAGONAL_15;
+extern const uint64_t BB_ANTI_DIAGONALS[15];
+
 extern const char DEFAULT_FEN[56];
 
 
@@ -59,6 +93,10 @@ void print_bb(uint64_t bb);
 int get_rank(int square);
 
 int get_file(int file);
+
+int get_diagonal(int square);
+
+int get_anti_diagonal(int square);
 
 int pop_count(uint64_t bb);
 
