@@ -6,13 +6,13 @@
 #include <ctype.h>
 #include "board.h"
 #include "util.h"
+#include "movegen.h"
 
 
 /**
- * @brief Initalizes the board to the given FEN. Assumes the FEN is valid.
- * 
- * @param board the uninitalized board structure.
- * @param fen the FEN string.
+ * @brief Initalizes the board and sliding piece attack tables
+ * @param board the uninitalized board structure
+ * @param fen the FEN string to initalize the board to. Assumed valid
  */
 void init_board(Board *board, char *fen) {
     char fen_copy[100];
@@ -133,4 +133,7 @@ void init_board(Board *board, char *fen) {
                 break;
         }
     }
+
+    init_bishop_attacks();
+    init_rook_attacks();
 }

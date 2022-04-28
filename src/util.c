@@ -7,7 +7,6 @@
 const bool WHITE = true;
 const bool BLACK = false;
 
-
 // Bitboards
 const uint64_t BB_SQUARES[64] = {
     1ULL << A1, 1ULL << B1, 1ULL << C1, 1ULL << D1, 1ULL << E1, 1ULL << F1, 1ULL << G1, 1ULL << H1,
@@ -154,7 +153,7 @@ int get_diagonal(int square) {
  * @return the anti-diagonal the square is on (0-7)
  */
 int get_anti_diagonal(int square) {
-    return get_rank(square) - get_file(square);
+    return get_rank(square) + get_file(square);
 }
 
 

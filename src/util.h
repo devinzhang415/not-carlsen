@@ -19,7 +19,6 @@ enum squares {
 extern const bool WHITE;
 extern const bool BLACK;
 
-
 extern const uint64_t BB_SQUARES[64];
 
 extern const uint64_t BB_ALL;

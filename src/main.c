@@ -7,10 +7,7 @@ int main(void) {
     Board board;
 
     init_board(&board, "rnbqkbnr/pppppppp/8/8/3B4/8/PPPPPPPP/RN1QKBNR w KQkq - 0 1");
-
-    init_rook_attacks();
-    init_bishop_attacks();
-    print_bb(get_bishop_attacks(&board, D4, WHITE));
+    print_bb(get_bishop_attacks(&board, E4, WHITE));
 
     return 0;
 }
