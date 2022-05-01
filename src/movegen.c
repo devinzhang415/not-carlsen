@@ -150,12 +150,19 @@ uint64_t get_queen_attacks(Board *board, int square, bool piece_color) {
  * @param board
  * @param square the square the king is on
  * @param piece_color the color of the king
- * @return where the king can move from the given square
+ * @return where the king can move from the given square, including castling squares
  */
 uint64_t get_king_attacks(Board *board, int square, bool piece_color) {
     uint64_t attacks = BB_KING_ATTACKS[square];
-
-    return (piece_color == WHITE) ? attacks & ~board->w_occupied : attacks & ~board->b_occupied;
+    if (piece_color == WHITE) {
+        if (board->w_kingside_castling_rights) attacks |= 1ULL << G1;
+        if (board->w_queenside_castling_rights) attacks |= 1ULL << C1;
+        return attacks & ~board->w_occupied;
+    } else {
+        if (board->b_kingside_castling_rights) attacks |= 1ULL << G8;
+        if (board->b_queenside_castling_rights) attacks |= 1ULL << C8;
+        return attacks & ~board->b_occupied;
+    }
 }
 
 
