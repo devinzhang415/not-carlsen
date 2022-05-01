@@ -10,6 +10,11 @@ Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-
 ------
 
 ## Devlog
+4/30/22 v0.1.3
+> Added wrapper functions for the move generation of all pieces besides pawns.
+>
+> Board structure now includes a "mailbox" representation of the board to easily determine what piece is on a given square.
+
 4/27/22 v0.1.2
 > Implemented sliding move generation using magic bitboards.
 
