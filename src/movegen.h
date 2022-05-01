@@ -19,11 +19,11 @@ extern uint64_t ROOK_ATTACK_SHIFTS[64];
 extern uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
-uint64_t get_knight_attacks(Board *board, int square, bool piece_color);
-uint64_t get_bishop_attacks(Board *board, int square, bool piece_color);
-uint64_t get_rook_attacks(Board *board, int square, bool piece_color);
-uint64_t get_queen_attacks(Board *board, int square, bool piece_color);
-uint64_t get_king_attacks(Board *board, int square, bool piece_color);
+uint64_t get_knight_moves(Board *board, int square, bool piece_color);
+uint64_t get_bishop_moves(Board *board, int square, bool piece_color);
+uint64_t get_rook_moves(Board *board, int square, bool piece_color);
+uint64_t get_queen_moves(Board *board, int square, bool piece_color);
+uint64_t get_king_moves(Board *board, int square, bool piece_color);
 
 void init_bishop_attacks(void);
 uint64_t init_bishop_attacks_helper(int square, uint64_t subset);
