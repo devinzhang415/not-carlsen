@@ -14,12 +14,10 @@
  * - an en passant target square, if any
  * - a halfmove counter, denoting the number of halfmoves since the last capture or pawn advance
  * - a fullmove counter, denoting the number of cycles of a white move and a black move
- * 
- * TODO
- * - mailbox
- * - move stack
  */
 typedef struct Board {
+    char mailbox[64];
+
     uint64_t w_pawns;
     uint64_t w_knights;
     uint64_t w_bishops;

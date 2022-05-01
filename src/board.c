@@ -48,6 +48,7 @@ void init_board(Board *board, char *fen) {
                             file += piece - '0';
                         } else {
                             int square = 8*rank + file;
+                            board->mailbox[square] = piece;
                             switch (piece) {
                                 case 'P':
                                     board->w_pawns |= 1ULL << square;

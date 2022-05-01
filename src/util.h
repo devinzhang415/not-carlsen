@@ -80,8 +80,6 @@ extern const uint64_t BB_ANTI_DIAGONAL_14;
 extern const uint64_t BB_ANTI_DIAGONAL_15;
 extern const uint64_t BB_ANTI_DIAGONALS[15];
 
-extern const char DEFAULT_FEN[56];
-
 
 int parse_square(char *square);
 

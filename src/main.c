@@ -5,9 +5,10 @@
 
 int main(void) {
     Board board;
+    char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    char* fen = DEFAULT_FEN;
 
-    init_board(&board, "rnbqkbnr/pppppppp/8/8/3B4/8/PPPPPPPP/RN1QKBNR w KQkq - 0 1");
-    print_bb(get_bishop_attacks(&board, E4, WHITE));
+    init_board(&board, fen);
 
     return 0;
 }
