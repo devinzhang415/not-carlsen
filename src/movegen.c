@@ -89,9 +89,9 @@ uint64_t BISHOP_ATTACK_SHIFTS[64];
  * @return where the knight can move from the given square
  */
 uint64_t get_knight_moves(Board *board, int square, bool piece_color) {
-    uint64_t attacks = BB_KNIGHT_ATTACKS[square];
+    uint64_t moves = BB_KNIGHT_ATTACKS[square];
 
-    return (piece_color == WHITE) ? attacks & ~board->w_occupied : attacks & ~board->b_occupied;
+    return (piece_color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
@@ -104,9 +104,9 @@ uint64_t get_knight_moves(Board *board, int square, bool piece_color) {
 uint64_t get_bishop_moves(Board *board, int square, bool piece_color) {
     uint64_t occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
     uint64_t key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
-    uint64_t attacks = BB_BISHOP_ATTACKS[square][key];
+    uint64_t moves = BB_BISHOP_ATTACKS[square][key];
 
-    return (piece_color == WHITE) ? attacks & ~board->w_occupied : attacks & ~board->b_occupied;
+    return (piece_color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
@@ -119,9 +119,9 @@ uint64_t get_bishop_moves(Board *board, int square, bool piece_color) {
 uint64_t get_rook_moves(Board *board, int square, bool piece_color) {
     uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
     uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
-    uint64_t attacks = BB_ROOK_ATTACKS[square][key];
+    uint64_t moves = BB_ROOK_ATTACKS[square][key];
 
-    return (piece_color == WHITE) ? attacks & ~board->w_occupied : attacks & ~board->b_occupied;
+    return (piece_color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
@@ -134,15 +134,15 @@ uint64_t get_rook_moves(Board *board, int square, bool piece_color) {
 uint64_t get_queen_moves(Board *board, int square, bool piece_color) {
     uint64_t bishop_occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
     uint64_t bishop_key = (bishop_occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
-    uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][bishop_key];
+    uint64_t bishop_moves = BB_BISHOP_ATTACKS[square][bishop_key];
 
     uint64_t rook_occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
     uint64_t rook_key = (rook_occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
-    uint64_t rook_attacks = BB_ROOK_ATTACKS[square][rook_key];
+    uint64_t rook_moves = BB_ROOK_ATTACKS[square][rook_key];
 
-    uint64_t attacks = bishop_attacks | rook_attacks;
+    uint64_t moves = bishop_moves | rook_moves;
 
-    return (piece_color == WHITE) ? attacks & ~board->w_occupied : attacks & ~board->b_occupied;
+    return (piece_color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
@@ -153,15 +153,15 @@ uint64_t get_queen_moves(Board *board, int square, bool piece_color) {
  * @return where the king can move from the given square, including castling squares
  */
 uint64_t get_king_moves(Board *board, int square, bool piece_color) {
-    uint64_t attacks = BB_KING_ATTACKS[square];
+    uint64_t moves = BB_KING_ATTACKS[square];
     if (piece_color == WHITE) {
-        if (board->w_kingside_castling_rights) attacks |= 1ULL << G1;
-        if (board->w_queenside_castling_rights) attacks |= 1ULL << C1;
-        return attacks & ~board->w_occupied;
+        if (board->w_kingside_castling_rights) moves |= 1ULL << G1;
+        if (board->w_queenside_castling_rights) moves |= 1ULL << C1;
+        return moves & ~board->w_occupied;
     } else {
-        if (board->b_kingside_castling_rights) attacks |= 1ULL << G8;
-        if (board->b_queenside_castling_rights) attacks |= 1ULL << C8;
-        return attacks & ~board->b_occupied;
+        if (board->b_kingside_castling_rights) moves |= 1ULL << G8;
+        if (board->b_queenside_castling_rights) moves |= 1ULL << C8;
+        return moves & ~board->b_occupied;
     }
 }
 
@@ -185,35 +185,10 @@ void init_bishop_attacks(void) {
             uint64_t index = subset;
             index *= BISHOP_MAGICS[square];
             index >>= shift;
-            BB_BISHOP_ATTACKS[square][index] = init_bishop_attacks_helper(square, subset);
+            BB_BISHOP_ATTACKS[square][index] = _init_bishop_attacks_helper(square, subset);
             subset = (subset - attack_mask) & attack_mask;
         } while (subset);
     }
-}
-
-
-/**
- * @brief Helper method to initalizes the bishop attack magic bitboard
- * @param square the current square
- * @param subset the current occupancy
- * @param attack_mask the bishop's attack mask without edges
- * @return the bishop attack bitboard
- * @author github.com/nkarve
- */
-uint64_t init_bishop_attacks_helper(int square, uint64_t subset) {
-    uint64_t square_mask = BB_SQUARES[square];
-    uint64_t diagonal_mask = BB_DIAGONALS[get_diagonal(square)];
-    uint64_t anti_diagonal_mask = BB_ANTI_DIAGONALS[get_anti_diagonal(square)];
-
-    uint64_t diagonal_attacks = (((diagonal_mask & subset) - square_mask * 2) ^
-                            get_reverse_bb(get_reverse_bb(diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
-                            diagonal_mask;
-
-    uint64_t anti_diagonal_attacks = (((anti_diagonal_mask & subset) - square_mask * 2) ^
-                            get_reverse_bb(get_reverse_bb(anti_diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
-                            anti_diagonal_mask;
-
-    return diagonal_attacks | anti_diagonal_attacks;
 }
 
 
@@ -236,10 +211,35 @@ void init_rook_attacks(void) {
             uint64_t index = subset;
             index *= ROOK_MAGICS[square];
             index >>= shift;
-            BB_ROOK_ATTACKS[square][index] = init_rook_attacks_helper(square, subset);
+            BB_ROOK_ATTACKS[square][index] = _init_rook_attacks_helper(square, subset);
             subset = (subset - attack_mask) & attack_mask;
         } while (subset);
     }
+}
+
+
+/**
+ * @brief Helper method to initalizes the bishop attack magic bitboard
+ * @param square the current square
+ * @param subset the current occupancy
+ * @param attack_mask the bishop's attack mask without edges
+ * @return the bishop attack bitboard
+ * @author github.com/nkarve
+ */
+uint64_t _init_bishop_attacks_helper(int square, uint64_t subset) {
+    uint64_t square_mask = BB_SQUARES[square];
+    uint64_t diagonal_mask = BB_DIAGONALS[get_diagonal(square)];
+    uint64_t anti_diagonal_mask = BB_ANTI_DIAGONALS[get_anti_diagonal(square)];
+
+    uint64_t diagonal_attacks = (((diagonal_mask & subset) - square_mask * 2) ^
+                            get_reverse_bb(get_reverse_bb(diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            diagonal_mask;
+
+    uint64_t anti_diagonal_attacks = (((anti_diagonal_mask & subset) - square_mask * 2) ^
+                            get_reverse_bb(get_reverse_bb(anti_diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            anti_diagonal_mask;
+
+    return diagonal_attacks | anti_diagonal_attacks;
 }
 
 
@@ -251,7 +251,7 @@ void init_rook_attacks(void) {
  * @return the rook attack bitboard
  * @author github.com/nkarve
  */
-uint64_t init_rook_attacks_helper(int square, uint64_t subset) {
+uint64_t _init_rook_attacks_helper(int square, uint64_t subset) {
     uint64_t square_mask = BB_SQUARES[square];
     uint64_t rank_mask = BB_RANKS[get_rank(square)];
     uint64_t file_mask = BB_FILES[get_file(square)];

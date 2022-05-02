@@ -26,10 +26,10 @@ uint64_t get_queen_moves(Board *board, int square, bool piece_color);
 uint64_t get_king_moves(Board *board, int square, bool piece_color);
 
 void init_bishop_attacks(void);
-uint64_t init_bishop_attacks_helper(int square, uint64_t subset);
-
 void init_rook_attacks(void);
-uint64_t init_rook_attacks_helper(int square, uint64_t subset);
+
+uint64_t _init_bishop_attacks_helper(int square, uint64_t subset);
+uint64_t _init_rook_attacks_helper(int square, uint64_t subset);
 
 
 #endif

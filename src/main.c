@@ -6,11 +6,9 @@
 int main(void) {
     Board board;
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    char* fen = "1r2k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQk - 0 1";
+    char* fen = "rnbqkbnr/pp3ppp/8/2ppp3/8/3P4/PPP1PPPP/RNBQKBNR w KQkq - 0 1";
 
     init_board(&board, fen);
-
-    print_bb(get_king_attacks(&board, E8, BLACK));
 
     return 0;
 }
