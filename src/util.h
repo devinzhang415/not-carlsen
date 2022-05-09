@@ -87,9 +87,9 @@ bool get_bit(uint64_t bb, int square);
 
 void print_bb(uint64_t bb);
 
-int get_rank(int square);
+int rank_of(int square);
 
-int get_file(int file);
+int file_of(int file);
 
 int get_diagonal(int square);
 

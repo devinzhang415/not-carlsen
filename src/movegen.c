@@ -212,9 +212,9 @@ uint64_t get_king_moves(Board *board, int square, bool piece_color) {
  */
 void init_bishop_attacks(void) {
     for (int square = A1; square <= H8; square++) {
-        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[get_rank(square)]) |
-                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[get_file(square)]);
-        BB_BISHOP_ATTACK_MASKS[square] = (BB_DIAGONALS[get_diagonal(square)] ^ BB_ANTI_DIAGONALS[get_anti_diagonal(square)]) & ~edges;
+        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
+                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
+        BB_BISHOP_ATTACK_MASKS[square] = (BB_DIAGONALS[diagonal_of(square)] ^ BB_ANTI_DIAGONALS[anti_diagonal_of(square)]) & ~edges;
         uint64_t attack_mask = BB_BISHOP_ATTACK_MASKS[square];
 
         int shift = 64 - pop_count(attack_mask);
@@ -238,9 +238,9 @@ void init_bishop_attacks(void) {
  */
 void init_rook_attacks(void) {
     for (int square = A1; square <= H8; square++) {
-        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[get_rank(square)]) |
-                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[get_file(square)]);
-        BB_ROOK_ATTACK_MASKS[square] = (BB_RANKS[get_rank(square)] ^ BB_FILES[get_file(square)]) & ~edges;
+        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
+                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
+        BB_ROOK_ATTACK_MASKS[square] = (BB_RANKS[rank_of(square)] ^ BB_FILES[file_of(square)]) & ~edges;
         uint64_t attack_mask = BB_ROOK_ATTACK_MASKS[square];
 
         int shift = 64 - pop_count(attack_mask);
@@ -268,8 +268,8 @@ void init_rook_attacks(void) {
  */
 uint64_t _init_bishop_attacks_helper(int square, uint64_t subset) {
     uint64_t square_mask = BB_SQUARES[square];
-    uint64_t diagonal_mask = BB_DIAGONALS[get_diagonal(square)];
-    uint64_t anti_diagonal_mask = BB_ANTI_DIAGONALS[get_anti_diagonal(square)];
+    uint64_t diagonal_mask = BB_DIAGONALS[diagonal_of(square)];
+    uint64_t anti_diagonal_mask = BB_ANTI_DIAGONALS[anti_diagonal_of(square)];
 
     uint64_t diagonal_attacks = (((diagonal_mask & subset) - square_mask * 2) ^
                             get_reverse_bb(get_reverse_bb(diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
@@ -293,8 +293,8 @@ uint64_t _init_bishop_attacks_helper(int square, uint64_t subset) {
  */
 uint64_t _init_rook_attacks_helper(int square, uint64_t subset) {
     uint64_t square_mask = BB_SQUARES[square];
-    uint64_t rank_mask = BB_RANKS[get_rank(square)];
-    uint64_t file_mask = BB_FILES[get_file(square)];
+    uint64_t rank_mask = BB_RANKS[rank_of(square)];
+    uint64_t file_mask = BB_FILES[file_of(square)];
 
     uint64_t rank_attacks = (((rank_mask & subset) - square_mask * 2) ^
                             get_reverse_bb(get_reverse_bb(rank_mask & subset) - get_reverse_bb(square_mask) * 2)) &

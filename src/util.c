@@ -123,7 +123,7 @@ void print_bb(uint64_t bb) {
  * @param square
  * @return the rank of the square (0-7)
  */
-int get_rank(int square) {
+int rank_of(int square) {
     return square / 8;
 }
 
@@ -132,7 +132,7 @@ int get_rank(int square) {
  * @param square
  * @return the rank of the square (0-7)
  */
-int get_file(int square) {
+int file_of(int square) {
     return square % 8;
 }
 
@@ -141,8 +141,8 @@ int get_file(int square) {
  * @param square
  * @return the diagonal the square is on (0-7)
  */
-int get_diagonal(int square) {
-    return 7 + get_rank(square) - get_file(square);
+int diagonal_of(int square) {
+    return 7 + rank_of(square) - file_of(square);
 }
 
 
@@ -150,8 +150,8 @@ int get_diagonal(int square) {
  * @param square
  * @return the anti-diagonal the square is on (0-7)
  */
-int get_anti_diagonal(int square) {
-    return get_rank(square) + get_file(square);
+int anti_diagonal_of(int square) {
+    return rank_of(square) + file_of(square);
 }
 
 
