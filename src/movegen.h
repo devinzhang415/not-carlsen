@@ -19,6 +19,7 @@ extern uint64_t ROOK_ATTACK_SHIFTS[64];
 extern uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
+uint64_t get_pawn_moves_all(Board *board, bool piece_color);
 uint64_t get_knight_moves(Board *board, int square, bool piece_color);
 uint64_t get_bishop_moves(Board *board, int square, bool piece_color);
 uint64_t get_rook_moves(Board *board, int square, bool piece_color);

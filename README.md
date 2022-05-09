@@ -10,6 +10,9 @@ Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-
 ------
 
 ## Devlog
+5/9/22 v0.1.4
+> Added pawn move (single push, double push, capture, and en passant) wrapper functions.
+
 4/30/22 v0.1.3
 > Added wrapper functions for the move generation of all pieces besides pawns.
 >
