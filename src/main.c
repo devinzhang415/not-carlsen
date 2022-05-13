@@ -10,7 +10,8 @@ int main(void) {
 
     init_board(&board, fen);
 
-    print_bb(get_pawn_moves_all(&board, BLACK));
+    // print_bb(get_pawn_moves_all(&board, BLACK));
+    printf("%s", board.mailbox);
 
     return 0;
 }

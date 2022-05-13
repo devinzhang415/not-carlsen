@@ -91,9 +91,9 @@ int rank_of(int square);
 
 int file_of(int file);
 
-int get_diagonal(int square);
+int diagonal_of(int square);
 
-int get_anti_diagonal(int square);
+int anti_diagonal_of(int square);
 
 int pop_count(uint64_t bb);
 

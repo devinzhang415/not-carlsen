@@ -6,7 +6,7 @@
 
 
 /**
- * Representation of the board using:
+ * @brief Representation of the board using:
  * - bitboards for every color and piece type
  * - a bitboard of all occupied squares, and the occupied squares of just white/black
  * - a flag denoting whose turn it is
