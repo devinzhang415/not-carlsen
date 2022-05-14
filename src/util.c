@@ -176,3 +176,13 @@ uint64_t get_reverse_bb(uint64_t bb) {
 	bb = (bb & 0x00ff00ff00ff00ff) << 8 | (bb >> 8) & 0x00ff00ff00ff00ff;
 	return (bb << 48) | ((bb & 0xffff0000) << 16) | ((bb >> 16) & 0xffff0000) | (bb >> 48);
 }
+
+
+/**
+ * @param bb 
+ * @return the index of the least-significant bit from the bb,
+ * range [A1, H8]
+ */
+int get_lsb(uint64_t bb) {
+    return __builtin_ffsll(bb) - 1;
+}

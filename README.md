@@ -19,7 +19,7 @@ Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-
 > Board structure now includes a "mailbox" representation of the board to easily determine what piece is on a given square.
 
 4/27/22 v0.1.2
-> Implemented sliding move generation using magic bitboards.
+> Implemented sliding move generation using magic bitboards. Credit to github.com/nkarve.
 
 3/27/22 v0.1.1
 > Defined bitboard constants for all squares, files, and ranks.

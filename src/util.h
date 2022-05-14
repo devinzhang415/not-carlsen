@@ -88,16 +88,15 @@ bool get_bit(uint64_t bb, int square);
 void print_bb(uint64_t bb);
 
 int rank_of(int square);
-
 int file_of(int file);
-
 int diagonal_of(int square);
-
 int anti_diagonal_of(int square);
 
 int pop_count(uint64_t bb);
 
 uint64_t get_reverse_bb(uint64_t bb);
+
+int get_lsb(uint64_t bb);
 
 
 #endif

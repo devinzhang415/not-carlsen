@@ -81,60 +81,26 @@ uint64_t BB_ROOK_ATTACK_MASKS[64];
 uint64_t ROOK_ATTACK_SHIFTS[64];
 uint64_t BISHOP_ATTACK_SHIFTS[64];
 
-/**
- * @param board 
- * @param color the color of the side making a move
- * @return an array of all the pseudolegal moves in a position
- * 
- * TODO to do captures just & with opponent pieces
- */
-Move* get_pseudolegal_moves(Board *board, bool color) {
-
-}
-
 
 /**
  * @param board
- * @param color the color of the pawns
- * @return where all the pawns can move
+ * @return where all the pawns can move (excludes en passant)
  */
-uint64_t get_pawn_moves_all(Board *board, bool color) {
-    if (color == WHITE) {
+uint64_t get_pawn_moves_all(Board *board) {
+    if (board->turn == WHITE) {
         uint64_t pawns = board->w_pawns;
+        uint64_t single_push = (pawns << 8) & ~board->occupied;
+        uint64_t double_push = ((single_push & BB_RANK_3) << 8) & ~board->occupied;
+        uint64_t captures = _get_pawn_captures_all(board);
 
-        uint64_t single_push = pawns << 8;
-        uint64_t double_push = (pawns & BB_RANK_2) << 16;
-        uint64_t pushes = (single_push | double_push) & ~board->occupied;
-
-        uint64_t captures = (((pawns << 9) & ~BB_FILE_A) | ((pawns << 7) & ~BB_FILE_H))
-                            & board->b_occupied;
-
-        if (board->en_passant_square != -1) {
-            uint64_t ep_pawns = pawns & BB_RANK_5;
-            uint64_t ep_captures = (((ep_pawns << 9) & ~BB_FILE_A) | ((ep_pawns << 7) & ~BB_FILE_H))
-                                   & BB_SQUARES[board->en_passant_square];
-            captures |= ep_captures;
-        }
-
-        return pushes | captures;
+        return single_push | double_push | captures;
     } else {
         uint64_t pawns = board->b_pawns;
+        uint64_t single_push = (pawns >> 8) & ~board->occupied;
+        uint64_t double_push = ((single_push & BB_RANK_6) >> 8) & ~board->occupied;
+        uint64_t captures = _get_pawn_captures_all(board);
 
-        uint64_t single_push = pawns >> 8;
-        uint64_t double_push = (pawns & BB_RANK_7) >> 16;
-        uint64_t pushes = (single_push | double_push) & ~board->occupied;
-
-        uint64_t captures = (((pawns >> 9) & ~BB_FILE_H) | ((pawns >> 7) & ~BB_FILE_A))
-                            & board->w_occupied;
-
-        if (board->en_passant_square != -1) {
-            uint64_t ep_pawns = pawns & BB_RANK_4;
-            uint64_t ep_captures = (((ep_pawns >> 9) & ~BB_FILE_H) | ((ep_pawns >> 7) & ~BB_FILE_A))
-                                   & BB_SQUARES[board->en_passant_square];
-            captures |= ep_captures;
-        }
-
-        return pushes | captures;
+        return single_push | double_push | captures;
     }
 }
 
@@ -142,53 +108,49 @@ uint64_t get_pawn_moves_all(Board *board, bool color) {
 /**
  * @param board
  * @param square the square the knight is on
- * @param color the color of the knight
  * @return where the knight can move from the given square
  */
-uint64_t get_knight_moves(Board *board, int square, bool color) {
+uint64_t get_knight_moves(Board *board, int square) {
     uint64_t moves = BB_KNIGHT_ATTACKS[square];
 
-    return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+    return (board->turn == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
 /**
  * @param board
  * @param square the square the bishop is on
- * @param color the color of the bishop
  * @return where the bishop can move from the given square
  */
-uint64_t get_bishop_moves(Board *board, int square, bool color) {
+uint64_t get_bishop_moves(Board *board, int square) {
     uint64_t occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
     uint64_t key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t moves = BB_BISHOP_ATTACKS[square][key];
 
-    return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+    return (board->turn == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
 /**
  * @param board
  * @param square the square the bishop is on
- * @param color the color of the bishop
  * @return where the bishop can move from the given square
  */
-uint64_t get_rook_moves(Board *board, int square, bool color) {
+uint64_t get_rook_moves(Board *board, int square) {
     uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
     uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
     uint64_t moves = BB_ROOK_ATTACKS[square][key];
 
-    return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+    return (board->turn == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
 /**
  * @param board
  * @param square the square the queen is on
- * @param color the color of the queen
  * @return where the queen can move from the given square
  */
-uint64_t get_queen_moves(Board *board, int square, bool color) {
+uint64_t get_queen_moves(Board *board, int square) {
     uint64_t bishop_occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
     uint64_t bishop_key = (bishop_occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t bishop_moves = BB_BISHOP_ATTACKS[square][bishop_key];
@@ -199,26 +161,39 @@ uint64_t get_queen_moves(Board *board, int square, bool color) {
 
     uint64_t moves = bishop_moves | rook_moves;
 
-    return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+    return (board->turn == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
 /**
  * @param board
  * @param square the square the king is on
- * @param color the color of the king
- * @return where the king can move from the given square, including castling squares
+ * @return where the king can move from the given square (excludes castling)
  */
-uint64_t get_king_moves(Board *board, int square, bool color) {
+uint64_t get_king_moves(Board *board, int square) {
     uint64_t moves = BB_KING_ATTACKS[square];
-    if (color == WHITE) {
-        if (board->w_kingside_castling_rights) moves |= 1ULL << G1;
-        if (board->w_queenside_castling_rights) moves |= 1ULL << C1;
-        return moves & ~board->w_occupied;
+
+    return (board->turn == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+}
+
+
+/**
+ * @param board
+ * @return where all the pawns can capture (excludes non-capture pushes and en passant)
+ */
+uint64_t _get_pawn_captures_all(Board *board) {
+    if (board->turn == WHITE) {
+        uint64_t pawns = board->w_pawns;
+        uint64_t captures = (((pawns << 9) & ~BB_FILE_A) | ((pawns << 7) & ~BB_FILE_H))
+                            & board->b_occupied;
+
+        return captures;
     } else {
-        if (board->b_kingside_castling_rights) moves |= 1ULL << G8;
-        if (board->b_queenside_castling_rights) moves |= 1ULL << C8;
-        return moves & ~board->b_occupied;
+        uint64_t pawns = board->b_pawns;
+        uint64_t captures = (((pawns >> 9) & ~BB_FILE_H) | ((pawns >> 7) & ~BB_FILE_A))
+                            & board->w_occupied;
+
+        return captures;
     }
 }
 

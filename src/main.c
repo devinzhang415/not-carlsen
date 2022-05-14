@@ -6,12 +6,15 @@
 int main(void) {
     Board board;
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    char* fen = "rnb1kbnr/4p1pp/8/2pq1pP1/ppPpK3/1P2P3/P2P1P1P/RNBQ1BNR w kq f6 0 1";
+    char* fen = "8/6P1/8/8/P7/8/1P6/8 w - - 0 1";
 
-    init_board(&board, fen);
+    init_board(&board, DEFAULT_FEN);
 
-    // print_bb(get_pawn_moves_all(&board, BLACK));
-    printf("%s", board.mailbox);
+    // while (pieces) {
+    //     int square = get_lsb(pieces);
+    //     char piece = board->mailbox[square];
+    //     pieces ^= 1ULL << square; // Remove the bit of the visited square
+    // }
 
     return 0;
 }

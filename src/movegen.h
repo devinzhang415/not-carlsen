@@ -9,7 +9,7 @@
  * @brief Representation of a move using:
  * - square piece is moving from
  * - square piece is moving to
- * - any special characteristic of the move, such as the promotion piece
+ * - any special characteristic of the move, such as the promotion piece / castling / en passant
  */
 typedef struct Move {
     int from;
@@ -32,13 +32,14 @@ extern uint64_t ROOK_ATTACK_SHIFTS[64];
 extern uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
-Move* get_pseudolegal_moves(Board *board, bool color);
-uint64_t get_pawn_moves_all(Board *board, bool color);
-uint64_t get_knight_moves(Board *board, int square, bool color);
-uint64_t get_bishop_moves(Board *board, int square, bool color);
-uint64_t get_rook_moves(Board *board, int square, bool color);
-uint64_t get_queen_moves(Board *board, int square, bool color);
-uint64_t get_king_moves(Board *board, int square, bool color);
+uint64_t get_pawn_moves_all(Board *board);
+uint64_t get_knight_moves(Board *board, int square);
+uint64_t get_bishop_moves(Board *board, int square);
+uint64_t get_rook_moves(Board *board, int square);
+uint64_t get_queen_moves(Board *board, int square);
+uint64_t get_king_moves(Board *board, int square);
+
+uint64_t _get_pawn_captures_all(Board *board);
 
 
 void init_bishop_attacks(void);
