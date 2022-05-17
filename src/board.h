@@ -8,12 +8,12 @@
 /**
  * @brief Representation of the board using:
  * - bitboards for every color and piece type
- * - a bitboard of all occupied squares, and the occupied squares of just white/black
- * - a flag denoting whose turn it is
+ * - bitboards of all occupied squares, and the occupied squares of just white/black
+ * - flag denoting whose turn it is
  * - flags for white/black castling rights kingside/queenside
- * - an en passant target square, if any
- * - a halfmove counter, denoting the number of halfmoves since the last capture or pawn advance
- * - a fullmove counter, denoting the number of cycles of a white move and a black move
+ * - en passant target square, if any
+ * - halfmove counter, denoting the number of halfmoves since the last capture or pawn advance
+ * - fullmove counter, denoting the number of cycles of a white move and a black move
  */
 typedef struct Board {
     char mailbox[64];

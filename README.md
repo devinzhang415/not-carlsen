@@ -1,6 +1,10 @@
 # Not-Carlsen
 Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-Magnus's goal was to learn the popular algorithims and techniques in modern chess engines, this engine will efficently implement them. Thus, the goal of this engine is simply to be strong while providing me an opportunity to solidify my C programming skills.
 
+Thanks to:
+- github.com/nkarve for their magic bitboard generation
+- Dominic Hofer and Peter Ellis Jone's legal move generation guides
+
 ------
 
 ## Current Features
@@ -10,6 +14,9 @@ Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-
 ------
 
 ## Devlog
+5/17/22 v0.1.5
+> Began legal move generator by implementing checkmasks (a bitboard which restricts the legal moves when in check).
+
 5/9/22 v0.1.4
 > Added pawn move (single push, double push, capture, and en passant) wrapper functions.
 

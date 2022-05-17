@@ -130,6 +130,7 @@ void init_board(Board *board, char *fen) {
     board->fullmove_number = atoi(token);
 
 
+    init_rays();
     init_bishop_attacks();
     init_rook_attacks();
 }

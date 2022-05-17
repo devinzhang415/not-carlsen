@@ -82,6 +82,8 @@ const uint64_t BB_ANTI_DIAGONALS[15] = {BB_ANTI_DIAGONAL_1, BB_ANTI_DIAGONAL_2, 
                                         BB_ANTI_DIAGONAL_7, BB_ANTI_DIAGONAL_8, BB_ANTI_DIAGONAL_9, BB_ANTI_DIAGONAL_10, BB_ANTI_DIAGONAL_11, BB_ANTI_DIAGONAL_12,
                                         BB_ANTI_DIAGONAL_13, BB_ANTI_DIAGONAL_14, BB_ANTI_DIAGONAL_15};
 
+uint64_t BB_RAYS[64][64];
+
 
 /**
  * @param square the string of the square name, ie "A1."
@@ -185,4 +187,54 @@ uint64_t get_reverse_bb(uint64_t bb) {
  */
 int get_lsb(uint64_t bb) {
     return __builtin_ffsll(bb) - 1;
+}
+
+
+/**
+ * @brief Initalizes BB_RAYS[64][64] with all rays that connect from one square to another
+ * (see _get_ray())
+ */
+void init_rays(void) {
+    for (int square1 = A1; square1 <= H8; square1++) {
+        for (int square2 = A1; square2 <= H8; square2++) {
+            BB_RAYS[square1][square2] = _get_ray(square1, square2);
+        }
+    }
+}
+
+
+/**
+ * @param square1 
+ * @param square2 
+ * @return the rank, file, or diagonal that connects the two squares, if any.
+ *         returns empty bitboard if the two squares are the same
+ */
+uint64_t _get_ray(int square1, int square2) {
+    if (square1 == square2) return 0;
+
+    uint64_t square2_bb = BB_SQUARES[square2];
+
+    uint64_t rank = BB_RANKS[rank_of(square1)];
+    if (rank & square2_bb) return rank;
+
+    uint64_t file = BB_FILES[file_of(square1)];
+    if (file & square2_bb) return file;
+
+    uint64_t diagonal = BB_DIAGONALS[diagonal_of(square1)];
+    if (diagonal & square2_bb) return diagonal;
+
+    uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square1)];
+    if (anti_diagonal & square2_bb) return anti_diagonal;
+    
+    return 0;
+}
+
+
+/**
+ * @param square1 
+ * @param square2 
+ * @return the bitboard of the ray between the two squares (including the squares), if any
+ */
+uint64_t _get_ray_between(int square1, int square2) {
+    return BB_RAYS[square1][square2] & ((BB_ALL << square1) ^ (BB_ALL << square2)) | BB_SQUARES[square2];
 }

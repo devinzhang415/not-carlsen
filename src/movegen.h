@@ -32,18 +32,20 @@ extern uint64_t ROOK_ATTACK_SHIFTS[64];
 extern uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
-uint64_t get_pawn_moves_all(Board *board);
-uint64_t get_knight_moves(Board *board, int square);
-uint64_t get_bishop_moves(Board *board, int square);
-uint64_t get_rook_moves(Board *board, int square);
-uint64_t get_queen_moves(Board *board, int square);
-uint64_t get_king_moves(Board *board, int square);
-
-uint64_t _get_pawn_captures_all(Board *board);
-
-
 void init_bishop_attacks(void);
 void init_rook_attacks(void);
+
+
+uint64_t _get_pawn_moves_all(Board *board);
+uint64_t _get_knight_moves(Board *board, int square);
+uint64_t _get_bishop_moves(Board *board, int square);
+uint64_t _get_rook_moves(Board *board, int square);
+uint64_t _get_queen_moves(Board *board, int square);
+uint64_t _get_king_moves(Board *board, int square);
+
+uint64_t _get_checkmask(Board *board);
+
+uint64_t _get_pawn_captures_all(Board *board);
 
 uint64_t _init_bishop_attacks_helper(int square, uint64_t subset);
 uint64_t _init_rook_attacks_helper(int square, uint64_t subset);
