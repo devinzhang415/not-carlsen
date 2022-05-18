@@ -230,69 +230,6 @@ uint64_t _get_king_moves(Board *board, int square) {
 
 
 /**
- * @param board 
- * @return all squares unless in check, then the path between the king and the attacking piece(s)
- */
-uint64_t _get_checkmask(Board *board) {
-    if (board->turn == WHITE) {
-        uint64_t checkmask = 0;
-        uint64_t king_bb = board->w_king;
-
-        int king_square = get_lsb(king_bb);
-
-        board->occupied ^= king_bb; // King is removed from calculations in case of moving backwards into the same sliding check
-
-        uint64_t pawn_attacks = (((king_bb << 9) & ~BB_FILE_A) | ((king_bb << 7) & ~BB_FILE_H)) & board->b_pawns;
-        checkmask |= pawn_attacks;
-
-        uint64_t knight_attacks = _get_knight_moves(board, king_square) & board->b_knights;
-        checkmask |= knight_attacks;
-
-        int bishop_square = get_lsb(_get_bishop_moves(board, king_square) & board->b_bishops);
-        if (bishop_square != -1) checkmask |= get_ray_between(king_square, bishop_square);
-
-        int rook_square = get_lsb(_get_rook_moves(board, king_square) & board->b_rooks);
-        if (rook_square != -1) checkmask |= get_ray_between(king_square, rook_square);
-
-        int queen_square = get_lsb(_get_queen_moves(board, king_square) & board->b_queens);
-        if (queen_square != -1) checkmask |= get_ray_between(king_square, queen_square);
-
-        board->occupied |= king_bb;
-
-        if (!checkmask) return BB_ALL; // If no checks, no checkmask restrictions
-        return checkmask;
-    } else {
-        uint64_t checkmask = 0;
-        uint64_t king_bb = board->b_king;
-
-        int king_square = get_lsb(king_bb);
-
-        board->occupied ^= king_bb; // King is removed from calculations in case of moving backwards into the same sliding check
-
-        uint64_t pawn_attacks = (((king_bb >> 9) & ~BB_FILE_H) | ((king_bb >> 7) & ~BB_FILE_A)) & board->w_pawns;
-        checkmask |= pawn_attacks;
-
-        uint64_t knight_attacks = _get_knight_moves(board, king_square) & board->w_knights;
-        checkmask |= knight_attacks;
-
-        int bishop_square = get_lsb(_get_bishop_moves(board, king_square) & board->w_bishops);
-        if (bishop_square != -1) checkmask |= get_ray_between(king_square, bishop_square);
-
-        int rook_square = get_lsb(_get_rook_moves(board, king_square) & board->w_rooks);
-        if (rook_square != -1) checkmask |= get_ray_between(king_square, rook_square);
-
-        int queen_square = get_lsb(_get_queen_moves(board, king_square) & board->w_queens);
-        if (queen_square != -1) checkmask |= get_ray_between(king_square, queen_square);
-
-        board->occupied |= king_bb;
-
-        if (!checkmask) return BB_ALL; // If no checks, no checkmask restrictions
-        return checkmask;
-    }
-}
-
-
-/**
  * @param board
  * @return where all the pawns can capture, including en passant (excludes non-capture pushes)
  */
@@ -323,6 +260,69 @@ uint64_t _get_pawn_captures_all(Board *board) {
         }
 
         return captures;
+    }
+}
+
+
+/**
+ * @param board 
+ * @return all squares unless in check, then the path between the king and the attacking piece(s)
+ */
+uint64_t _get_checkmask(Board *board) {
+    if (board->turn == WHITE) {
+        uint64_t checkmask = 0;
+        uint64_t king_bb = board->w_king;
+
+        int king_square = get_lsb(king_bb);
+
+        board->occupied ^= king_bb; // King is removed from calculations in case of moving backwards into the same sliding check
+
+        uint64_t pawn_attacks = (((king_bb << 9) & ~BB_FILE_A) | ((king_bb << 7) & ~BB_FILE_H)) & board->b_pawns;
+        checkmask |= pawn_attacks;
+
+        uint64_t knight_attacks = _get_knight_moves(board, king_square) & board->b_knights;
+        checkmask |= knight_attacks;
+
+        int bishop_square = get_lsb(_get_bishop_moves(board, king_square) & board->b_bishops);
+        if (bishop_square != -1) checkmask |= get_ray_between(king_square, bishop_square);
+
+        int rook_square = get_lsb(_get_rook_moves(board, king_square) & board->b_rooks);
+        if (rook_square != -1) checkmask |= get_ray_between(king_square, rook_square);
+
+        int queen_square = get_lsb(_get_queen_moves(board, king_square) & board->b_queens);
+        if (queen_square != -1) checkmask |= get_ray_between(king_square, queen_square);
+
+        board->occupied |= king_bb;
+
+        if (checkmask == 0) return BB_ALL; // If no checks, no checkmask restrictions
+        return checkmask;
+    } else {
+        uint64_t checkmask = 0;
+        uint64_t king_bb = board->b_king;
+
+        int king_square = get_lsb(king_bb);
+
+        board->occupied ^= king_bb; // King is removed from calculations in case of moving backwards into the same sliding check
+
+        uint64_t pawn_attacks = (((king_bb >> 9) & ~BB_FILE_H) | ((king_bb >> 7) & ~BB_FILE_A)) & board->w_pawns;
+        checkmask |= pawn_attacks;
+
+        uint64_t knight_attacks = _get_knight_moves(board, king_square) & board->w_knights;
+        checkmask |= knight_attacks;
+
+        int bishop_square = get_lsb(_get_bishop_moves(board, king_square) & board->w_bishops);
+        if (bishop_square != -1) checkmask |= get_ray_between(king_square, bishop_square);
+
+        int rook_square = get_lsb(_get_rook_moves(board, king_square) & board->w_rooks);
+        if (rook_square != -1) checkmask |= get_ray_between(king_square, rook_square);
+
+        int queen_square = get_lsb(_get_queen_moves(board, king_square) & board->w_queens);
+        if (queen_square != -1) checkmask |= get_ray_between(king_square, queen_square);
+
+        board->occupied |= king_bb;
+
+        if (checkmask == 0) return BB_ALL; // If no checks, no checkmask restrictions
+        return checkmask;
     }
 }
 
