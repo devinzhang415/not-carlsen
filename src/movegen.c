@@ -136,21 +136,22 @@ void init_rook_attacks(void) {
 
 /**
  * @param board
+ * @param color the color of the pawns
  * @return where all the pawns can move
  */
-uint64_t _get_pawn_moves_all(Board *board) {
-    if (board->turn == WHITE) {
+uint64_t _get_pawn_moves_all(Board *board, bool color) {
+    if (color == WHITE) {
         uint64_t pawns = board->w_pawns;
         uint64_t single_push = (pawns << 8) & ~board->occupied;
         uint64_t double_push = ((single_push & BB_RANK_3) << 8) & ~board->occupied;
-        uint64_t captures = _get_pawn_captures_all(board);
+        uint64_t captures = _get_pawn_captures_all(board, color);
 
         return single_push | double_push | captures;
     } else {
         uint64_t pawns = board->b_pawns;
         uint64_t single_push = (pawns >> 8) & ~board->occupied;
         uint64_t double_push = ((single_push & BB_RANK_6) >> 8) & ~board->occupied;
-        uint64_t captures = _get_pawn_captures_all(board);
+        uint64_t captures = _get_pawn_captures_all(board, color);
 
         return single_push | double_push | captures;
     }
@@ -159,50 +160,54 @@ uint64_t _get_pawn_moves_all(Board *board) {
 
 /**
  * @param board
+ * @param color the color of the knights
  * @param square the square the knight is on
  * @return where the knight can move from the given square
  */
-uint64_t _get_knight_moves(Board *board, int square) {
+uint64_t _get_knight_moves(Board *board, bool color, int square) {
     uint64_t moves = BB_KNIGHT_ATTACKS[square];
 
-    return (board->turn == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+    return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
 /**
  * @param board
+ * @param color the color of the bishops
  * @param square the square the bishop is on
  * @return where the bishop can move from the given square
  */
-uint64_t _get_bishop_moves(Board *board, int square) {
+uint64_t _get_bishop_moves(Board *board, bool color, int square) {
     uint64_t occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
     uint64_t key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t moves = BB_BISHOP_ATTACKS[square][key];
 
-    return (board->turn == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+    return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
 /**
  * @param board
+ * @param color the color of the rooks
  * @param square the square the bishop is on
  * @return where the bishop can move from the given square
  */
-uint64_t _get_rook_moves(Board *board, int square) {
+uint64_t _get_rook_moves(Board *board, bool color, int square) {
     uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
     uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
     uint64_t moves = BB_ROOK_ATTACKS[square][key];
 
-    return (board->turn == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+    return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
 /**
  * @param board
+ * @param color the color of the queens
  * @param square the square the queen is on
  * @return where the queen can move from the given square
  */
-uint64_t _get_queen_moves(Board *board, int square) {
+uint64_t _get_queen_moves(Board *board, bool color, int square) {
     uint64_t bishop_occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
     uint64_t bishop_key = (bishop_occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t bishop_moves = BB_BISHOP_ATTACKS[square][bishop_key];
@@ -213,28 +218,32 @@ uint64_t _get_queen_moves(Board *board, int square) {
 
     uint64_t moves = bishop_moves | rook_moves;
 
-    return (board->turn == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+    return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
 /**
  * @param board
+ * @param color the color of the king
  * @param square the square the king is on
  * @return where the king can move from the given square (excludes castling)
  */
-uint64_t _get_king_moves(Board *board, int square) {
+uint64_t _get_king_moves(Board *board, bool color, int square) {
     uint64_t moves = BB_KING_ATTACKS[square];
 
-    return (board->turn == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+    return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
 }
 
 
 /**
  * @param board
+ * @param color the color of the pawns
  * @return where all the pawns can capture, including en passant (excludes non-capture pushes)
+ * 
+ * TODO unused?
  */
-uint64_t _get_pawn_captures_all(Board *board) {
-    if (board->turn == WHITE) {
+uint64_t _get_pawn_captures_all(Board *board, bool color) {
+    if (color == WHITE) {
         uint64_t pawns = board->w_pawns;
         uint64_t captures = (((pawns << 9) & ~BB_FILE_A) | ((pawns << 7) & ~BB_FILE_H))
                             & board->b_occupied;
@@ -266,13 +275,13 @@ uint64_t _get_pawn_captures_all(Board *board) {
 
 /**
  * @param board 
+ * @param color the side to move
  * @return all squares unless in check, then the path between the king and the attacking piece(s)
  */
-uint64_t _get_checkmask(Board *board) {
-    if (board->turn == WHITE) {
+uint64_t _get_checkmask(Board *board, bool color) {
+    if (color == WHITE) {
         uint64_t checkmask = 0;
         uint64_t king_bb = board->w_king;
-
         int king_square = get_lsb(king_bb);
 
         board->occupied ^= king_bb; // King is removed from calculations in case of moving backwards into the same sliding check
@@ -280,17 +289,29 @@ uint64_t _get_checkmask(Board *board) {
         uint64_t pawn_attacks = (((king_bb << 9) & ~BB_FILE_A) | ((king_bb << 7) & ~BB_FILE_H)) & board->b_pawns;
         checkmask |= pawn_attacks;
 
-        uint64_t knight_attacks = _get_knight_moves(board, king_square) & board->b_knights;
+        uint64_t knight_attacks = _get_knight_moves(board, color, king_square) & board->b_knights;
         checkmask |= knight_attacks;
 
-        int bishop_square = get_lsb(_get_bishop_moves(board, king_square) & board->b_bishops);
-        if (bishop_square != -1) checkmask |= get_ray_between(king_square, bishop_square);
+        uint64_t bishop_attacks = _get_bishop_moves(board, color, king_square) & board->b_bishops;
+        int bishop_square = pull_lsb(&bishop_attacks);
+        while (bishop_square != - 1) {
+            checkmask |= get_ray_between(king_square, bishop_square);
+            bishop_square = pull_lsb(&bishop_attacks);
+        }
 
-        int rook_square = get_lsb(_get_rook_moves(board, king_square) & board->b_rooks);
-        if (rook_square != -1) checkmask |= get_ray_between(king_square, rook_square);
+        uint64_t rook_attacks = _get_rook_moves(board, color, king_square) & board->b_rooks;
+        int rook_square = pull_lsb(&rook_attacks);
+        while (rook_square != - 1) {
+            checkmask |= get_ray_between(king_square, rook_square);
+            rook_square = pull_lsb(&rook_attacks);
+        }
 
-        int queen_square = get_lsb(_get_queen_moves(board, king_square) & board->b_queens);
-        if (queen_square != -1) checkmask |= get_ray_between(king_square, queen_square);
+        uint64_t queen_attacks = _get_queen_moves(board, color, king_square) & board->b_queens;
+        int queen_square = pull_lsb(&queen_attacks);
+        while (queen_square != - 1) {
+            checkmask |= get_ray_between(king_square, queen_square);
+            queen_square = pull_lsb(&queen_attacks);
+        }
 
         board->occupied |= king_bb;
 
@@ -299,7 +320,6 @@ uint64_t _get_checkmask(Board *board) {
     } else {
         uint64_t checkmask = 0;
         uint64_t king_bb = board->b_king;
-
         int king_square = get_lsb(king_bb);
 
         board->occupied ^= king_bb; // King is removed from calculations in case of moving backwards into the same sliding check
@@ -307,22 +327,61 @@ uint64_t _get_checkmask(Board *board) {
         uint64_t pawn_attacks = (((king_bb >> 9) & ~BB_FILE_H) | ((king_bb >> 7) & ~BB_FILE_A)) & board->w_pawns;
         checkmask |= pawn_attacks;
 
-        uint64_t knight_attacks = _get_knight_moves(board, king_square) & board->w_knights;
+        uint64_t knight_attacks = _get_knight_moves(board, color, king_square) & board->w_knights;
         checkmask |= knight_attacks;
 
-        int bishop_square = get_lsb(_get_bishop_moves(board, king_square) & board->w_bishops);
+        int bishop_square = get_lsb(_get_bishop_moves(board, color, king_square) & board->w_bishops);
         if (bishop_square != -1) checkmask |= get_ray_between(king_square, bishop_square);
 
-        int rook_square = get_lsb(_get_rook_moves(board, king_square) & board->w_rooks);
+        int rook_square = get_lsb(_get_rook_moves(board, color, king_square) & board->w_rooks);
         if (rook_square != -1) checkmask |= get_ray_between(king_square, rook_square);
 
-        int queen_square = get_lsb(_get_queen_moves(board, king_square) & board->w_queens);
+        int queen_square = get_lsb(_get_queen_moves(board, color, king_square) & board->w_queens);
         if (queen_square != -1) checkmask |= get_ray_between(king_square, queen_square);
 
         board->occupied |= king_bb;
 
         if (checkmask == 0) return BB_ALL; // If no checks, no checkmask restrictions
         return checkmask;
+    }
+}
+
+
+/**
+ * @brief 
+ * 
+ * @param board 
+ * @param color 
+ * @return uint64_t 
+ */
+uint64_t _get_pinmask(Board *board, bool color) {
+    if (color == WHITE) {
+        // uint64_t pinmask = 0;
+        // uint64_t king_bb = board->w_king;
+        // int king_square = get_lsb(king_bb);
+
+        // uint64_t rays = _get_queen_moves(board, BLACK, king_square);
+        // uint64_t pot_pinned = rays & board->w_occupied;
+
+        // if (pot_pinned == 0) return BB_ALL;
+
+        // board->occupied ^= pot_pinned;
+
+        // uint64_t new_rays = _get_queen_moves(board, WHITE, king_square);
+        // uint64_t pot_pinners = new_rays & board->b_occupied;
+
+        // while (pot_pinners) {
+        //     int pot_pinner_square = get_lsb(pot_pinners);
+        //     uint64_t pin_ray = get_ray_between(king_square, pot_pinner_square);
+        //     if (pin_ray & pot_pinned) pinmask |= pin_ray;
+        //     pot_pinners &= pot_pinners - 1;
+        // }
+
+        // board->occupied |= pot_pinned;
+
+        // return pinmask;
+    } else {
+
     }
 }
 

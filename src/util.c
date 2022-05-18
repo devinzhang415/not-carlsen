@@ -182,8 +182,8 @@ uint64_t get_reverse_bb(uint64_t bb) {
 
 /**
  * @param bb 
- * @return the index of the least-significant bit from the bb,
- * range [A1, H8]
+ * @return the index of the least-significant bit from the bb, range [A1, H8].
+ *         returns -1 if no bit is set
  */
 int get_lsb(uint64_t bb) {
     return __builtin_ffsll(bb) - 1;
@@ -208,7 +208,7 @@ void init_rays(void) {
  * @param square2 
  * @return the ray (rank, file, or diagonal) that connects the two squares, if any.
  *         for example, there is a ray between a1 and c3, but not betweem a1 and b3.
- *         returns empty bitboard if the two squares are the same
+ *         returns empty bitboard if the two squares are equal
  */
 uint64_t _get_ray(int square1, int square2) {
     if (square1 == square2) return 0;
@@ -237,5 +237,16 @@ uint64_t _get_ray(int square1, int square2) {
  * @return the bitboard of the ray between the two squares (including the squares), if any
  */
 uint64_t get_ray_between(int square1, int square2) {
-    return BB_RAYS[square1][square2] & ((BB_ALL << square1) ^ (BB_ALL << square2)) | BB_SQUARES[square2];
+    return (BB_RAYS[square1][square2] & ((BB_ALL << square1) ^ (BB_ALL << square2))) | BB_SQUARES[square2];
+}
+
+
+/**
+ * @param bb 
+ * @return the index of the lsb and removes it from the bitboard
+ */
+int pull_lsb(uint64_t *bb) {
+    int square = get_lsb(*bb);
+    *bb &= *bb - 1;
+    return square;
 }

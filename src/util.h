@@ -105,5 +105,7 @@ uint64_t _get_ray(int square1, int square2);
 
 uint64_t get_ray_between(int square1, int square2);
 
+int pull_lsb(uint64_t *bb);
+
 
 #endif
