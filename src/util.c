@@ -44,7 +44,7 @@ const uint64_t BB_RANK_7 = BB_RANK_1 << 48;
 const uint64_t BB_RANK_8 = BB_RANK_1 << 56;
 const uint64_t BB_RANKS[8] = {BB_RANK_1, BB_RANK_2, BB_RANK_3, BB_RANK_4, BB_RANK_5, BB_RANK_6, BB_RANK_7, BB_RANK_8};
 
-const uint64_t BB_DIAGONAL_1 = 0x80;
+const uint64_t BB_DIAGONAL_1 = 0x80; // Numbered from lower right to upper left
 const uint64_t BB_DIAGONAL_2 = 0x8040;
 const uint64_t BB_DIAGONAL_3 = 0x804020;
 const uint64_t BB_DIAGONAL_4 = 0x80402010;
@@ -63,7 +63,7 @@ const uint64_t BB_DIAGONALS[15] = {BB_DIAGONAL_1, BB_DIAGONAL_2, BB_DIAGONAL_3, 
                                    BB_DIAGONAL_7, BB_DIAGONAL_8, BB_DIAGONAL_9, BB_DIAGONAL_10, BB_DIAGONAL_11, BB_DIAGONAL_12,
                                    BB_DIAGONAL_13, BB_DIAGONAL_14, BB_DIAGONAL_15};
 
-const uint64_t BB_ANTI_DIAGONAL_1 = 0x1;
+const uint64_t BB_ANTI_DIAGONAL_1 = 0x1; // Numbered from lower left to upper right
 const uint64_t BB_ANTI_DIAGONAL_2 = 0x102;
 const uint64_t BB_ANTI_DIAGONAL_3 = 0x10204;
 const uint64_t BB_ANTI_DIAGONAL_4 = 0x1020408;
@@ -206,7 +206,8 @@ void init_rays(void) {
 /**
  * @param square1 
  * @param square2 
- * @return the rank, file, or diagonal that connects the two squares, if any.
+ * @return the ray (rank, file, or diagonal) that connects the two squares, if any.
+ *         for example, there is a ray between a1 and c3, but not betweem a1 and b3.
  *         returns empty bitboard if the two squares are the same
  */
 uint64_t _get_ray(int square1, int square2) {
@@ -235,6 +236,6 @@ uint64_t _get_ray(int square1, int square2) {
  * @param square2 
  * @return the bitboard of the ray between the two squares (including the squares), if any
  */
-uint64_t _get_ray_between(int square1, int square2) {
+uint64_t get_ray_between(int square1, int square2) {
     return BB_RAYS[square1][square2] & ((BB_ALL << square1) ^ (BB_ALL << square2)) | BB_SQUARES[square2];
 }

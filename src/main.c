@@ -6,12 +6,11 @@
 int main(void) {
     Board board;
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    char* fen = "8/8/8/1bb1bb2/3b4/1p6/2K4r/8 w - - 0 1";
+    char* fen = "3r3k/8/8/8/8/3q4/2K5/8 w - - 0 1";
 
     init_board(&board, fen);
 
-    print_bb(_get_checkmask(&board));
-    // print_bb(_get_ray_between(C2, F5));
+    print_bb(_get_checkmask(&board) & _get_king_moves(&board, C2));
 
     // while (attackers) {
     //     int square = get_lsb(attackers);
