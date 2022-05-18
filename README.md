@@ -3,7 +3,6 @@ Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-
 
 Special thanks to:
 - github.com/nkarve for their magic bitboard generation
-- Dominic Hofer and Peter Ellis Jone's legal move generation guides
 
 ------
 
@@ -14,9 +13,6 @@ Special thanks to:
 ------
 
 ## Devlog
-5/17/22 v0.1.5
-> Began legal move generator by implementing checkmasks (a bitboard which restricts the legal moves when in check).
-
 5/9/22 v0.1.4
 > Added pawn move (single push, double push, capture, and en passant) wrapper functions.
 
