@@ -242,8 +242,9 @@ uint64_t get_ray_between(int square1, int square2) {
 
 
 /**
+ * @brief removes the least-significant bit from the bitboard and returns it
  * @param bb 
- * @return the index of the lsb and removes it from the bitboard
+ * @return the least-significant bit
  */
 int pull_lsb(uint64_t *bb) {
     int square = get_lsb(*bb);

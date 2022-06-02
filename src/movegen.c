@@ -135,6 +135,55 @@ void init_rook_attacks(void) {
 
 
 /**
+ * @brief Get the pseudolegal moves object
+ * 
+ * @param board 
+ * @param color the side to move
+ * @return Move* 
+ */
+Move* get_pseudolegal_moves(Board *board, bool color) {
+    Move moves[1000]; // TODO
+    int i = 0;
+
+    uint64_t pieces = (color == WHITE) ? board->w_occupied : board->b_occupied;
+    while (pieces) {
+        int from = pull_lsb(pieces);
+        char piece = board->mailbox[piece];
+
+        uint64_t moves_bb;
+        switch (toupper(piece)) {
+            case 'P':
+
+                break;
+            case 'N':
+                moves_bb = _get_knight_moves(board, color, from);
+                break;
+            case 'B':
+                moves_bb = _get_bishop_moves(board, color, from);
+                break;
+            case 'R':
+                moves_bb = _get_rook_moves(board, color, from);
+                break;
+            case 'Q':
+                moves_bb = _get_queen_moves(board, color, from);
+                break;
+            case 'K':
+                moves_bb = _get_king_moves(board, color, from);
+                break;
+        }
+
+        while (moves_bb) {
+            int to = pull_lsb(moves_bb);
+            Move move = {from, to, 0};
+            moves[i++] = move;
+        }
+    }
+
+    return moves;
+}
+
+
+/**
  * @param board
  * @param color the color of the pawns
  * @return where all the pawns can move
@@ -142,16 +191,36 @@ void init_rook_attacks(void) {
 uint64_t _get_pawn_moves_all(Board *board, bool color) {
     if (color == WHITE) {
         uint64_t pawns = board->w_pawns;
+
         uint64_t single_push = (pawns << 8) & ~board->occupied;
         uint64_t double_push = ((single_push & BB_RANK_3) << 8) & ~board->occupied;
-        uint64_t captures = _get_pawn_captures_all(board, color);
+
+        uint64_t captures = (((pawns << 9) & ~BB_FILE_A) | ((pawns << 7) & ~BB_FILE_H))
+                            & board->b_occupied;
+
+        if (board->en_passant_square != -1) {
+            uint64_t ep_pawns = pawns & BB_RANK_5;
+            uint64_t ep_captures = (((ep_pawns << 9) & ~BB_FILE_A) | ((ep_pawns << 7) & ~BB_FILE_H))
+                                   & BB_SQUARES[board->en_passant_square];
+            captures |= ep_captures;
+        }
 
         return single_push | double_push | captures;
     } else {
         uint64_t pawns = board->b_pawns;
+
         uint64_t single_push = (pawns >> 8) & ~board->occupied;
         uint64_t double_push = ((single_push & BB_RANK_6) >> 8) & ~board->occupied;
-        uint64_t captures = _get_pawn_captures_all(board, color);
+
+        uint64_t captures = (((pawns >> 9) & ~BB_FILE_H) | ((pawns >> 7) & ~BB_FILE_A))
+                            & board->w_occupied;
+
+        if (board->en_passant_square != -1) {
+            uint64_t ep_pawns = pawns & BB_RANK_4;
+            uint64_t ep_captures = (((ep_pawns >> 9) & ~BB_FILE_H) | ((ep_pawns >> 7) & ~BB_FILE_A))
+                                   & BB_SQUARES[board->en_passant_square];
+            captures |= ep_captures;
+        }
 
         return single_push | double_push | captures;
     }
@@ -232,44 +301,6 @@ uint64_t _get_king_moves(Board *board, bool color, int square) {
     uint64_t moves = BB_KING_ATTACKS[square];
 
     return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
-}
-
-
-/**
- * @param board
- * @param color the color of the pawns
- * @return where all the pawns can capture, including en passant (excludes non-capture pushes)
- * 
- * TODO unused?
- */
-uint64_t _get_pawn_captures_all(Board *board, bool color) {
-    if (color == WHITE) {
-        uint64_t pawns = board->w_pawns;
-        uint64_t captures = (((pawns << 9) & ~BB_FILE_A) | ((pawns << 7) & ~BB_FILE_H))
-                            & board->b_occupied;
-
-        if (board->en_passant_square != -1) {
-            uint64_t ep_pawns = pawns & BB_RANK_5;
-            uint64_t ep_captures = (((ep_pawns << 9) & ~BB_FILE_A) | ((ep_pawns << 7) & ~BB_FILE_H))
-                                   & BB_SQUARES[board->en_passant_square];
-            captures |= ep_captures;
-        }
-
-        return captures;
-    } else {
-        uint64_t pawns = board->b_pawns;
-        uint64_t captures = (((pawns >> 9) & ~BB_FILE_H) | ((pawns >> 7) & ~BB_FILE_A))
-                            & board->w_occupied;
-
-        if (board->en_passant_square != -1) {
-            uint64_t ep_pawns = pawns & BB_RANK_4;
-            uint64_t ep_captures = (((ep_pawns >> 9) & ~BB_FILE_H) | ((ep_pawns >> 7) & ~BB_FILE_A))
-                                   & BB_SQUARES[board->en_passant_square];
-            captures |= ep_captures;
-        }
-
-        return captures;
-    }
 }
 
 
