@@ -15,7 +15,7 @@ Special thanks to:
 
 ## Devlog
 6/2/22 v0.2
-> Implemented a pseudolegal move generator.
+> Implemented a pseudolegal move generator and move stack.
 >
 > Changed pawn move generator from setwise to individual.
 
