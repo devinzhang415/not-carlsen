@@ -1,8 +1,10 @@
 #include <stdint.h>
+#include <ctype.h> 
 #include "movegen.h"
 #include "util.h"
 #include "board.h"
 
+#include <stdio.h>
 
 // Pseudo-legal bitboards indexed by square to determine where that piece can attack
 const uint64_t BB_KNIGHT_ATTACKS[64] = {
@@ -142,18 +144,18 @@ void init_rook_attacks(void) {
  * @return Move* 
  */
 Move* get_pseudolegal_moves(Board *board, bool color) {
-    Move moves[1000]; // TODO
-    int i = 0;
+    static Move moves[1000]; // TODO
+    size_t i = 0;
 
     uint64_t pieces = (color == WHITE) ? board->w_occupied : board->b_occupied;
     while (pieces) {
-        int from = pull_lsb(pieces);
-        char piece = board->mailbox[piece];
+        int from = pull_lsb(&pieces);
+        char piece = board->mailbox[from];
 
         uint64_t moves_bb;
         switch (toupper(piece)) {
             case 'P':
-
+                moves_bb = _get_pawn_moves(board, color, from);
                 break;
             case 'N':
                 moves_bb = _get_knight_moves(board, color, from);
@@ -173,8 +175,9 @@ Move* get_pseudolegal_moves(Board *board, bool color) {
         }
 
         while (moves_bb) {
-            int to = pull_lsb(moves_bb);
-            Move move = {from, to, 0};
+            int to = pull_lsb(&moves_bb);
+            int flag = 0; // TODO
+            Move move = {from, to, flag};
             moves[i++] = move;
         }
     }
@@ -185,41 +188,42 @@ Move* get_pseudolegal_moves(Board *board, bool color) {
 
 /**
  * @param board
- * @param color the color of the pawns
- * @return where all the pawns can move
+ * @param color the color of the pawn
+ * @param square the square the pawn is on
+ * @return where the pawn can move from the given square
  */
-uint64_t _get_pawn_moves_all(Board *board, bool color) {
+uint64_t _get_pawn_moves(Board *board, bool color, int square) {
     if (color == WHITE) {
-        uint64_t pawns = board->w_pawns;
+        uint64_t pawn = BB_SQUARES[square];
 
-        uint64_t single_push = (pawns << 8) & ~board->occupied;
+        uint64_t single_push = (pawn << 8) & ~board->occupied;
         uint64_t double_push = ((single_push & BB_RANK_3) << 8) & ~board->occupied;
 
-        uint64_t captures = (((pawns << 9) & ~BB_FILE_A) | ((pawns << 7) & ~BB_FILE_H))
+        uint64_t captures = (((pawn << 9) & ~BB_FILE_A) | ((pawn << 7) & ~BB_FILE_H))
                             & board->b_occupied;
 
         if (board->en_passant_square != -1) {
-            uint64_t ep_pawns = pawns & BB_RANK_5;
-            uint64_t ep_captures = (((ep_pawns << 9) & ~BB_FILE_A) | ((ep_pawns << 7) & ~BB_FILE_H))
+            uint64_t ep_pawn = pawn & BB_RANK_5;
+            uint64_t ep_capture = (((ep_pawn << 9) & ~BB_FILE_A) | ((ep_pawn << 7) & ~BB_FILE_H))
                                    & BB_SQUARES[board->en_passant_square];
-            captures |= ep_captures;
+            captures |= ep_capture;
         }
 
         return single_push | double_push | captures;
     } else {
-        uint64_t pawns = board->b_pawns;
+        uint64_t pawn = BB_SQUARES[square];
 
-        uint64_t single_push = (pawns >> 8) & ~board->occupied;
+        uint64_t single_push = (pawn >> 8) & ~board->occupied;
         uint64_t double_push = ((single_push & BB_RANK_6) >> 8) & ~board->occupied;
 
-        uint64_t captures = (((pawns >> 9) & ~BB_FILE_H) | ((pawns >> 7) & ~BB_FILE_A))
+        uint64_t captures = (((pawn >> 9) & ~BB_FILE_H) | ((pawn >> 7) & ~BB_FILE_A))
                             & board->w_occupied;
 
         if (board->en_passant_square != -1) {
-            uint64_t ep_pawns = pawns & BB_RANK_4;
-            uint64_t ep_captures = (((ep_pawns >> 9) & ~BB_FILE_H) | ((ep_pawns >> 7) & ~BB_FILE_A))
+            uint64_t ep_pawn = pawn & BB_RANK_4;
+            uint64_t ep_capture = (((ep_pawn >> 9) & ~BB_FILE_H) | ((ep_pawn >> 7) & ~BB_FILE_A))
                                    & BB_SQUARES[board->en_passant_square];
-            captures |= ep_captures;
+            captures |= ep_capture;
         }
 
         return single_push | double_push | captures;
@@ -229,7 +233,7 @@ uint64_t _get_pawn_moves_all(Board *board, bool color) {
 
 /**
  * @param board
- * @param color the color of the knights
+ * @param color the color of the knight
  * @param square the square the knight is on
  * @return where the knight can move from the given square
  */
@@ -242,7 +246,7 @@ uint64_t _get_knight_moves(Board *board, bool color, int square) {
 
 /**
  * @param board
- * @param color the color of the bishops
+ * @param color the color of the bishop
  * @param square the square the bishop is on
  * @return where the bishop can move from the given square
  */
@@ -257,7 +261,7 @@ uint64_t _get_bishop_moves(Board *board, bool color, int square) {
 
 /**
  * @param board
- * @param color the color of the rooks
+ * @param color the color of the rook
  * @param square the square the bishop is on
  * @return where the bishop can move from the given square
  */
@@ -272,7 +276,7 @@ uint64_t _get_rook_moves(Board *board, bool color, int square) {
 
 /**
  * @param board
- * @param color the color of the queens
+ * @param color the color of the queen
  * @param square the square the queen is on
  * @return where the queen can move from the given square
  */

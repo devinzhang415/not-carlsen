@@ -13,6 +13,11 @@ Special thanks to:
 ------
 
 ## Devlog
+6/2/22 v0.2
+> Implemented a pseudolegal move generator.
+>
+> Changed pawn move generator from setwise to individual.
+
 5/9/22 v0.1.4
 > Added pawn move (single push, double push, capture, and en passant) wrapper functions.
 

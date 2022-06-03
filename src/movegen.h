@@ -38,7 +38,7 @@ void init_rook_attacks(void);
 
 Move* get_pseudolegal_moves(Board *board, bool color);
 
-uint64_t _get_pawn_moves_all(Board *board, bool color);
+uint64_t _get_pawn_moves(Board *board, bool color, int square);
 uint64_t _get_knight_moves(Board *board, bool color, int square);
 uint64_t _get_bishop_moves(Board *board, bool color, int square);
 uint64_t _get_rook_moves(Board *board, bool color, int square);
