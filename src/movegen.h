@@ -2,20 +2,7 @@
 #define MOVEGEN_H
 
 #include <stdint.h>
-#include "board.h"
-
-
-/**
- * @brief Representation of a move using:
- * - square piece is moving from
- * - square piece is moving to
- * - any special characteristic of the move, such as the promotion piece / castling / en passant
- */
-typedef struct Move {
-    int from;
-    int to;
-    int flag;
-} Move;
+#include "util.h"
 
 
 extern const uint64_t BB_KNIGHT_ATTACKS[64];

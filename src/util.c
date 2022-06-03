@@ -191,6 +191,18 @@ int get_lsb(uint64_t bb) {
 
 
 /**
+ * @brief removes the least-significant bit from the bitboard and returns it
+ * @param bb 
+ * @return the least-significant bit
+ */
+int pull_lsb(uint64_t *bb) {
+    int square = get_lsb(*bb);
+    *bb &= *bb - 1;
+    return square;
+}
+
+
+/**
  * @brief Initalizes BB_RAYS[64][64] with all rays that connect from one square to another
  * (see _get_ray())
  */
@@ -200,6 +212,16 @@ void init_rays(void) {
             BB_RAYS[square1][square2] = _get_ray(square1, square2);
         }
     }
+}
+
+
+/**
+ * @param square1 
+ * @param square2 
+ * @return the bitboard of the ray between the two squares (including the squares), if any
+ */
+uint64_t get_ray_between(int square1, int square2) {
+    return (BB_RAYS[square1][square2] & ((BB_ALL << square1) ^ (BB_ALL << square2))) | BB_SQUARES[square2];
 }
 
 
@@ -228,26 +250,4 @@ uint64_t _get_ray(int square1, int square2) {
     if (anti_diagonal & square2_bb) return anti_diagonal;
     
     return 0;
-}
-
-
-/**
- * @param square1 
- * @param square2 
- * @return the bitboard of the ray between the two squares (including the squares), if any
- */
-uint64_t get_ray_between(int square1, int square2) {
-    return (BB_RAYS[square1][square2] & ((BB_ALL << square1) ^ (BB_ALL << square2))) | BB_SQUARES[square2];
-}
-
-
-/**
- * @brief removes the least-significant bit from the bitboard and returns it
- * @param bb 
- * @return the least-significant bit
- */
-int pull_lsb(uint64_t *bb) {
-    int square = get_lsb(*bb);
-    *bb &= *bb - 1;
-    return square;
 }

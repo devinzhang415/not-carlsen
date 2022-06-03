@@ -5,6 +5,82 @@
 #include <stdbool.h>
 
 
+/**
+ * @brief Representation of a move using:
+ * - square piece is moving from
+ * - square piece is moving to
+ * - any special characteristic of the move, such as the promotion piece / castling / en passant
+ */
+typedef struct Move {
+    int from;
+    int to;
+    int flag;
+} Move;
+
+
+enum flags {
+    NONE // TODO, flags for Move struct
+};
+
+
+/**
+ * @brief A stack of all the moves that has been played.
+ * Head is most recent move played.
+ */
+typedef struct Move_Stack {
+    Move *move;
+    struct Move_Stack *next;
+} Move_Stack;
+
+
+/**
+ * @brief Representation of the board using:
+ * - bitboards for every color and piece type
+ * - bitboards of all occupied squares, and the occupied squares of just white/black
+ * - flag denoting whose turn it is
+ * - flags for white/black castling rights kingside/queenside
+ * - en passant target square, if any
+ * - halfmove counter, denoting the number of halfmoves since the last capture or pawn advance
+ * - fullmove counter, denoting the number of cycles of a white move and a black move
+ * 
+ * Includes a mailbox representation for piece-at-square retrieval
+ * Includes a move stack
+ */
+typedef struct Board {
+    char mailbox[64];
+    Move_Stack *stack_head;
+
+    uint64_t w_pawns;
+    uint64_t w_knights;
+    uint64_t w_bishops;
+    uint64_t w_rooks;
+    uint64_t w_queens;
+    uint64_t w_king;
+    uint64_t b_pawns;
+    uint64_t b_knights;
+    uint64_t b_bishops;
+    uint64_t b_rooks;
+    uint64_t b_queens;
+    uint64_t b_king;
+
+    uint64_t occupied;
+    uint64_t w_occupied;
+    uint64_t b_occupied;
+
+    bool turn;
+
+    bool w_kingside_castling_rights;
+    bool w_queenside_castling_rights;
+    bool b_kingside_castling_rights;
+    bool b_queenside_castling_rights;
+
+    int en_passant_square;
+
+    int halfmove_clock;
+    int fullmove_number;
+} Board;
+
+
 enum squares {
     A1, B1, C1, D1, E1, F1, G1, H1,
     A2, B2, C2, D2, E2, F2, G2, H2,
@@ -15,6 +91,7 @@ enum squares {
     A7, B7, C7, D7, E7, F7, G7, H7,
     A8, B8, C8, D8, E8, F8, G8, H8
 };
+
 
 extern const bool WHITE;
 extern const bool BLACK;
@@ -99,13 +176,11 @@ int pop_count(uint64_t bb);
 uint64_t get_reverse_bb(uint64_t bb);
 
 int get_lsb(uint64_t bb);
+int pull_lsb(uint64_t *bb);
 
 void init_rays(void);
-uint64_t _get_ray(int square1, int square2);
-
 uint64_t get_ray_between(int square1, int square2);
-
-int pull_lsb(uint64_t *bb);
+uint64_t _get_ray(int square1, int square2);
 
 
 #endif

@@ -2,9 +2,7 @@
 #include <ctype.h> 
 #include "movegen.h"
 #include "util.h"
-#include "board.h"
 
-#include <stdio.h>
 
 // Pseudo-legal bitboards indexed by square to determine where that piece can attack
 const uint64_t BB_KNIGHT_ATTACKS[64] = {
@@ -144,7 +142,7 @@ void init_rook_attacks(void) {
  * @return Move* 
  */
 Move* get_pseudolegal_moves(Board *board, bool color) {
-    static Move moves[1000]; // TODO
+    static Move moves[1000]; // TODO, should be dynamic
     size_t i = 0;
 
     uint64_t pieces = (color == WHITE) ? board->w_occupied : board->b_occupied;
@@ -176,7 +174,7 @@ Move* get_pseudolegal_moves(Board *board, bool color) {
 
         while (moves_bb) {
             int to = pull_lsb(&moves_bb);
-            int flag = 0; // TODO
+            int flag = NONE; // TODO
             Move move = {from, to, flag};
             moves[i++] = move;
         }
@@ -202,9 +200,8 @@ uint64_t _get_pawn_moves(Board *board, bool color, int square) {
         uint64_t captures = (((pawn << 9) & ~BB_FILE_A) | ((pawn << 7) & ~BB_FILE_H))
                             & board->b_occupied;
 
-        if (board->en_passant_square != -1) {
-            uint64_t ep_pawn = pawn & BB_RANK_5;
-            uint64_t ep_capture = (((ep_pawn << 9) & ~BB_FILE_A) | ((ep_pawn << 7) & ~BB_FILE_H))
+        if (board->en_passant_square != -1 && rank_of(square) + 1 == 5) {
+            uint64_t ep_capture = (((pawn << 9) & ~BB_FILE_A) | ((pawn << 7) & ~BB_FILE_H))
                                    & BB_SQUARES[board->en_passant_square];
             captures |= ep_capture;
         }
@@ -219,9 +216,8 @@ uint64_t _get_pawn_moves(Board *board, bool color, int square) {
         uint64_t captures = (((pawn >> 9) & ~BB_FILE_H) | ((pawn >> 7) & ~BB_FILE_A))
                             & board->w_occupied;
 
-        if (board->en_passant_square != -1) {
-            uint64_t ep_pawn = pawn & BB_RANK_4;
-            uint64_t ep_capture = (((ep_pawn >> 9) & ~BB_FILE_H) | ((ep_pawn >> 7) & ~BB_FILE_A))
+        if (board->en_passant_square != -1 && rank_of(square) + 1 == 4) {
+            uint64_t ep_capture = (((pawn >> 9) & ~BB_FILE_H) | ((pawn >> 7) & ~BB_FILE_A))
                                    & BB_SQUARES[board->en_passant_square];
             captures |= ep_capture;
         }

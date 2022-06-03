@@ -19,9 +19,11 @@ void init_board(Board *board, char *fen) {
     strcpy(fen_copy, fen);
     char *rest = fen_copy;
 
-    for (int i = A1; i < H8; i++) {
+    for (int i = A1; i <= H8; i++) {
         board->mailbox[i] = '-';
     }
+    board->stack_head = NULL;
+
     board->w_pawns = 0;
     board->w_knights = 0;
     board->w_bishops = 0;
@@ -129,8 +131,32 @@ void init_board(Board *board, char *fen) {
     token = strtok_r(rest, " ", &rest);
     board->fullmove_number = atoi(token);
 
-
     init_rays();
     init_bishop_attacks();
     init_rook_attacks();
+}
+
+
+/**
+ * @brief makes the given move
+ * @param board 
+ * @param move 
+ */
+void push(Board *board, Move *move) {
+    Move_Stack *new_node = (Move_Stack*) malloc(sizeof(Move_Stack));
+    new_node->move = move;
+    new_node->next = board->stack_head;
+    board->stack_head = new_node;
+}
+
+
+/**
+ * @brief unmakes the most recent move
+ * @param board 
+
+ */
+void pop(Board *board) {
+    Move_Stack *temp = board->stack_head;
+    board->stack_head = temp->next;
+    free(temp);
 }
