@@ -14,6 +14,9 @@ Special thanks to:
 ------
 
 ## Devlog
+6/5/22 v0.2.1
+> Changed make/unmake to make/copy for move pushing and popping.
+
 6/2/22 v0.2
 > Implemented a pseudolegal move generator and move stack.
 >
