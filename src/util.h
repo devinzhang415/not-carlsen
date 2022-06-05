@@ -5,11 +5,29 @@
 #include <stdbool.h>
 
 
+enum squares {
+    A1, B1, C1, D1, E1, F1, G1, H1,
+    A2, B2, C2, D2, E2, F2, G2, H2,
+    A3, B3, C3, D3, E3, F3, G3, H3,
+    A4, B4, C4, D4, E4, F4, G4, H4,
+    A5, B5, C5, D5, E5, F5, G5, H5,
+    A6, B6, C6, D6, E6, F6, G6, H6,
+    A7, B7, C7, D7, E7, F7, G7, H7,
+    A8, B8, C8, D8, E8, F8, G8, H8
+};
+
+
+enum flags { // TODO, flags for Move struct
+    NONE,
+    PASS
+};
+
+
 /**
- * @brief Representation of a move using:
+ * Representation of a move using:
  * - square piece is moving from
  * - square piece is moving to
- * - any special characteristic of the move, such as the promotion piece / castling / en passant
+ * - any special characteristic of the move
  */
 typedef struct Move {
     int from;
@@ -18,23 +36,8 @@ typedef struct Move {
 } Move;
 
 
-enum flags {
-    NONE // TODO, flags for Move struct
-};
-
-
 /**
- * @brief A stack of all the moves that has been played.
- * Head is most recent move played.
- */
-typedef struct Move_Stack {
-    Move *move;
-    struct Move_Stack *next;
-} Move_Stack;
-
-
-/**
- * @brief Representation of the board using:
+ * Representation of the board using:
  * - bitboards for every color and piece type
  * - bitboards of all occupied squares, and the occupied squares of just white/black
  * - flag denoting whose turn it is
@@ -48,7 +51,6 @@ typedef struct Move_Stack {
  */
 typedef struct Board {
     char mailbox[64];
-    Move_Stack *stack_head;
 
     uint64_t w_pawns;
     uint64_t w_knights;
@@ -81,16 +83,15 @@ typedef struct Board {
 } Board;
 
 
-enum squares {
-    A1, B1, C1, D1, E1, F1, G1, H1,
-    A2, B2, C2, D2, E2, F2, G2, H2,
-    A3, B3, C3, D3, E3, F3, G3, H3,
-    A4, B4, C4, D4, E4, F4, G4, H4,
-    A5, B5, C5, D5, E5, F5, G5, H5,
-    A6, B6, C6, D6, E6, F6, G6, H6,
-    A7, B7, C7, D7, E7, F7, G7, H7,
-    A8, B8, C8, D8, E8, F8, G8, H8
-};
+/**
+ * A stack of all yhe board positions that's been reached and
+ * the moves that got to them.
+ */
+typedef struct Stack {
+    Board *board;
+    Move *move;
+    struct Stack *next;
+} Stack;
 
 
 extern const bool WHITE;
@@ -159,8 +160,10 @@ extern const uint64_t BB_ANTI_DIAGONALS[15];
 
 extern uint64_t BB_RAYS[64][64];
 
+extern Move NULL_MOVE;
 
-int parse_square(char *square);
+
+int parse_square(char* square);
 
 bool get_bit(uint64_t bb, int square);
 
@@ -176,7 +179,7 @@ int pop_count(uint64_t bb);
 uint64_t get_reverse_bb(uint64_t bb);
 
 int get_lsb(uint64_t bb);
-int pull_lsb(uint64_t *bb);
+int pull_lsb(uint64_t* bb);
 
 void init_rays(void);
 uint64_t get_ray_between(int square1, int square2);

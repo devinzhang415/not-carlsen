@@ -84,12 +84,14 @@ const uint64_t BB_ANTI_DIAGONALS[15] = {BB_ANTI_DIAGONAL_1, BB_ANTI_DIAGONAL_2, 
 
 uint64_t BB_RAYS[64][64];
 
+Move NULL_MOVE = {A1, A1, PASS};
+
 
 /**
  * @param square the string of the square name, ie "A1."
  * @return the square's integer value.
  */
-int parse_square(char *square) {
+int parse_square(char* square) {
     int file = square[0] - 'a';
     int rank = square[1] - '0';
     return 8 * (rank - 1) + file;
@@ -107,7 +109,7 @@ bool get_bit(uint64_t bb, int square) {
 
 
 /**
- * @brief Prints the binary representation of the bitboard.
+ * Prints the binary representation of the bitboard.
  * @param bb the bitboard.
  */
 void print_bb(uint64_t bb) {
@@ -191,11 +193,11 @@ int get_lsb(uint64_t bb) {
 
 
 /**
- * @brief removes the least-significant bit from the bitboard and returns it
+ * removes the least-significant bit from the bitboard and returns it
  * @param bb 
  * @return the least-significant bit
  */
-int pull_lsb(uint64_t *bb) {
+int pull_lsb(uint64_t* bb) {
     int square = get_lsb(*bb);
     *bb &= *bb - 1;
     return square;
@@ -203,7 +205,7 @@ int pull_lsb(uint64_t *bb) {
 
 
 /**
- * @brief Initalizes BB_RAYS[64][64] with all rays that connect from one square to another
+ * Initalizes BB_RAYS[64][64] with all rays that connect from one square to another
  * (see _get_ray())
  */
 void init_rays(void) {

@@ -10,11 +10,13 @@
 
 
 /**
- * @brief Initalizes the board and sliding piece attack tables
+ * Initalizes the board and other tables
  * @param board the uninitalized board structure
+ * @param stack the board history
  * @param fen the FEN string to initalize the board to. Assumed valid
  */
-void init_board(Board *board, char *fen) {
+void init(Board* board, Stack** stack, char* fen) {
+    // Initalize board
     char fen_copy[100];
     strcpy(fen_copy, fen);
     char *rest = fen_copy;
@@ -22,8 +24,6 @@ void init_board(Board *board, char *fen) {
     for (int i = A1; i <= H8; i++) {
         board->mailbox[i] = '-';
     }
-    board->stack_head = NULL;
-
     board->w_pawns = 0;
     board->w_knights = 0;
     board->w_bishops = 0;
@@ -131,6 +131,14 @@ void init_board(Board *board, char *fen) {
     token = strtok_r(rest, " ", &rest);
     board->fullmove_number = atoi(token);
 
+    // Initalize stack
+    Stack* node = (Stack*) malloc(sizeof(Stack));
+    node->move = &NULL_MOVE;
+    node->board = (*stack)->board;
+    node->next = *stack;
+    *stack = node;
+
+    // Initalize tables
     init_rays();
     init_bishop_attacks();
     init_rook_attacks();
@@ -138,25 +146,35 @@ void init_board(Board *board, char *fen) {
 
 
 /**
- * @brief makes the given move
- * @param board 
- * @param move 
+ * Makes the given move and updates the stack
+ * @param stack 
+ * @param move
  */
-void push(Board *board, Move *move) {
-    Move_Stack *new_node = (Move_Stack*) malloc(sizeof(Move_Stack));
-    new_node->move = move;
-    new_node->next = board->stack_head;
-    board->stack_head = new_node;
+void push(Stack** stack, Move* move) {
+    Stack* node = (Stack*) malloc(sizeof(Stack));
+    node->move = move;
+    node->board = (*stack)->board; // TODO update board
+    node->next = *stack;
+    *stack = node;
 }
 
 
 /**
- * @brief unmakes the most recent move
- * @param board 
-
+ * Unmakes the most recent move and updates the stack
+ * @param stack 
  */
-void pop(Board *board) {
-    Move_Stack *temp = board->stack_head;
-    board->stack_head = temp->next;
+void pop(Stack** stack) {
+    Stack* temp = *stack;
+    *stack = (*stack)->next;
     free(temp);
+}
+
+
+/**
+ * Updates the board with the move
+ * @param board 
+ * @param move 
+ */
+void _make_move(Board* board, Move* move) {
+    
 }

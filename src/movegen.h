@@ -23,14 +23,14 @@ void init_bishop_attacks(void);
 void init_rook_attacks(void);
 
 
-Move* get_pseudolegal_moves(Board *board, bool color);
+Move* get_pseudolegal_moves(Board* board, bool color);
 
-uint64_t _get_pawn_moves(Board *board, bool color, int square);
-uint64_t _get_knight_moves(Board *board, bool color, int square);
-uint64_t _get_bishop_moves(Board *board, bool color, int square);
-uint64_t _get_rook_moves(Board *board, bool color, int square);
-uint64_t _get_queen_moves(Board *board, bool color, int square);
-uint64_t _get_king_moves(Board *board, bool color, int square);
+uint64_t _get_pawn_moves(Board* board, bool color, int square);
+uint64_t _get_knight_moves(Board* board, bool color, int square);
+uint64_t _get_bishop_moves(Board* board, bool color, int square);
+uint64_t _get_rook_moves(Board* board, bool color, int square);
+uint64_t _get_queen_moves(Board* board, bool color, int square);
+uint64_t _get_king_moves(Board* board, bool color, int square);
 
 
 uint64_t _init_bishop_attacks_helper(int square, uint64_t subset);
