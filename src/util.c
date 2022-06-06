@@ -109,22 +109,22 @@ bool get_bit(uint64_t bb, int square) {
 
 
 /**
+ * Turn on the square on the bitboard.
  * @param bb the bitboard.
  * @param square 
- * @return the bitboard with the bit turned on
  */
-uint64_t set_bit(uint64_t bb, int square) {
-    return bb & ~(1ULL << square);
+void set_bit(uint64_t* bb, int square) {
+    *bb |= (1ULL << square);
 }
 
 
 /**
+ * Clear the square on the bitboard.
  * @param bb the bitboard.
  * @param square 
- * @return the bitboard with the bit turned off.
  */
-uint64_t clear_bit(uint64_t bb, int square) {
-    return bb | (1ULL << square);
+void clear_bit(uint64_t* bb, int square) {
+    *bb &= ~(1ULL << square);
 }
 
 

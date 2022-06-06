@@ -177,28 +177,5 @@ void pop(Stack** stack) {
  * @param move 
  */
 void _make_move(Board* board, Move* move) {
-    // bool color = board->turn;
-    // int from = move->from;
-    // int to = move->to;
-    // int flag = move->flag;
-    // char attacker = board->mailbox[from];
-
-    // if (color == WHITE) {
-    //     board->w_occupied = set_bit(board->w_occupied, from);
-    //     board->w_occupied = clear_bit(board->w_occupied, to);
-    //     if (flag == CASTLING) {
-    //         board->w_king = set_bit(board->w_king, from);
-    //         board->w_king = clear_bit(board->w_king, to);
-    //         if (to - from > 0) {
-
-    //         } else {
-
-    //         }
-    //     }
-    // } else {
-
-    // }
-
-    // board->occupied = board->w_occupied | board->b_occupied;
-    // board->turn = !color;
+    
 }

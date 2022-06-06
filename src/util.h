@@ -21,7 +21,6 @@ enum flags {
     NONE,
     PASS,
     CAPTURE,
-    EN_PASSANT,
     W_KS_CASTLING,
     W_QS_CASTLING,
     B_KS_CASTLING,
@@ -176,8 +175,8 @@ extern Move NULL_MOVE;
 int parse_square(char* square);
 
 bool get_bit(uint64_t bb, int square);
-uint64_t set_bit(uint64_t bb, int square);
-uint64_t clear_bit(uint64_t bb, int square);
+void set_bit(uint64_t* bb, int square);
+void clear_bit(uint64_t* bb, int square);
 
 void print_bb(uint64_t bb);
 

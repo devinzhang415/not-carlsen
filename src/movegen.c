@@ -213,16 +213,15 @@ Move* get_pseudolegal_moves(Board* board, bool color) {
  * @param piece
  * @param from the square the piece is moving from
  * @param to the square the piece is moving to 
- * @return the appropriate flag for the move 
- * 
- * TODO promotion
+ * @return the appropriate flag for the move
  */
 int _get_flag(Board* board, bool color, char piece, int from, int to) {
     uint64_t enemy = (color == WHITE) ? board->b_occupied : board->w_occupied;
-    int from_file = file_of(from);
-    int to_file = file_of(to);
     
-    if (toupper(piece) == 'P' && from_file != to_file && !(BB_SQUARES[to] & enemy)) return EN_PASSANT;
+    if (toupper(piece) == 'P') {
+        if (file_of(from) != file_of(to)) return CAPTURE;
+        if (rank_of(to) == 0 || rank_of(to) == 8) return NONE; // TODO insert promotion type
+    }
     if (BB_SQUARES[to] & enemy) return CAPTURE;
     return NONE;
 }
@@ -339,12 +338,19 @@ uint64_t _get_queen_moves(Board* board, bool color, int square) {
  * @param board
  * @param color the color of the king
  * @param square the square the king is on
- * @return where the king can move from the given square (excludes castling)
+ * @return where the king can move from the given square
  */
 uint64_t _get_king_moves(Board* board, bool color, int square) {
     uint64_t moves = BB_KING_ATTACKS[square];
-
-    return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
+    if (color == WHITE) {
+        if (board->w_kingside_castling_rights) set_bit(&moves, G1);
+        if (board->w_queenside_castling_rights) set_bit(&moves, C1);
+        return moves & ~board->w_occupied;
+    } else {
+        if (board->b_kingside_castling_rights) set_bit(&moves, G8);
+        if (board->b_queenside_castling_rights) set_bit(&moves, C8);
+        return moves & ~board->b_occupied;
+    }
 }
 
 
