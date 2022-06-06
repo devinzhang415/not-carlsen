@@ -86,6 +86,8 @@ uint64_t BB_RAYS[64][64];
 
 Move NULL_MOVE = {A1, A1, PASS};
 
+const int NULL_SQUARE = -1;
+
 
 /**
  * @param square the string of the square name, ie "A1."

@@ -11,6 +11,7 @@ void push(Stack** stack, Move* move);
 void pop(Stack** stack);
 
 void _make_move(Board* board, Move* move);
+void _update_victim(Board* board, int target);
 
 
 #endif

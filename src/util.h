@@ -21,10 +21,8 @@ enum flags {
     NONE,
     PASS,
     CAPTURE,
-    W_KS_CASTLING,
-    W_QS_CASTLING,
-    B_KS_CASTLING,
-    B_QS_CASTLING,
+    EN_PASSANT,
+    CASTLING,
     PROMOTION_KNIGHT,
     PROMOTION_BISHOP,
     PROMOTION_ROOK,
@@ -170,6 +168,8 @@ extern const uint64_t BB_ANTI_DIAGONALS[15];
 extern uint64_t BB_RAYS[64][64];
 
 extern Move NULL_MOVE;
+
+extern const int NULL_SQUARE;
 
 
 int parse_square(char* square);

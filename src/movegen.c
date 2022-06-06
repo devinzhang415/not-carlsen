@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <ctype.h> 
+#include <stdlib.h>
 #include "movegen.h"
 #include "util.h"
 
@@ -145,30 +146,7 @@ Move* get_pseudolegal_moves(Board* board, bool color) {
     static Move moves[1000]; // TODO, should be dynamic
     size_t i = 0;
 
-    // Add castling moves to list
-    uint64_t pieces;
-    if (color == WHITE) {
-        if (board->w_kingside_castling_rights) {
-            Move move = {E1, G1, W_KS_CASTLING};
-            moves[i++] = move;
-        }
-        if (board->w_queenside_castling_rights) {
-            Move move = {E1, C1, W_QS_CASTLING};
-            moves[i++] = move;
-        }
-        pieces = board->w_occupied;
-    } else {
-        if (board->b_kingside_castling_rights) {
-            Move move = {E8, G8, B_KS_CASTLING};
-            moves[i++] = move;
-        }
-        if (board->b_queenside_castling_rights) {
-            Move move = {E8, C8, B_QS_CASTLING};
-            moves[i++] = move;
-        }
-        pieces = board->b_occupied;
-    }
-
+    uint64_t pieces = (color == WHITE) ? board->w_occupied : board->b_occupied;
     while (pieces) {
         int from = pull_lsb(&pieces);
         char piece = board->mailbox[from];
@@ -219,8 +197,10 @@ int _get_flag(Board* board, bool color, char piece, int from, int to) {
     uint64_t enemy = (color == WHITE) ? board->b_occupied : board->w_occupied;
     
     if (toupper(piece) == 'P') {
-        if (file_of(from) != file_of(to)) return CAPTURE;
-        if (rank_of(to) == 0 || rank_of(to) == 8) return NONE; // TODO insert promotion type
+        if (to == board->en_passant_square) return EN_PASSANT;
+        if (rank_of(to) == 0 || rank_of(to) == 8) return PROMOTION_QUEEN; // TODO insert promotion type
+    } else if (toupper(piece) == 'K') {
+        if (abs(file_of(from) - file_of(to)) == 2) return CASTLING;
     }
     if (BB_SQUARES[to] & enemy) return CAPTURE;
     return NONE;
@@ -243,7 +223,7 @@ uint64_t _get_pawn_moves(Board* board, bool color, int square) {
         uint64_t captures = (((pawn << 9) & ~BB_FILE_A) | ((pawn << 7) & ~BB_FILE_H))
                             & board->b_occupied;
 
-        if (board->en_passant_square != -1 && rank_of(square) + 1 == 5) {
+        if (board->en_passant_square != NULL_SQUARE && rank_of(square) + 1 == 5) {
             uint64_t ep_capture = (((pawn << 9) & ~BB_FILE_A) | ((pawn << 7) & ~BB_FILE_H))
                                    & BB_SQUARES[board->en_passant_square];
             captures |= ep_capture;
@@ -259,7 +239,7 @@ uint64_t _get_pawn_moves(Board* board, bool color, int square) {
         uint64_t captures = (((pawn >> 9) & ~BB_FILE_H) | ((pawn >> 7) & ~BB_FILE_A))
                             & board->w_occupied;
 
-        if (board->en_passant_square != -1 && rank_of(square) + 1 == 4) {
+        if (board->en_passant_square != NULL_SQUARE && rank_of(square) + 1 == 4) {
             uint64_t ep_capture = (((pawn >> 9) & ~BB_FILE_H) | ((pawn >> 7) & ~BB_FILE_A))
                                    & BB_SQUARES[board->en_passant_square];
             captures |= ep_capture;
