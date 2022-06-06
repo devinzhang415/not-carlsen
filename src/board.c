@@ -12,7 +12,7 @@
 /**
  * Initalizes the board and other tables
  * @param board the uninitalized board structure
- * @param stack the board history
+ * @param stack history of board positions and the moves it took to reach them
  * @param fen the FEN string to initalize the board to. Assumed valid
  */
 void init(Board* board, Stack** stack, char* fen) {
@@ -132,7 +132,7 @@ void init(Board* board, Stack** stack, char* fen) {
     board->fullmove_number = atoi(token);
 
     // Initalize stack
-    Stack* node = (Stack*) malloc(sizeof(Stack));
+    Stack* node = malloc(sizeof(Stack));
     node->move = &NULL_MOVE;
     node->board = (*stack)->board;
     node->next = *stack;
@@ -147,13 +147,14 @@ void init(Board* board, Stack** stack, char* fen) {
 
 /**
  * Makes the given move and updates the stack
- * @param stack 
+ * @param stack history of board positions and the moves it took to reach them
  * @param move
  */
 void push(Stack** stack, Move* move) {
-    Stack* node = (Stack*) malloc(sizeof(Stack));
+    Stack* node = malloc(sizeof(Stack));
     node->move = move;
-    node->board = (*stack)->board; // TODO update board
+    _make_move((*stack)->board, move);
+    node->board = (*stack)->board;
     node->next = *stack;
     *stack = node;
 }
@@ -161,7 +162,7 @@ void push(Stack** stack, Move* move) {
 
 /**
  * Unmakes the most recent move and updates the stack
- * @param stack 
+ * @param stack history of board positions and the moves it took to reach them
  */
 void pop(Stack** stack) {
     Stack* temp = *stack;
@@ -176,5 +177,28 @@ void pop(Stack** stack) {
  * @param move 
  */
 void _make_move(Board* board, Move* move) {
-    
+    // bool color = board->turn;
+    // int from = move->from;
+    // int to = move->to;
+    // int flag = move->flag;
+    // char attacker = board->mailbox[from];
+
+    // if (color == WHITE) {
+    //     board->w_occupied = set_bit(board->w_occupied, from);
+    //     board->w_occupied = clear_bit(board->w_occupied, to);
+    //     if (flag == CASTLING) {
+    //         board->w_king = set_bit(board->w_king, from);
+    //         board->w_king = clear_bit(board->w_king, to);
+    //         if (to - from > 0) {
+
+    //         } else {
+
+    //         }
+    //     }
+    // } else {
+
+    // }
+
+    // board->occupied = board->w_occupied | board->b_occupied;
+    // board->turn = !color;
 }

@@ -145,7 +145,30 @@ Move* get_pseudolegal_moves(Board* board, bool color) {
     static Move moves[1000]; // TODO, should be dynamic
     size_t i = 0;
 
-    uint64_t pieces = (color == WHITE) ? board->w_occupied : board->b_occupied;
+    // Add castling moves to list
+    uint64_t pieces;
+    if (color == WHITE) {
+        if (board->w_kingside_castling_rights) {
+            Move move = {E1, G1, W_KS_CASTLING};
+            moves[i++] = move;
+        }
+        if (board->w_queenside_castling_rights) {
+            Move move = {E1, C1, W_QS_CASTLING};
+            moves[i++] = move;
+        }
+        pieces = board->w_occupied;
+    } else {
+        if (board->b_kingside_castling_rights) {
+            Move move = {E8, G8, B_KS_CASTLING};
+            moves[i++] = move;
+        }
+        if (board->b_queenside_castling_rights) {
+            Move move = {E8, C8, B_QS_CASTLING};
+            moves[i++] = move;
+        }
+        pieces = board->b_occupied;
+    }
+
     while (pieces) {
         int from = pull_lsb(&pieces);
         char piece = board->mailbox[from];
@@ -174,13 +197,34 @@ Move* get_pseudolegal_moves(Board* board, bool color) {
 
         while (moves_bb) {
             int to = pull_lsb(&moves_bb);
-            int flag = NONE; // TODO
+            int flag = _get_flag(board, color, piece, from, to);
             Move move = {from, to, flag};
             moves[i++] = move;
         }
     }
 
     return moves;
+}
+
+
+/**
+ * @param board
+ * @param color the side to move
+ * @param piece
+ * @param from the square the piece is moving from
+ * @param to the square the piece is moving to 
+ * @return the appropriate flag for the move 
+ * 
+ * TODO promotion
+ */
+int _get_flag(Board* board, bool color, char piece, int from, int to) {
+    uint64_t enemy = (color == WHITE) ? board->b_occupied : board->w_occupied;
+    int from_file = file_of(from);
+    int to_file = file_of(to);
+    
+    if (toupper(piece) == 'P' && from_file != to_file && !(BB_SQUARES[to] & enemy)) return EN_PASSANT;
+    if (BB_SQUARES[to] & enemy) return CAPTURE;
+    return NONE;
 }
 
 

@@ -17,9 +17,19 @@ enum squares {
 };
 
 
-enum flags { // TODO, flags for Move struct
+enum flags {
     NONE,
-    PASS
+    PASS,
+    CAPTURE,
+    EN_PASSANT,
+    W_KS_CASTLING,
+    W_QS_CASTLING,
+    B_KS_CASTLING,
+    B_QS_CASTLING,
+    PROMOTION_KNIGHT,
+    PROMOTION_BISHOP,
+    PROMOTION_ROOK,
+    PROMOTION_QUEEN
 };
 
 
@@ -84,7 +94,7 @@ typedef struct Board {
 
 
 /**
- * A stack of all yhe board positions that's been reached and
+ * A stack of all the board positions that's been reached and
  * the moves that got to them.
  */
 typedef struct Stack {
@@ -166,6 +176,8 @@ extern Move NULL_MOVE;
 int parse_square(char* square);
 
 bool get_bit(uint64_t bb, int square);
+uint64_t set_bit(uint64_t bb, int square);
+uint64_t clear_bit(uint64_t bb, int square);
 
 void print_bb(uint64_t bb);
 
