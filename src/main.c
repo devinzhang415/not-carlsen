@@ -23,8 +23,9 @@ int main(void) {
 
     Move e2e4 = {E2, E4, NONE};
     Move e7e5 = {E7, E5, NONE};
-    push(&stack, &e2e4);
-    push(&stack, &e7e5);
+    push(&board, &stack, &e2e4);
+    push(&board, &stack, &e7e5);
+    pop(&board, &stack);
 
     print_mailbox(board.mailbox);
 

@@ -132,8 +132,8 @@ void init(Board* board, Stack** stack, char* fen) {
 
     // Initalize stack
     Stack* node = malloc(sizeof(Stack));
-    node->move = &NULL_MOVE;
-    node->board = board;
+    node->move = NULL_MOVE;
+    node->board = *board;
     node->next = *stack;
     *stack = node;
 
@@ -146,14 +146,15 @@ void init(Board* board, Stack** stack, char* fen) {
 
 /**
  * Makes the given move and updates the stack
+ * @param board
  * @param stack history of board positions and the moves it took to reach them
  * @param move
  */
-void push(Stack** stack, Move* move) {
+void push(Board* board, Stack** stack, Move* move) {
     Stack* node = malloc(sizeof(Stack));
-    node->move = move;
-    _make_move((*stack)->board, move);
-    node->board = (*stack)->board;
+    node->move = *move;
+    _make_move(board, move);
+    node->board = *board;
     node->next = *stack;
     *stack = node;
 }
@@ -161,11 +162,13 @@ void push(Stack** stack, Move* move) {
 
 /**
  * Unmakes the most recent move and updates the stack
+ * @param board
  * @param stack history of board positions and the moves it took to reach them
  */
-void pop(Stack** stack) {
+void pop(Board* board, Stack** stack) {
     Stack* temp = *stack;
     *stack = (*stack)->next;
+    *board = (*stack)->board;
     free(temp);
 }
 

@@ -95,8 +95,8 @@ typedef struct Board {
  * the moves that got to them.
  */
 typedef struct Stack {
-    Board *board;
-    Move *move;
+    Board board;
+    Move move;
     struct Stack *next;
 } Stack;
 
