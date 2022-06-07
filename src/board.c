@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
@@ -134,7 +133,7 @@ void init(Board* board, Stack** stack, char* fen) {
     // Initalize stack
     Stack* node = malloc(sizeof(Stack));
     node->move = &NULL_MOVE;
-    node->board = (*stack)->board;
+    node->board = board;
     node->next = *stack;
     *stack = node;
 
@@ -153,7 +152,7 @@ void init(Board* board, Stack** stack, char* fen) {
 void push(Stack** stack, Move* move) {
     Stack* node = malloc(sizeof(Stack));
     node->move = move;
-    _make_move(&((*stack)->board), &move);
+    _make_move((*stack)->board, move);
     node->board = (*stack)->board;
     node->next = *stack;
     *stack = node;
@@ -177,140 +176,177 @@ void pop(Stack** stack) {
  * @param move 
  */
 void _make_move(Board* board, Move* move) {
-    // int from = move->from;
-    // int to = move->from;
-    // int flag = move->flag;
-    // char attacker = board->mailbox[from];
+    int from = move->from;
+    int to = move->to;
+    int flag = move->flag;
+    bool color = board->turn;
+    char attacker = board->mailbox[from];
 
-    // if (flag == PASS) {
-    //     board->turn = !board->turn;
-    //     return;
-    // }
+    if (flag == PASS) {
+        board->turn = !color;
+        return;
+    }
 
-    // bool reset_halfmove = false;
-    // board->en_passant_square = NULL_SQUARE;
+    bool reset_halfmove = false;
+    board->en_passant_square = NULL_SQUARE;
 
-    // switch (attacker) {
-    //     case 'P':
-    //         clear_bit(&board->w_pawns, from);
-    //         set_bit(&board->w_pawns, to);
+    switch (attacker) {
+        case 'P':
+            clear_bit(&board->w_pawns, from);
+            set_bit(&board->w_pawns, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'P';
 
-    //         reset_halfmove = true;
+            reset_halfmove = true;
 
-    //         if (rank_of(to) - rank_of(from) == 2) board->en_passant_square = to - 8;
+            if (rank_of(to) - rank_of(from) == 2) board->en_passant_square = to - 8;
 
-    //         if (flag == EN_PASSANT) {
-    //             clear_bit(&board->b_pawns, to + 8);
-    //         }
+            if (flag == EN_PASSANT) {
+                clear_bit(&board->b_pawns, to + 8);
+                board->mailbox[to + 8] = '-';
+            }
 
-    //         break;
-    //     case 'N':
-    //         clear_bit(&board->w_knights, from);
-    //         set_bit(&board->w_knights, to);
-    //         break;
-    //     case 'B':
-    //         clear_bit(&board->w_bishops, from);
-    //         set_bit(&board->w_bishops, to);
-    //         break;
-    //     case 'R':
-    //         clear_bit(&board->w_rooks, from);
-    //         set_bit(&board->w_rooks, to);
+            break;
+        case 'N':
+            clear_bit(&board->w_knights, from);
+            set_bit(&board->w_knights, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'N';
+            break;
+        case 'B':
+            clear_bit(&board->w_bishops, from);
+            set_bit(&board->w_bishops, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'B';
+            break;
+        case 'R':
+            clear_bit(&board->w_rooks, from);
+            set_bit(&board->w_rooks, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'R';
 
-    //         if (from == H8) board->w_kingside_castling_rights = false;
-    //         else if (from == A1) board->w_queenside_castling_rights = false;
+            if (from == H8) board->w_kingside_castling_rights = false;
+            else if (from == A1) board->w_queenside_castling_rights = false;
 
-    //         break;
-    //     case 'Q':
-    //         clear_bit(&board->w_queens, from);
-    //         set_bit(&board->w_queens, to);
-    //         break;
-    //     case 'K':
-    //         clear_bit(&board->w_king, from);
-    //         set_bit(&board->w_king, to);
+            break;
+        case 'Q':
+            clear_bit(&board->w_queens, from);
+            set_bit(&board->w_queens, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'Q';
+            break;
+        case 'K':
+            clear_bit(&board->w_king, from);
+            set_bit(&board->w_king, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'K';
 
-    //         if (flag == CASTLING) {
-    //             if (file_of(to) - file_of(from) > 0) { // Kingside
-    //                 clear_bit(&board->w_rooks, H1);
-    //                 set_bit(&board->w_rooks, F1);
-    //             } else { // Queenside
-    //                 clear_bit(&board->w_rooks, A1);
-    //                 set_bit(&board->w_rooks, D1);
-    //             }
-    //         }
+            if (flag == CASTLING) {
+                if (file_of(to) - file_of(from) > 0) { // Kingside
+                    clear_bit(&board->w_rooks, H1);
+                    set_bit(&board->w_rooks, F1);
+                    board->mailbox[H1] = '-';
+                    board->mailbox[F1] = 'R';
+                } else { // Queenside
+                    clear_bit(&board->w_rooks, A1);
+                    set_bit(&board->w_rooks, D1);
+                    board->mailbox[A1] = '-';
+                    board->mailbox[D1] = 'R';
+                }
+            }
 
-    //         board->w_kingside_castling_rights = false;
-    //         board->w_queenside_castling_rights = false;
+            board->w_kingside_castling_rights = false;
+            board->w_queenside_castling_rights = false;
 
-    //         break;
-    //     case 'p':
-    //         clear_bit(&board->b_pawns, from);
-    //         set_bit(&board->b_pawns, to);
+            break;
+        case 'p':
+            clear_bit(&board->b_pawns, from);
+            set_bit(&board->b_pawns, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'p';
 
-    //         reset_halfmove = true;
+            reset_halfmove = true;
 
-    //         if (rank_of(to) - rank_of(from) == -2) board->en_passant_square = to + 8;
+            if (rank_of(to) - rank_of(from) == -2) board->en_passant_square = to + 8;
 
-    //         if (flag == EN_PASSANT) {
-    //             clear_bit(&board->w_pawns, to - 8);
-    //         }
+            if (flag == EN_PASSANT) {
+                clear_bit(&board->w_pawns, to - 8);
+                board->mailbox[to - 8] = '-';
+            }
 
-    //         break;
-    //     case 'n':
-    //         clear_bit(&board->b_knights, from);
-    //         set_bit(&board->b_knights, to);
-    //         break;
-    //     case 'b':
-    //         clear_bit(&board->b_bishops, from);
-    //         set_bit(&board->b_bishops, to);
-    //         break;
-    //     case 'r':
-    //         clear_bit(&board->b_rooks, from);
-    //         set_bit(&board->b_rooks, to);
+            break;
+        case 'n':
+            clear_bit(&board->b_knights, from);
+            set_bit(&board->b_knights, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'n';
+            break;
+        case 'b':
+            clear_bit(&board->b_bishops, from);
+            set_bit(&board->b_bishops, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'b';
+            break;
+        case 'r':
+            clear_bit(&board->b_rooks, from);
+            set_bit(&board->b_rooks, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'r';
 
-    //         if (from == H8) board->b_kingside_castling_rights = false;
-    //         else if (from == A1) board->b_queenside_castling_rights = false;
+            if (from == H8) board->b_kingside_castling_rights = false;
+            else if (from == A1) board->b_queenside_castling_rights = false;
 
-    //         break;
-    //     case 'q':
-    //         clear_bit(&board->b_queens, from);
-    //         set_bit(&board->b_queens, to);
-    //         break;
-    //     case 'k':
-    //         clear_bit(&board->b_king, from);
-    //         set_bit(&board->b_king, to);
+            break;
+        case 'q':
+            clear_bit(&board->b_queens, from);
+            set_bit(&board->b_queens, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'q';
+            break;
+        case 'k':
+            clear_bit(&board->b_king, from);
+            set_bit(&board->b_king, to);
+            board->mailbox[from] = '-';
+            board->mailbox[to] = 'k';
 
-    //         if (flag == CASTLING) {
-    //             if (file_of(to) - file_of(from) > 0) { // Kingside
-    //                 clear_bit(&board->b_rooks, H8);
-    //                 set_bit(&board->b_rooks, F8);
-    //             } else { // Queenside
-    //                 clear_bit(&board->b_rooks, A8);
-    //                 set_bit(&board->b_rooks, D8);
-    //             }
-    //         }
+            if (flag == CASTLING) {
+                if (file_of(to) - file_of(from) > 0) { // Kingside
+                    clear_bit(&board->b_rooks, H8);
+                    set_bit(&board->b_rooks, F8);
+                    board->mailbox[H8] = '-';
+                    board->mailbox[F8] = 'r';
+                } else { // Queenside
+                    clear_bit(&board->b_rooks, A8);
+                    set_bit(&board->b_rooks, D8);
+                    board->mailbox[A8] = '-';
+                    board->mailbox[D8] = 'r';
+                }
+            }
 
-    //         board->b_kingside_castling_rights = false;
-    //         board->b_queenside_castling_rights = false;
+            board->b_kingside_castling_rights = false;
+            board->b_queenside_castling_rights = false;
 
-    //         break;
-    // }
+            break;
+    }
 
-    // if (flag == CAPTURE) {
-    //     _update_victim(board, to);
-    //     reset_halfmove = true;
-    // }
+    if (flag == CAPTURE) {
+        _update_victim(board, to);
+        reset_halfmove = true;
+    }
 
-    // board->w_occupied = board->w_pawns | board->w_knights | board->w_bishops | board->w_rooks | board->w_queens | board->w_king;
-    // board->b_occupied = board->b_pawns | board->b_knights | board->b_bishops | board->b_rooks | board->b_queens | board->b_king;
-    // board->occupied = board->w_occupied | board->b_occupied;
+    board->w_occupied = board->w_pawns | board->w_knights | board->w_bishops | board->w_rooks | board->w_queens | board->w_king;
+    board->b_occupied = board->b_pawns | board->b_knights | board->b_bishops | board->b_rooks | board->b_queens | board->b_king;
+    board->occupied = board->w_occupied | board->b_occupied;
 
-    // board->turn = !board->turn;
-    // if (reset_halfmove) {
-    //     board->halfmove_clock = 0;
-    // } else {
-    //     board->halfmove_clock++;
-    // }
-    // board->fullmove_number++;
+    if (reset_halfmove) {
+        board->halfmove_clock = 0;
+    } else {
+        board->halfmove_clock++;
+    }
+
+    if (color == BLACK) board->fullmove_number++;
+
+    board->turn = !color;
 }
 
 
@@ -325,39 +361,51 @@ void _update_victim(Board* board, int target) {
     switch (victim) {
         case 'P':
             clear_bit(&board->w_pawns, target);
+            board->mailbox[target] = '-';
             break;
         case 'N':
             clear_bit(&board->w_knights, target);
+            board->mailbox[target] = '-';
             break;
         case 'B':
             clear_bit(&board->w_bishops, target);
+            board->mailbox[target] = '-';
             break;
         case 'R':
             clear_bit(&board->w_rooks, target);
+            board->mailbox[target] = '-';
             break;
         case 'Q':
             clear_bit(&board->w_queens, target);
+            board->mailbox[target] = '-';
             break;
         case 'K':
             clear_bit(&board->w_king, target);
+            board->mailbox[target] = '-';
             break;
         case 'p':
             clear_bit(&board->b_pawns, target);
+            board->mailbox[target] = '-';
             break;
         case 'n':
             clear_bit(&board->b_knights, target);
+            board->mailbox[target] = '-';
             break;
         case 'b':
             clear_bit(&board->b_bishops, target);
+            board->mailbox[target] = '-';
             break;
         case 'r':
             clear_bit(&board->b_rooks, target);
+            board->mailbox[target] = '-';
             break;
         case 'q':
             clear_bit(&board->b_queens, target);
+            board->mailbox[target] = '-';
             break;
         case 'k':
             clear_bit(&board->b_king, target);
+            board->mailbox[target] = '-';
             break;
     }
 }

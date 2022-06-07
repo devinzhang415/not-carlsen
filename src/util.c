@@ -146,6 +146,21 @@ void print_bb(uint64_t bb) {
 
 
 /**
+ * Prints the labeled representation of the mailbox board.
+ * @param board 
+ */
+void print_mailbox(char* mailbox) {
+    for (int rank = 7; rank >= 0; rank--) {
+        for (int file = 0; file <= 7; file++) {
+            printf("%c ", mailbox[8*rank + file]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+
+/**
  * @param square
  * @return the rank of the square (0-7)
  */

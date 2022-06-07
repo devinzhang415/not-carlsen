@@ -21,10 +21,19 @@ int main(void) {
      * UCI
     **/
 
-    print_bb(board.occupied);
-    Move move = {E2, E4, NONE};
-    push(&stack, &move);
-    print_bb(board.occupied);
+    Move e2e4 = {E2, E4, NONE};
+    Move e7e5 = {E7, E5, NONE};
+    push(&stack, &e2e4);
+    push(&stack, &e7e5);
+
+    print_mailbox(board.mailbox);
+
+    printf("Turn: %d\n%d%d%d%d\nEn passant: %d\nHalfmove: %d\nFullmove: %d\n", board.turn,
+                                                                               board.w_kingside_castling_rights, board.w_queenside_castling_rights, board.b_kingside_castling_rights, board.b_queenside_castling_rights,
+                                                                               board.en_passant_square,
+                                                                               board.halfmove_clock,
+                                                                               board.fullmove_number);
+
  
     return 0;
 }
