@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "movegen.h"
 #include "util.h"
+#include "board.h"
 
 
 // Pseudo-legal bitboards indexed by square to determine where that piece can attack
@@ -84,11 +85,35 @@ uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
 /**
- * Get the pseudolegal moves object
- * 
+ * Performance test debug function to determine the accuracy of the move generator.
+ * @param board
+ * @param stack history of board positions and the moves it took to reach them.
+ * @param depth what depth to perform moves to.
+ * @return the number of legal moves at depth n.
+ */
+uint64_t perft(Board* board, Stack** stack, int depth) {
+    uint64_t nodes = 0;
+
+    if (depth == 0) return 1ULL;
+
+    Move* moves = get_pseudolegal_moves(board, board->turn);
+    for (int i = 0; i < 1000; i++) {
+        if (moves[i].flag == INVALID) break;
+
+        if (!push_if_legal(board, stack, &moves[i])) {
+            continue;
+        }
+        nodes += perft(board, stack, depth - 1);
+        pop(board, stack);
+    }
+    return nodes;
+}
+
+
+/**
  * @param board 
- * @param color the side to move
- * @return Move* 
+ * @param color the side to move.
+ * @return an array of pseudolegal moves in the position the side to move can play.
  */
 Move* get_pseudolegal_moves(Board* board, bool color) {
     static Move moves[1000]; // TODO, should be dynamic

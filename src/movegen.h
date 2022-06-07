@@ -19,6 +19,8 @@ extern uint64_t ROOK_ATTACK_SHIFTS[64];
 extern uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
+uint64_t perft(Board* board, Stack** stack, int depth);
+
 Move* get_pseudolegal_moves(Board* board, bool color);
 int _get_flag(Board* board, bool color, char piece, int from, int to);
 

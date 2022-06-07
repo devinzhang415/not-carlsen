@@ -145,9 +145,74 @@ void init(Board* board, Stack** stack, char* fen) {
 
 
 /**
- * Makes the given move and updates the stack
+ * Makes the given move. If it is illegal, revert it.
+ * @param board 
+ * @param stack history of board positions and the moves it took to reach them.
+ * @param move
+ * @return true if the move was legal
+ */
+bool push_if_legal(Board* board, Stack** stack, Move* move) {
+    int from = move->from;
+    int to = move->to;
+    int flag = move->flag;
+
+    // Determine if castling is legal
+    if (flag == CASTLING) {
+        if (is_check(board, board->turn)) return false;
+        if (board->turn == WHITE) {
+            if (from != E1) return false;
+            if (to == H1) { // Kingside
+                if (!(board->w_rooks & BB_SQUARES[H1])) return false;
+                if (board->occupied & (BB_SQUARES[F1] | BB_SQUARES[G1])) return false;
+                if (is_attacked(board, BLACK, F1) || is_attacked(board, BLACK, G1)) return false;
+
+                push(board, stack, move);
+                return true;
+            } else if (to == A1) { // Queenside
+                if (!(board->w_rooks & BB_SQUARES[A1])) return false;
+                if (board->occupied & (BB_SQUARES[D1] | BB_SQUARES[C1] | BB_SQUARES[B1])) return false;
+                if (is_attacked(board, BLACK, D1) || is_attacked(board, BLACK, C1)) return false;
+
+                push(board, stack, move);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            if (from != E8) return false;
+            if (to == H8) { // Kingside
+                if (!(board->w_rooks & BB_SQUARES[H8])) return false;
+                if (board->occupied & (BB_SQUARES[F8] | BB_SQUARES[G8])) return false;
+                if (is_attacked(board, BLACK, F8) || is_attacked(board, BLACK, G8)) return false;
+
+                push(board, stack, move);
+                return true;
+            } else if (to == A8) { // Queenside
+                if (!(board->w_rooks & BB_SQUARES[A8])) return false;
+                if (board->occupied & (BB_SQUARES[D8] | BB_SQUARES[C8] | BB_SQUARES[B8])) return false;
+                if (is_attacked(board, BLACK, D8) || is_attacked(board, BLACK, C8)) return false;
+
+                push(board, stack, move);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    push(board, stack, move);
+    if (is_check(board, !board->turn)) {
+        pop(board, stack);
+        return false;
+    }
+    return true;
+}
+
+
+/**
+ * Makes the given move and updates the stack.
  * @param board
- * @param stack history of board positions and the moves it took to reach them
+ * @param stack history of board positions and the moves it took to reach them.
  * @param move
  */
 void push(Board* board, Stack** stack, Move* move) {
@@ -161,9 +226,9 @@ void push(Board* board, Stack** stack, Move* move) {
 
 
 /**
- * Unmakes the most recent move and updates the stack
+ * Unmakes the most recent move and updates the stack.
  * @param board
- * @param stack history of board positions and the moves it took to reach them
+ * @param stack history of board positions and the moves it took to reach them.
  */
 void pop(Board* board, Stack** stack) {
     Stack* temp = *stack;
@@ -174,7 +239,7 @@ void pop(Board* board, Stack** stack) {
 
 
 /**
- * Updates the board with the move
+ * Updates the board with the move.
  * @param board
  * @param move 
  */
@@ -399,25 +464,38 @@ void _make_move(Board* board, Move* move) {
  */
 bool is_check(Board* board, bool color) {
     if (color == WHITE) {
-        uint64_t king_bb = board->w_king;
-        int king_square = get_lsb(king_bb);
+        return is_attacked(board, BLACK, get_lsb(board->w_king));
+    } else {
+        return is_attacked(board, WHITE, get_lsb(board->b_king));
+    }
+}
 
-        if (_get_queen_moves(board, WHITE, king_square) & board->b_queens) return true;
-        if (_get_rook_moves(board, WHITE, king_square) & board->b_rooks) return true;
-        if (_get_bishop_moves(board, WHITE, king_square) & board->b_bishops) return true;
-        if (_get_knight_moves(board, WHITE, king_square) & board->b_knights) return true;
-        if ((((king_bb << 9) & ~BB_FILE_A) | ((king_bb << 7) & ~BB_FILE_H)) & board->b_pawns) return true;
+
+/**
+ * @param board 
+ * @param color the color of the attackers.
+ * @param square 
+ * @return true if the square is being attacked by the given side
+ */
+bool is_attacked(Board* board, bool color, int square) {
+    if (color == BLACK) {
+        uint64_t square_bb = BB_SQUARES[square];
+
+        if (_get_queen_moves(board, WHITE, square) & board->b_queens) return true;
+        if (_get_rook_moves(board, WHITE, square) & board->b_rooks) return true;
+        if (_get_bishop_moves(board, WHITE, square) & board->b_bishops) return true;
+        if (_get_knight_moves(board, WHITE, square) & board->b_knights) return true;
+        if ((((square_bb << 9) & ~BB_FILE_A) | ((square_bb << 7) & ~BB_FILE_H)) & board->b_pawns) return true;
 
         return false;
     } else {
-        uint64_t king_bb = board->b_king;
-        int king_square = get_lsb(king_bb);
+        uint64_t square_bb = BB_SQUARES[square];
 
-        if (_get_queen_moves(board, BLACK, king_square) & board->w_queens) return true;
-        if (_get_rook_moves(board, BLACK, king_square) & board->w_rooks) return true;
-        if (_get_bishop_moves(board, BLACK, king_square) & board->w_bishops) return true;
-        if (_get_knight_moves(board, BLACK, king_square) & board->w_knights) return true;
-        if ((((king_bb >> 9) & ~BB_FILE_H) | ((king_bb >> 7) & ~BB_FILE_A)) & board->w_pawns) return true;
+        if (_get_queen_moves(board, BLACK, square) & board->w_queens) return true;
+        if (_get_rook_moves(board, BLACK, square) & board->w_rooks) return true;
+        if (_get_bishop_moves(board, BLACK, square) & board->w_bishops) return true;
+        if (_get_knight_moves(board, BLACK, square) & board->w_knights) return true;
+        if ((((square_bb >> 9) & ~BB_FILE_H) | ((square_bb >> 7) & ~BB_FILE_A)) & board->w_pawns) return true;
 
         return false;
     }

@@ -7,12 +7,12 @@
 int main(void) {
     ////////////////////////////////////////////////////////////////////////////////
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    char* fen = "3k4/2r1q3/8/6b1/4n3/8/4p3/3K4 w - - 0 1";
+    char* fen = "4k3/3q4/8/8/8/8/8/4K3 w - - 0 1";
 
     Board board;
     Stack* stack = malloc(sizeof(Stack));
 
-    init(&board, &stack, fen);
+    init(&board, &stack, DEFAULT_FEN);
 
     ////////////////////////////////////////////////////////////////////////////////
     /**
@@ -20,7 +20,7 @@ int main(void) {
      * perft
      * UCI
     **/
-    printf("%d\n", is_check(&board, WHITE));
+    printf("%d", perft(&board, &stack, 2));
 
 
 

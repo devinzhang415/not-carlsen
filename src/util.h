@@ -18,8 +18,9 @@ enum squares {
 
 
 enum flags {
-    NONE,
-    PASS,
+    INVALID, // Move is uninitialized
+    NONE, // No special flag
+    PASS, // Null move
     CAPTURE,
     EN_PASSANT,
     CASTLING,
