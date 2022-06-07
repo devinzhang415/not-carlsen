@@ -14,6 +14,9 @@ Special thanks to:
 ------
 
 ## Devlog
+6/6/22 v0.2.2
+> Added function to determine if king is in check.
+
 6/5/22 v0.2.1
 > Changed make/unmake to make/copy for move pushing and popping.
 

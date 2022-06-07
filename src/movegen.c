@@ -84,58 +84,6 @@ uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
 /**
- * Initalizes the bishop attack magic bitboard
- * @author github.com/nkarve
- */
-void init_bishop_attacks(void) {
-    for (int square = A1; square <= H8; square++) {
-        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
-                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
-        BB_BISHOP_ATTACK_MASKS[square] = (BB_DIAGONALS[diagonal_of(square)] ^ BB_ANTI_DIAGONALS[anti_diagonal_of(square)]) & ~edges;
-        uint64_t attack_mask = BB_BISHOP_ATTACK_MASKS[square];
-
-        int shift = 64 - pop_count(attack_mask);
-        BISHOP_ATTACK_SHIFTS[square] = shift;
-
-        uint64_t subset = 0;
-        do {
-            uint64_t index = subset;
-            index *= BISHOP_MAGICS[square];
-            index >>= shift;
-            BB_BISHOP_ATTACKS[square][index] = _init_bishop_attacks_helper(square, subset);
-            subset = (subset - attack_mask) & attack_mask;
-        } while (subset);
-    }
-}
-
-
-/**
- * Initalizes the rook attack magic bitboard
- * @author github.com/nkarve
- */
-void init_rook_attacks(void) {
-    for (int square = A1; square <= H8; square++) {
-        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
-                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
-        BB_ROOK_ATTACK_MASKS[square] = (BB_RANKS[rank_of(square)] ^ BB_FILES[file_of(square)]) & ~edges;
-        uint64_t attack_mask = BB_ROOK_ATTACK_MASKS[square];
-
-        int shift = 64 - pop_count(attack_mask);
-        ROOK_ATTACK_SHIFTS[square] = shift;
-
-        uint64_t subset = 0;
-        do {
-            uint64_t index = subset;
-            index *= ROOK_MAGICS[square];
-            index >>= shift;
-            BB_ROOK_ATTACKS[square][index] = _init_rook_attacks_helper(square, subset);
-            subset = (subset - attack_mask) & attack_mask;
-        } while (subset);
-    }
-}
-
-
-/**
  * Get the pseudolegal moves object
  * 
  * @param board 
@@ -330,6 +278,58 @@ uint64_t _get_king_moves(Board* board, bool color, int square) {
         if (board->b_kingside_castling_rights) set_bit(&moves, G8);
         if (board->b_queenside_castling_rights) set_bit(&moves, C8);
         return moves & ~board->b_occupied;
+    }
+}
+
+
+/**
+ * Initalizes the bishop attack magic bitboard
+ * @author github.com/nkarve
+ */
+void init_bishop_attacks(void) {
+    for (int square = A1; square <= H8; square++) {
+        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
+                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
+        BB_BISHOP_ATTACK_MASKS[square] = (BB_DIAGONALS[diagonal_of(square)] ^ BB_ANTI_DIAGONALS[anti_diagonal_of(square)]) & ~edges;
+        uint64_t attack_mask = BB_BISHOP_ATTACK_MASKS[square];
+
+        int shift = 64 - pop_count(attack_mask);
+        BISHOP_ATTACK_SHIFTS[square] = shift;
+
+        uint64_t subset = 0;
+        do {
+            uint64_t index = subset;
+            index *= BISHOP_MAGICS[square];
+            index >>= shift;
+            BB_BISHOP_ATTACKS[square][index] = _init_bishop_attacks_helper(square, subset);
+            subset = (subset - attack_mask) & attack_mask;
+        } while (subset);
+    }
+}
+
+
+/**
+ * Initalizes the rook attack magic bitboard
+ * @author github.com/nkarve
+ */
+void init_rook_attacks(void) {
+    for (int square = A1; square <= H8; square++) {
+        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
+                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
+        BB_ROOK_ATTACK_MASKS[square] = (BB_RANKS[rank_of(square)] ^ BB_FILES[file_of(square)]) & ~edges;
+        uint64_t attack_mask = BB_ROOK_ATTACK_MASKS[square];
+
+        int shift = 64 - pop_count(attack_mask);
+        ROOK_ATTACK_SHIFTS[square] = shift;
+
+        uint64_t subset = 0;
+        do {
+            uint64_t index = subset;
+            index *= ROOK_MAGICS[square];
+            index >>= shift;
+            BB_ROOK_ATTACKS[square][index] = _init_rook_attacks_helper(square, subset);
+            subset = (subset - attack_mask) & attack_mask;
+        } while (subset);
     }
 }
 

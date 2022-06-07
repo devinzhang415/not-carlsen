@@ -19,12 +19,7 @@ extern uint64_t ROOK_ATTACK_SHIFTS[64];
 extern uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
-void init_bishop_attacks(void);
-void init_rook_attacks(void);
-
-
 Move* get_pseudolegal_moves(Board* board, bool color);
-
 int _get_flag(Board* board, bool color, char piece, int from, int to);
 
 uint64_t _get_pawn_moves(Board* board, bool color, int square);
@@ -34,7 +29,8 @@ uint64_t _get_rook_moves(Board* board, bool color, int square);
 uint64_t _get_queen_moves(Board* board, bool color, int square);
 uint64_t _get_king_moves(Board* board, bool color, int square);
 
-
+void init_bishop_attacks(void);
+void init_rook_attacks(void);
 uint64_t _init_bishop_attacks_helper(int square, uint64_t subset);
 uint64_t _init_rook_attacks_helper(int square, uint64_t subset);
 

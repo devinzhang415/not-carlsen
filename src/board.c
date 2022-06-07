@@ -205,8 +205,8 @@ void _make_move(Board* board, Move* move) {
             if (rank_of(to) - rank_of(from) == 2) board->en_passant_square = to - 8;
 
             if (flag == EN_PASSANT) {
-                clear_bit(&board->b_pawns, to + 8);
-                board->mailbox[to + 8] = '-';
+                clear_bit(&board->b_pawns, to - 8);
+                board->mailbox[to - 8] = '-';
             }
 
             break;
@@ -273,8 +273,8 @@ void _make_move(Board* board, Move* move) {
             if (rank_of(to) - rank_of(from) == -2) board->en_passant_square = to + 8;
 
             if (flag == EN_PASSANT) {
-                clear_bit(&board->w_pawns, to - 8);
-                board->mailbox[to - 8] = '-';
+                clear_bit(&board->w_pawns, to + 8);
+                board->mailbox[to + 8] = '-';
             }
 
             break;
@@ -333,8 +333,47 @@ void _make_move(Board* board, Move* move) {
     }
 
     if (flag == CAPTURE) {
-        _update_victim(board, to);
         reset_halfmove = true;
+
+        char victim = board->mailbox[to];
+        switch (victim) {
+            case 'P':
+                clear_bit(&board->w_pawns, to);
+                break;
+            case 'N':
+                clear_bit(&board->w_knights, to);
+                break;
+            case 'B':
+                clear_bit(&board->w_bishops, to);
+                break;
+            case 'R':
+                clear_bit(&board->w_rooks, to);
+                break;
+            case 'Q':
+                clear_bit(&board->w_queens, to);
+                break;
+            case 'K':
+                clear_bit(&board->w_king, to);
+                break;
+            case 'p':
+                clear_bit(&board->b_pawns, to);
+                break;
+            case 'n':
+                clear_bit(&board->b_knights, to);
+                break;
+            case 'b':
+                clear_bit(&board->b_bishops, to);
+                break;
+            case 'r':
+                clear_bit(&board->b_rooks, to);
+                break;
+            case 'q':
+                clear_bit(&board->b_queens, to);
+                break;
+            case 'k':
+                clear_bit(&board->b_king, to);
+                break;
+        }
     }
 
     board->w_occupied = board->w_pawns | board->w_knights | board->w_bishops | board->w_rooks | board->w_queens | board->w_king;
@@ -354,61 +393,32 @@ void _make_move(Board* board, Move* move) {
 
 
 /**
- * Updates the taken piece's bitboard.
  * @param board 
- * @param target the square the victim is on 
+ * @param color the color of the king.
+ * @return true if the side's king is in check.
  */
-void _update_victim(Board* board, int target) {
-    char victim = board->mailbox[target];
+bool is_check(Board* board, bool color) {
+    if (color == WHITE) {
+        uint64_t king_bb = board->w_king;
+        int king_square = get_lsb(king_bb);
 
-    switch (victim) {
-        case 'P':
-            clear_bit(&board->w_pawns, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'N':
-            clear_bit(&board->w_knights, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'B':
-            clear_bit(&board->w_bishops, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'R':
-            clear_bit(&board->w_rooks, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'Q':
-            clear_bit(&board->w_queens, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'K':
-            clear_bit(&board->w_king, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'p':
-            clear_bit(&board->b_pawns, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'n':
-            clear_bit(&board->b_knights, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'b':
-            clear_bit(&board->b_bishops, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'r':
-            clear_bit(&board->b_rooks, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'q':
-            clear_bit(&board->b_queens, target);
-            board->mailbox[target] = '-';
-            break;
-        case 'k':
-            clear_bit(&board->b_king, target);
-            board->mailbox[target] = '-';
-            break;
+        if (_get_queen_moves(board, WHITE, king_square) & board->b_queens) return true;
+        if (_get_rook_moves(board, WHITE, king_square) & board->b_rooks) return true;
+        if (_get_bishop_moves(board, WHITE, king_square) & board->b_bishops) return true;
+        if (_get_knight_moves(board, WHITE, king_square) & board->b_knights) return true;
+        if ((((king_bb << 9) & ~BB_FILE_A) | ((king_bb << 7) & ~BB_FILE_H)) & board->b_pawns) return true;
+
+        return false;
+    } else {
+        uint64_t king_bb = board->b_king;
+        int king_square = get_lsb(king_bb);
+
+        if (_get_queen_moves(board, BLACK, king_square) & board->w_queens) return true;
+        if (_get_rook_moves(board, BLACK, king_square) & board->w_rooks) return true;
+        if (_get_bishop_moves(board, BLACK, king_square) & board->w_bishops) return true;
+        if (_get_knight_moves(board, BLACK, king_square) & board->w_knights) return true;
+        if ((((king_bb >> 9) & ~BB_FILE_H) | ((king_bb >> 7) & ~BB_FILE_A)) & board->w_pawns) return true;
+
+        return false;
     }
 }
