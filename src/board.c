@@ -162,6 +162,7 @@ bool push_if_legal(Board* board, Stack** stack, Move* move) {
         if (board->turn == WHITE) {
             if (from != E1) return false;
             if (to == H1) { // Kingside
+                if (!board->w_kingside_castling_rights) return false;
                 if (!(board->w_rooks & BB_SQUARES[H1])) return false;
                 if (board->occupied & (BB_SQUARES[F1] | BB_SQUARES[G1])) return false;
                 if (is_attacked(board, BLACK, F1) || is_attacked(board, BLACK, G1)) return false;
@@ -169,6 +170,7 @@ bool push_if_legal(Board* board, Stack** stack, Move* move) {
                 push(board, stack, move);
                 return true;
             } else if (to == A1) { // Queenside
+                if (!board->w_queenside_castling_rights) return false;
                 if (!(board->w_rooks & BB_SQUARES[A1])) return false;
                 if (board->occupied & (BB_SQUARES[D1] | BB_SQUARES[C1] | BB_SQUARES[B1])) return false;
                 if (is_attacked(board, BLACK, D1) || is_attacked(board, BLACK, C1)) return false;
@@ -181,6 +183,7 @@ bool push_if_legal(Board* board, Stack** stack, Move* move) {
         } else {
             if (from != E8) return false;
             if (to == H8) { // Kingside
+                if (!board->b_kingside_castling_rights) return false;
                 if (!(board->w_rooks & BB_SQUARES[H8])) return false;
                 if (board->occupied & (BB_SQUARES[F8] | BB_SQUARES[G8])) return false;
                 if (is_attacked(board, BLACK, F8) || is_attacked(board, BLACK, G8)) return false;
@@ -188,6 +191,7 @@ bool push_if_legal(Board* board, Stack** stack, Move* move) {
                 push(board, stack, move);
                 return true;
             } else if (to == A8) { // Queenside
+                if (!board->b_queenside_castling_rights) return false;
                 if (!(board->w_rooks & BB_SQUARES[A8])) return false;
                 if (board->occupied & (BB_SQUARES[D8] | BB_SQUARES[C8] | BB_SQUARES[B8])) return false;
                 if (is_attacked(board, BLACK, D8) || is_attacked(board, BLACK, C8)) return false;
