@@ -168,6 +168,7 @@ extern const uint64_t BB_ANTI_DIAGONALS[15];
 
 extern uint64_t BB_RAYS[64][64];
 
+
 extern Move NULL_MOVE;
 
 extern const int NULL_SQUARE;

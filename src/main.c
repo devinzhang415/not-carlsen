@@ -7,7 +7,7 @@
 int main(void) {
     ////////////////////////////////////////////////////////////////////////////////
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    char* fen = "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10";
+    char* fen = "q6k/8/8/8/1P6/KP6/8/8 w - - 0 1";
 
     Board board;
     Stack* stack = malloc(sizeof(Stack));
@@ -20,7 +20,10 @@ int main(void) {
      * perft: speedups in move generation for check and checkmate. also not fully accurate until 3-fold rep and 50 move rule detection
      * UCI
     **/
-    printf("\n%d", perft(&board, &stack, 1));
+    printf("\n%d", perft(&board, &stack, 2));
+
+
+
 
 
 

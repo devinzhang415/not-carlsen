@@ -84,6 +84,8 @@ const uint64_t BB_ANTI_DIAGONALS[15] = {BB_ANTI_DIAGONAL_1, BB_ANTI_DIAGONAL_2, 
 
 uint64_t BB_RAYS[64][64];
 
+
+// Misc
 Move NULL_MOVE = {A1, A1, PASS};
 
 const int NULL_SQUARE = -1;

@@ -101,10 +101,10 @@ uint64_t perft(Board* board, Stack** stack, int depth) {
     for (int i = 0; i < 1000; i++) {
         if (moves[i].flag == INVALID) break;
 
-        // printf("\n%d, %d, %d ", moves[i].from, moves[i].to, moves[i].flag);
+        printf("\ni %d, turn %d, depth %d, from %d to %d ", i, board->turn, depth, moves[i].from, moves[i].to);
 
-        if (!push_if_legal(board, stack, moves[i])) {
-            // printf("ILLEGAL");
+        if (!legal_push(board, stack, moves[i])) {
+            printf("ILLEGAL");
             continue;
         }
         nodes += perft(board, stack, depth - 1);
@@ -120,7 +120,7 @@ uint64_t perft(Board* board, Stack** stack, int depth) {
  * @return an array of pseudolegal moves in the position the side to move can play.
  */
 Move* get_pseudolegal_moves(Board* board, bool color) {
-    static Move moves[1000]; // TODO, should be dynamic
+    static Move moves[1000];
     size_t i = 0;
 
     uint64_t pieces = (color == WHITE) ? board->w_occupied : board->b_occupied;

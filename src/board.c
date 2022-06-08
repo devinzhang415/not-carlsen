@@ -152,7 +152,7 @@ void init(Board* board, Stack** stack, char* fen) {
  * @param move
  * @return true if the move was legal
  */
-bool push_if_legal(Board* board, Stack** stack, Move move) {
+bool legal_push(Board* board, Stack** stack, Move move) {
     int from = move.from;
     int to = move.to;
     int flag = move.flag;
@@ -222,9 +222,9 @@ bool push_if_legal(Board* board, Stack** stack, Move move) {
  */
 void push(Board* board, Stack** stack, Move move) {
     Stack* node = malloc(sizeof(Stack));
-    node->move = move;
     _make_move(board, move);
     node->board = *board;
+    node->move = move;
     node->next = *stack;
     *stack = node;
 }
@@ -456,7 +456,7 @@ void _make_move(Board* board, Move move) {
 
     if (flag == CAPTURE) {
         reset_halfmove = true;
-        
+
         switch (victim) {
             case 'P':
                 clear_bit(&board->w_pawns, to);

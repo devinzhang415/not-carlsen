@@ -7,7 +7,7 @@
 
 void init(Board* board, Stack** stack, char* fen);
 
-bool push_if_legal(Board* board, Stack** stack, Move move);
+bool legal_push(Board* board, Stack** stack, Move move);
 
 void push(Board* board, Stack** stack, Move move);
 void pop(Board* board, Stack** stack);
