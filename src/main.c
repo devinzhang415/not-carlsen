@@ -7,7 +7,7 @@
 int main(void) {
     ////////////////////////////////////////////////////////////////////////////////
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    char* fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+    char* fen = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8";
 
     Board board;
     Stack* stack = malloc(sizeof(Stack));
@@ -20,15 +20,9 @@ int main(void) {
      * perft: speedups in move generation for check and checkmate. also not fully accurate until 3-fold rep and 50 move rule detection
      * UCI
     **/
-    printf("%d", perft(&board, &stack, 1));
+    printf("\n%d", perft(&board, &stack, 1));
 
 
-
-
-    // Move move = {D5, E6, EN_PASSANT};
-    // push(&board, &stack, &move);
-
-    // print_mailbox(board.mailbox);
 
     // print_bb(board.w_pawns);
     // print_bb(board.w_knights);
@@ -46,6 +40,8 @@ int main(void) {
     // print_bb(board.occupied);
     // print_bb(board.w_occupied);
     // print_bb(board.b_occupied);
+
+    // print_mailbox(board.mailbox);
 
     // printf("Turn: %d\n%d%d%d%d\nEn passant: %d\nHalfmove: %d\nFullmove: %d\n", board.turn,
     //                                                                            board.w_kingside_castling_rights, board.w_queenside_castling_rights, board.b_kingside_castling_rights, board.b_queenside_castling_rights,

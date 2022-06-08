@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <ctype.h> 
 #include <stdlib.h>
@@ -100,7 +101,10 @@ uint64_t perft(Board* board, Stack** stack, int depth) {
     for (int i = 0; i < 1000; i++) {
         if (moves[i].flag == INVALID) break;
 
-        if (!push_if_legal(board, stack, &moves[i])) {
+        printf("\n%d, %d, %d ", moves[i].from, moves[i].to, moves[i].flag);
+
+        if (!push_if_legal(board, stack, moves[i])) {
+            printf("ILLEGAL");
             continue;
         }
         nodes += perft(board, stack, depth - 1);
@@ -148,9 +152,20 @@ Move* get_pseudolegal_moves(Board* board, bool color) {
 
         while (moves_bb) {
             int to = pull_lsb(&moves_bb);
-            int flag = _get_flag(board, color, piece, from, to);
-            Move move = {from, to, flag};
-            moves[i++] = move;
+            if (toupper(piece) == 'P' && (rank_of(to) == 0 || rank_of(to) == 7)) { // Add all promotions
+                Move queen_promotion = {from, to, PROMOTION_QUEEN};
+                moves[i++] = queen_promotion;
+                Move rook_promotion = {from, to, PROMOTION_ROOK};
+                moves[i++] = rook_promotion;
+                Move bishop_promotion = {from, to, PROMOTION_BISHOP};
+                moves[i++] = bishop_promotion;
+                Move knight_promotion = {from, to, PROMOTION_KNIGHT};
+                moves[i++] = knight_promotion;
+            } else {
+                int flag = _get_flag(board, color, piece, from, to);
+                Move move = {from, to, flag};
+                moves[i++] = move;
+            }
         }
     }
 
@@ -164,16 +179,16 @@ Move* get_pseudolegal_moves(Board* board, bool color) {
  * @param piece
  * @param from the square the piece is moving from
  * @param to the square the piece is moving to 
- * @return the appropriate flag for the move
+ * @return the appropriate flag for the move, excludes promotions
  */
 int _get_flag(Board* board, bool color, char piece, int from, int to) {
     uint64_t enemy = (color == WHITE) ? board->b_occupied : board->w_occupied;
     
-    if (toupper(piece) == 'P') {
-        if (to == board->en_passant_square) return EN_PASSANT;
-        if (rank_of(to) == 0 || rank_of(to) == 8) return PROMOTION_QUEEN; // TODO insert promotion type
-    } else if (toupper(piece) == 'K') {
-        if (abs(file_of(from) - file_of(to)) == 2) return CASTLING;
+    switch (toupper(piece)) {
+        case 'P':
+            if (to == board->en_passant_square) return EN_PASSANT;
+        case 'K':
+            if (abs(file_of(from) - file_of(to)) == 2) return CASTLING;
     }
     if (BB_SQUARES[to] & enemy) return CAPTURE;
     return NONE;
@@ -254,8 +269,8 @@ uint64_t _get_bishop_moves(Board *board, bool color, int square) {
 /**
  * @param board
  * @param color the color of the rook
- * @param square the square the bishop is on
- * @return where the bishop can move from the given square
+ * @param square the square the rook is on
+ * @return where the rook can move from the given square
  */
 uint64_t _get_rook_moves(Board* board, bool color, int square) {
     uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
