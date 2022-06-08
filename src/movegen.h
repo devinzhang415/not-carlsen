@@ -21,7 +21,7 @@ extern uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 uint64_t perft(Board* board, Stack** stack, int depth);
 
-Move* get_pseudolegal_moves(Board* board, bool color);
+void gen_pseudolegal_moves(Move* moves, Board* board, bool color);
 int _get_flag(Board* board, bool color, char piece, int from, int to);
 
 uint64_t _get_pawn_moves(Board* board, bool color, int square);

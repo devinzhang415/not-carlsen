@@ -7,7 +7,7 @@
 int main(void) {
     ////////////////////////////////////////////////////////////////////////////////
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    char* fen = "q6k/8/8/8/1P6/KP6/8/8 w - - 0 1";
+    char* fen = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
 
     Board board;
     Stack* stack = malloc(sizeof(Stack));

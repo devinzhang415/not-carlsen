@@ -14,6 +14,11 @@ Special thanks to:
 ------
 
 ## Devlog
+6/8/22 v0.2.4
+> Fixed major perft bugs by using a non-static pseudolegal move array. In recurisve perft calls, said array was erroneously being changed mid-call such that the array would be different after a recursive call and keep the changes after the sub-function finished executing.
+> 
+> Perft errors reduced to ~10%.
+
 6/7/22 v0.2.3
 > Fixed bug with move generation where the victim piece in captures was incorrectly tagged due to it being checked after the attacker square was updated.
 >
