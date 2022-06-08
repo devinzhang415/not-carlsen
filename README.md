@@ -14,7 +14,12 @@ Special thanks to:
 ------
 
 ## Devlog
+6/7/22 v0.2.3
+> Fixed bug with move generation where the victim piece in captures was incorrectly tagged due to it being checked after the attacker square was updated.
+
 6/6/22 v0.2.2
+> Started perft testing with the move generator. This determines the accuracy of the move generation as well as the speed at different depths.
+>
 > Added function to determine if king is in check.
 
 6/5/22 v0.2.1
