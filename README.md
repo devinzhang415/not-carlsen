@@ -16,6 +16,8 @@ Special thanks to:
 ## Devlog
 6/7/22 v0.2.3
 > Fixed bug with move generation where the victim piece in captures was incorrectly tagged due to it being checked after the attacker square was updated.
+>
+> Continuing to run into error where all "perft 1" numbers match the unit tests, but deeper depths give results larger than what they should be.
 
 6/6/22 v0.2.2
 > Started perft testing with the move generator. This determines the accuracy of the move generation as well as the speed at different depths.

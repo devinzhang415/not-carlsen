@@ -101,10 +101,10 @@ uint64_t perft(Board* board, Stack** stack, int depth) {
     for (int i = 0; i < 1000; i++) {
         if (moves[i].flag == INVALID) break;
 
-        printf("\n%d, %d, %d ", moves[i].from, moves[i].to, moves[i].flag);
+        // printf("\n%d, %d, %d ", moves[i].from, moves[i].to, moves[i].flag);
 
         if (!push_if_legal(board, stack, moves[i])) {
-            printf("ILLEGAL");
+            // printf("ILLEGAL");
             continue;
         }
         nodes += perft(board, stack, depth - 1);
