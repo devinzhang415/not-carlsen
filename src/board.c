@@ -172,7 +172,7 @@ bool push_if_legal(Board* board, Stack** stack, Move* move) {
             } else if (to == A1) { // Queenside
                 if (!board->w_queenside_castling_rights) return false;
                 if (!(board->w_rooks & BB_SQUARES[A1])) return false;
-                if (board->occupied & (BB_SQUARES[D1] | BB_SQUARES[C1] | BB_SQUARES[B1])) return false;
+                if (board->occupied & (BB_SQUARES[D1] | BB_SQUARES[C1])) return false;
                 if (is_attacked(board, BLACK, D1) || is_attacked(board, BLACK, C1)) return false;
 
                 push(board, stack, move);
@@ -193,7 +193,7 @@ bool push_if_legal(Board* board, Stack** stack, Move* move) {
             } else if (to == A8) { // Queenside
                 if (!board->b_queenside_castling_rights) return false;
                 if (!(board->w_rooks & BB_SQUARES[A8])) return false;
-                if (board->occupied & (BB_SQUARES[D8] | BB_SQUARES[C8] | BB_SQUARES[B8])) return false;
+                if (board->occupied & (BB_SQUARES[D8] | BB_SQUARES[C8])) return false;
                 if (is_attacked(board, BLACK, D8) || is_attacked(board, BLACK, C8)) return false;
 
                 push(board, stack, move);
