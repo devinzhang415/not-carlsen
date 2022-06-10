@@ -190,11 +190,10 @@ void print_move_pre(Board* board, Move move) {
                 printf("B");
                 break;
         }
-        printf(" ");
     } else {
         printf("%c", piece);
         printf("%c", 104 - (7 - file_of(move.to)));
-        printf("%d ", rank_of(move.to) + 1);
+        printf("%d", rank_of(move.to) + 1);
     }
 }
 

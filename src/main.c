@@ -4,6 +4,12 @@
 #include "board.h"
 #include "movegen.h"
 
+extern int captures;
+extern int ep;
+extern int castles;
+extern int promotions;
+
+
 int main(void) {
     ////////////////////////////////////////////////////////////////////////////////
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -21,9 +27,16 @@ int main(void) {
      *  also not fully accurate until 3-fold rep and 50 move rule detection
      * UCI
      * legal move gen
+     * 
+     * pos 1 accurate to depth 7
+     * pos 2 fails on depth 5
+     * pos 3 fails on depth 7
+     * pos 4 fails on depth 4
+     * pos 5 fails on depth 5
+     * pos 6 accurate to depth 5
     **/
 
-    printf("\n%llu", perft(&board, &stack, 3));
+    print_divided_perft(&board, &stack, 5);
 
  
     return 0;

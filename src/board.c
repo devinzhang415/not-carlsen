@@ -299,7 +299,7 @@ void _make_move(Board* board, Move move) {
                     case PROMOTION_KNIGHT:
                         clear_bit(&board->w_pawns, to);
                         set_bit(&board->w_knights, to);
-                        board->mailbox[to] = 'K';
+                        board->mailbox[to] = 'N';
                         break;
                 }
             }
@@ -392,7 +392,7 @@ void _make_move(Board* board, Move move) {
                     case PROMOTION_KNIGHT:
                         clear_bit(&board->b_pawns, to);
                         set_bit(&board->b_knights, to);
-                        board->mailbox[to] = 'k';
+                        board->mailbox[to] = 'n';
                         break;
                 }
             }

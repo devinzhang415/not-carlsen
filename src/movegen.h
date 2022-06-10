@@ -19,6 +19,7 @@ extern uint64_t ROOK_ATTACK_SHIFTS[64];
 extern uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
+void print_divided_perft(Board* board, Stack** stack, int depth);
 uint64_t perft(Board* board, Stack** stack, int depth);
 
 void gen_pseudolegal_moves(Move* moves, Board* board, bool color);

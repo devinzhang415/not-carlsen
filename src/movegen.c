@@ -86,6 +86,32 @@ uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
 /**
+ * Prints out the perft grouped by the first moves made.
+ * @param board 
+ * @param stack history of board positions and the moves it took to reach them.
+ * @param depth what depth to perform moves to.
+ */
+void print_divided_perft(Board* board, Stack** stack, int depth) {
+    uint64_t total_nodes = 0;
+    Move moves[1000];
+
+    gen_pseudolegal_moves(moves, board, board->turn);
+    for (int i = 0; i < 1000; i++) {
+        if (moves[i].flag == INVALID) break;
+
+        if (!legal_push(board, stack, moves[i])) continue;
+
+        print_move_post(board, moves[i]);
+        uint64_t nodes = perft(board, stack, depth - 1);
+        total_nodes += nodes;
+        printf(": %llu\n", nodes);
+        pop(board, stack);
+    }
+    printf("\nNodes searched: %llu\n", total_nodes);
+}
+
+
+/**
  * Performance test debug function to determine the accuracy of the move generator.
  * @param board
  * @param stack history of board positions and the moves it took to reach them.
