@@ -105,7 +105,8 @@ uint64_t perft(Board* board, Stack** stack, int depth) {
 
         if (!legal_push(board, stack, moves[i])) continue;
 
-        print_move(board, moves[i]);
+        print_move_post(board, moves[i]);
+        printf(" ");
         nodes += perft(board, stack, depth - 1);
         pop(board, stack);
     }

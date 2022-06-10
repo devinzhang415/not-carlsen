@@ -178,14 +178,13 @@ bool legal_push(Board* board, Stack** stack, Move move) {
 
                 push(board, stack, move);
                 return true;
-            } else {
-                return false;
             }
+            return false;
         } else {
             if (from != E8) return false;
             if (to == G8) { // Kingside
                 if (!board->b_kingside_castling_rights) return false;
-                if (!(board->w_rooks & BB_SQUARES[H8])) return false;
+                if (!(board->b_rooks & BB_SQUARES[H8])) return false;
                 if (board->occupied & (BB_SQUARES[F8] | BB_SQUARES[G8])) return false;
                 if (is_attacked(board, WHITE, F8) || is_attacked(board, WHITE, G8)) return false;
 
@@ -193,15 +192,14 @@ bool legal_push(Board* board, Stack** stack, Move move) {
                 return true;
             } else if (to == C8) { // Queenside
                 if (!board->b_queenside_castling_rights) return false;
-                if (!(board->w_rooks & BB_SQUARES[A8])) return false;
+                if (!(board->b_rooks & BB_SQUARES[A8])) return false;
                 if (board->occupied & (BB_SQUARES[D8] | BB_SQUARES[C8] | BB_SQUARES[B8])) return false;
                 if (is_attacked(board, WHITE, D8) || is_attacked(board, WHITE, C8)) return false;
 
                 push(board, stack, move);
                 return true;
-            } else {
-                return false;
             }
+            return false;
         }
     }
 
@@ -454,47 +452,9 @@ void _make_move(Board* board, Move move) {
             break;
     }
 
-    if (flag == CAPTURE) {
+    if (victim != '-') {
         reset_halfmove = true;
-
-        switch (victim) {
-            case 'P':
-                clear_bit(&board->w_pawns, to);
-                break;
-            case 'N':
-                clear_bit(&board->w_knights, to);
-                break;
-            case 'B':
-                clear_bit(&board->w_bishops, to);
-                break;
-            case 'R':
-                clear_bit(&board->w_rooks, to);
-                break;
-            case 'Q':
-                clear_bit(&board->w_queens, to);
-                break;
-            case 'K':
-                clear_bit(&board->w_king, to);
-                break;
-            case 'p':
-                clear_bit(&board->b_pawns, to);
-                break;
-            case 'n':
-                clear_bit(&board->b_knights, to);
-                break;
-            case 'b':
-                clear_bit(&board->b_bishops, to);
-                break;
-            case 'r':
-                clear_bit(&board->b_rooks, to);
-                break;
-            case 'q':
-                clear_bit(&board->b_queens, to);
-                break;
-            case 'k':
-                clear_bit(&board->b_king, to);
-                break;
-        }
+        _toggle_victim(board, victim, to);
     }
 
     board->w_occupied = board->w_pawns | board->w_knights | board->w_bishops | board->w_rooks | board->w_queens | board->w_king;
@@ -510,6 +470,54 @@ void _make_move(Board* board, Move move) {
     if (color == BLACK) board->fullmove_number++;
 
     board->turn = !color;
+}
+
+
+/**
+ * Helper function for captures to remove the victim from their bitboard.
+ * @param board 
+ * @param victim the piece that was taken.
+ * @param to the square the piece was on.
+ */
+void _toggle_victim(Board* board, char victim, int to) {
+    switch (victim) {
+        case 'P':
+            clear_bit(&board->w_pawns, to);
+            break;
+        case 'N':
+            clear_bit(&board->w_knights, to);
+            break;
+        case 'B':
+            clear_bit(&board->w_bishops, to);
+            break;
+        case 'R':
+            clear_bit(&board->w_rooks, to);
+            break;
+        case 'Q':
+            clear_bit(&board->w_queens, to);
+            break;
+        case 'K':
+            clear_bit(&board->w_king, to);
+            break;
+        case 'p':
+            clear_bit(&board->b_pawns, to);
+            break;
+        case 'n':
+            clear_bit(&board->b_knights, to);
+            break;
+        case 'b':
+            clear_bit(&board->b_bishops, to);
+            break;
+        case 'r':
+            clear_bit(&board->b_rooks, to);
+            break;
+        case 'q':
+            clear_bit(&board->b_queens, to);
+            break;
+        case 'k':
+            clear_bit(&board->b_king, to);
+            break;
+    }
 }
 
 

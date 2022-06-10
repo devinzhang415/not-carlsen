@@ -164,16 +164,75 @@ void print_mailbox(char* mailbox) {
 
 
 /**
- * Prints the pushed move in algebraic notation.
+ * Prints the move (before its been made) in algebraic notation.
+ * Does not accurately print all moves. Primarily for debug purposes.
+ * @param board
+ * @param move the move to be made.
+ */
+void print_move_pre(Board* board, Move move) {
+    char piece = toupper(board->mailbox[move.from]);
+
+    if (piece == 'P') {
+        printf("%c", 104 - (7 - file_of(move.to)));
+        printf("%d", rank_of(move.to) + 1);
+
+        switch (move.flag) {
+            case PROMOTION_QUEEN:
+                printf("Q");
+                break;
+            case PROMOTION_ROOK:
+                printf("R");
+                break;
+            case PROMOTION_KNIGHT:
+                printf("N");
+                break;
+            case PROMOTION_BISHOP:
+                printf("B");
+                break;
+        }
+        printf(" ");
+    } else {
+        printf("%c", piece);
+        printf("%c", 104 - (7 - file_of(move.to)));
+        printf("%d ", rank_of(move.to) + 1);
+    }
+}
+
+
+/**
+ * Prints the move (after its been made) in algebraic notation.
  * Does not accurately print all moves. Primarily for debug purposes.
  * @param board
  * @param move the move that has just been made.
  */
-void print_move(Board* board, Move move) {
-    char piece = toupper(board->mailbox[move.to]);
-    if (piece != 'P') printf("%c", piece);
-    printf("%c", 104 - (7 - file_of(move.to)));
-    printf("%d ", rank_of(move.to) + 1);
+void print_move_post(Board* board, Move move) {
+    switch (move.flag) {
+        case PROMOTION_QUEEN:
+            printf("%c", 104 - (7 - file_of(move.to)));
+            printf("%d", rank_of(move.to) + 1);
+            printf("Q");
+            break;
+        case PROMOTION_ROOK:
+            printf("%c", 104 - (7 - file_of(move.to)));
+            printf("%d", rank_of(move.to) + 1);
+            printf("R");
+            break;
+        case PROMOTION_KNIGHT:
+            printf("%c", 104 - (7 - file_of(move.to)));
+            printf("%d", rank_of(move.to) + 1);
+            printf("N");
+            break;
+        case PROMOTION_BISHOP:
+            printf("%c", 104 - (7 - file_of(move.to)));
+            printf("%d", rank_of(move.to) + 1);
+            printf("B");
+            break;
+        default:
+            char piece = toupper(board->mailbox[move.to]);
+            if (piece != 'P') printf("%c", piece);
+            printf("%c", 104 - (7 - file_of(move.to)));
+            printf("%d", rank_of(move.to) + 1);
+    }
 }
 
 

@@ -182,7 +182,8 @@ void clear_bit(uint64_t* bb, int square);
 
 void print_bb(uint64_t bb);
 void print_mailbox(char* mailbox);
-void print_move(Board* board, Move move);
+void print_move_pre(Board* board, Move move);
+void print_move_post(Board* board, Move move);
 
 int rank_of(int square);
 int file_of(int file);
