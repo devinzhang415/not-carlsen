@@ -103,12 +103,13 @@ uint64_t perft(Board* board, Stack** stack, int depth) {
     for (int i = 0; i < 1000; i++) {
         if (moves[i].flag == INVALID) break;
 
-        if (!legal_push(board, stack, moves[i])) {
-            continue;
-        }
+        if (!legal_push(board, stack, moves[i])) continue;
+
+        print_move(board, moves[i]);
         nodes += perft(board, stack, depth - 1);
         pop(board, stack);
     }
+    printf("\n");
     return nodes;
 }
 
@@ -167,6 +168,8 @@ void gen_pseudolegal_moves(Move* moves, Board* board, bool color) {
             }
         }
     }
+    Move end = {A1, A1, INVALID};
+    moves[i] = end;
 }
 
 

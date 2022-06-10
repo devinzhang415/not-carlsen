@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "util.h"
 
 
@@ -159,6 +160,20 @@ void print_mailbox(char* mailbox) {
         printf("\n");
     }
     printf("\n");
+}
+
+
+/**
+ * Prints the pushed move in algebraic notation.
+ * Does not accurately print all moves. Primarily for debug purposes.
+ * @param board
+ * @param move the move that has just been made.
+ */
+void print_move(Board* board, Move move) {
+    char piece = toupper(board->mailbox[move.to]);
+    if (piece != 'P') printf("%c", piece);
+    printf("%c", 104 - (7 - file_of(move.to)));
+    printf("%d ", rank_of(move.to) + 1);
 }
 
 

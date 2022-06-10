@@ -17,10 +17,11 @@ int main(void) {
     ////////////////////////////////////////////////////////////////////////////////
     /**
      * TODO
-     * perft: speedups in move generation for check and checkmate. also not fully accurate until 3-fold rep and 50 move rule detection
+     * perft: speedups in move generation for check and checkmate.
+     *  also not fully accurate until 3-fold rep and 50 move rule detection
      * UCI
     **/
-    printf("\n%d", perft(&board, &stack, 2));
+    printf("\n%llu", perft(&board, &stack, 2));
 
 
 

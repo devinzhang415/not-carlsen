@@ -14,8 +14,13 @@ Special thanks to:
 ------
 
 ## Devlog
+6/10/22 v0.2.5
+> Continuing to squash perft bugs. Latest one traced to an improper last move flag in the pseudo-legal move list due to a reliance on default uninitialized values.
+>
+> Several positions still have errors, but default position has no errors up to depth 7 (3.2 billion nodes). First speed test clocks in at 6.5 million nodes per second.
+
 6/8/22 v0.2.4
-> Fixed major perft bugs by using a non-static pseudolegal move array. In recurisve perft calls, said array was erroneously being changed mid-call such that the array would be different after a recursive call and keep the changes after the sub-function finished executing.
+> Fixed major perft bugs by using a non-static pseudo-legal move array. In recurisve perft calls, said array was erroneously being changed mid-call such that the array would be different after a recursive call and keep the changes after the sub-function finished executing.
 > 
 > Perft errors reduced to ~10%.
 
