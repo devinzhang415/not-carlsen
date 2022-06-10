@@ -16,8 +16,11 @@ Special thanks to:
 ## Devlog
 6/10/22 v0.2.5
 > Continuing to squash perft bugs:
+>
 > Duplicate moves caused by an improper last move flag in the pseudo-legal move list due to a reliance on default uninitialized values.
+>
 > Missing castling moves for black as the move legality was checking for the existence of white rooks instead of black.
+>
 > Undefined behavior due to oversight where promotion moves that were also captures were not being properly considered captures.
 >
 > Several positions still have errors, but default position has no errors up to depth 7 (3.2 billion nodes). First speed test clocks in at 6.5 million nodes per second.
