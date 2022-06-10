@@ -9,7 +9,7 @@ Special thanks to:
 ## Current Features
 - FEN board initialization
 - Magic bitboard sliding move generation
-- Pseudolegal move generator
+- Pseudolegal move generator (6.5 million nps)
 
 ------
 
