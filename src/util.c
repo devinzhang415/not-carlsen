@@ -134,6 +134,15 @@ void clear_bit(uint64_t* bb, int square) {
 
 
 /**
+ * @param bb
+ * @return the number of set bits in the bitboard
+ */
+int pop_count(uint64_t bb) {
+    return __builtin_popcountll(bb);
+}
+
+
+/**
  * Prints the binary representation of the bitboard.
  * @param bb the bitboard.
  */
@@ -273,15 +282,6 @@ int anti_diagonal_of(int square) {
 
 /**
  * @param bb
- * @return the number of set bits in the bitboard
- */
-int pop_count(uint64_t bb) {
-    return __builtin_popcountll(bb);
-}
-
-
-/**
- * @param bb
  * @return the reverse of the bitboard. Flips the perspective of the board
  * @author github.com/nkarve
  */
@@ -364,4 +364,17 @@ uint64_t _get_ray(int square1, int square2) {
     if (anti_diagonal & square2_bb) return anti_diagonal;
     
     return 0;
+}
+
+
+/**
+ * @return a random unsigned 64-bit integer.
+ * @author https://stackoverflow.com/a/28116032.
+ */
+uint64_t rand_ull(void) {
+    uint64_t n = 0;
+    for (int i = 0; i < 5; i++) {
+        n = (n << 15) | (rand() & 0x7FFF);
+    }
+    return n & 0xFFFFFFFFFFFFFFFF;
 }

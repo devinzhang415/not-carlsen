@@ -16,11 +16,15 @@
  * @param fen the FEN string to initalize the board to. Assumed valid
  */
 void init(Board* board, Stack** stack, char* fen) {
-    // Initalize board
+    // Initalize random
+    srand(time(NULL)); 
+
     char fen_copy[100];
     strcpy(fen_copy, fen);
     char *rest = fen_copy;
 
+    // Initalize bitboards and mailbox
+    char *token = strtok_r(rest, " ", &rest);
     for (int i = A1; i <= H8; i++) {
         board->mailbox[i] = '-';
     }
@@ -36,8 +40,6 @@ void init(Board* board, Stack** stack, char* fen) {
     board->b_rooks = 0;
     board->b_queens = 0;
     board->b_king = 0;
-
-    char *token = strtok_r(rest, " ", &rest);
     for (int rank = 7; rank >= 0; rank--) {
         char *fen_board = strtok_r(token, "/", &token);
         int file = 0;
@@ -96,9 +98,11 @@ void init(Board* board, Stack** stack, char* fen) {
     board->b_occupied = board->b_pawns | board->b_knights | board->b_bishops | board->b_rooks | board->b_queens | board->b_king;
     board->occupied = board->w_occupied | board->b_occupied;
 
+    // Initalize turn
     token = strtok_r(rest, " ", &rest);
     board->turn = (*token == 'w') ? WHITE : BLACK;
 
+    // Initalize castling rights
     token = strtok_r(rest, " ", &rest);
     board->w_kingside_castling_rights = false;
     board->w_queenside_castling_rights = false;
@@ -122,12 +126,15 @@ void init(Board* board, Stack** stack, char* fen) {
         }
     }
 
+    // Initalize possible en passant square
     token = strtok_r(rest, " ", &rest);
     board->en_passant_square = (*token == '-') ? NULL_SQUARE : parse_square(token);
 
+    // Initalize halfmove clock
     token = strtok_r(rest, " ", &rest);
     board->halfmove_clock = atoi(token);
 
+    // Initalize fullmove number
     token = strtok_r(rest, " ", &rest);
     board->fullmove_number = atoi(token);
 
