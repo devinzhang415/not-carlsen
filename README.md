@@ -14,6 +14,9 @@ Special thanks to:
 ------
 
 ## Devlog
+6/15/22 v0.2.6
+> Added zobrist hash to the position.
+
 6/10/22 v0.2.5
 > Continuing to squash perft bugs:
 >
