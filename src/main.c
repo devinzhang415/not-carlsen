@@ -4,11 +4,6 @@
 #include "board.h"
 #include "movegen.h"
 
-extern int captures;
-extern int ep;
-extern int castles;
-extern int promotions;
-
 
 int main(void) {
     ////////////////////////////////////////////////////////////////////////////////
