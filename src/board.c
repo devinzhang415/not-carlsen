@@ -265,7 +265,7 @@ void pop(Board* board, Stack** stack) {
  * @param board
  * @param move 
  */
-static void _make_move(Board* board, Move move) { // board->zobrist ^= ZOBRIST_VALUES[64*parse_piece(piece) + square];
+static void _make_move(Board* board, Move move) {
     int from = move.from;
     int to = move.to;
     int flag = move.flag;
@@ -285,7 +285,7 @@ static void _make_move(Board* board, Move move) { // board->zobrist ^= ZOBRIST_V
     uint64_t* attacker_bb = get_bitboard(board, attacker);
     clear_bit(attacker_bb, from);
     set_bit(attacker_bb, to);
-    board->mailbox[from] - '-';
+    board->mailbox[from] = '-';
     board->mailbox[to] = attacker;
 
     switch (attacker) {
@@ -411,7 +411,7 @@ static void _make_move(Board* board, Move move) { // board->zobrist ^= ZOBRIST_V
 
     if (victim != '-') {
         reset_halfmove = true;
-        uint64_t* victim_bb = get_bitboard(board, victim);
+        uint64_t* victim_bb = board->bitboards[parse_piece(victim)];
         clear_bit(victim_bb, to);
     }
 

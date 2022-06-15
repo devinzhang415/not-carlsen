@@ -13,7 +13,7 @@ int main(void) {
     Board board;
     Stack* stack = malloc(sizeof(Stack));
 
-    init(&board, &stack, fen);
+    init(&board, &stack, DEFAULT_FEN);
 
     ////////////////////////////////////////////////////////////////////////////////
     /**
@@ -31,9 +31,7 @@ int main(void) {
      * pos 6 accurate to depth 5
     **/
 
-    // print_divided_perft(&board, &stack, 1);
-
-    printf("\n%llu\n", board.zobrist);
+    print_divided_perft(&board, &stack, 6);
 
  
     return 0;
