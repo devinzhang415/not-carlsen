@@ -46,16 +46,16 @@ typedef struct Move {
 
 /**
  * Representation of the board using:
+ * - mailbox representation for piece-at-square retrieval
  * - bitboards for every color and piece type
  * - bitboards of all occupied squares, and the occupied squares of just white/black
+ * - array of all bitboards
  * - flag denoting whose turn it is
  * - flags for white/black castling rights kingside/queenside
  * - en passant target square, if any
  * - halfmove counter, denoting the number of halfmoves since the last capture or pawn advance
  * - fullmove counter, denoting the number of cycles of a white move and a black move
- * 
- * Includes a mailbox representation for piece-at-square retrieval
- * Includes a move stack
+ * - a zobrist hash value for the current position
  */
 typedef struct Board {
     char mailbox[64];
@@ -77,6 +77,8 @@ typedef struct Board {
     uint64_t w_occupied;
     uint64_t b_occupied;
 
+    uint64_t* bitboards[12];
+
     bool turn;
 
     bool w_kingside_castling_rights;
@@ -88,6 +90,8 @@ typedef struct Board {
 
     int halfmove_clock;
     int fullmove_number;
+
+    uint64_t zobrist;
 } Board;
 
 
@@ -168,13 +172,14 @@ extern const uint64_t BB_ANTI_DIAGONALS[15];
 
 extern uint64_t BB_RAYS[64][64];
 
+extern uint64_t ZOBRIST_VALUES[781];
 
-extern Move NULL_MOVE;
-
+extern const Move NULL_MOVE;
 extern const int NULL_SQUARE;
 
 
 int parse_square(char* square);
+int parse_piece(char piece);
 
 bool get_bit(uint64_t bb, int square);
 void set_bit(uint64_t* bb, int square);
@@ -198,7 +203,9 @@ int pull_lsb(uint64_t* bb);
 
 void init_rays(void);
 uint64_t get_ray_between(int square1, int square2);
-uint64_t _get_ray(int square1, int square2);
+static uint64_t _get_ray(int square1, int square2);
+
+void init_zobrist_table(void);
 
 uint64_t rand_ull(void);
 

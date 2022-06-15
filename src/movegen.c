@@ -158,22 +158,22 @@ void gen_pseudolegal_moves(Move* moves, Board* board, bool color) {
         uint64_t moves_bb;
         switch (toupper(piece)) {
             case 'P':
-                moves_bb = _get_pawn_moves(board, color, from);
+                moves_bb = get_pawn_moves(board, color, from);
                 break;
             case 'N':
-                moves_bb = _get_knight_moves(board, color, from);
+                moves_bb = get_knight_moves(board, color, from);
                 break;
             case 'B':
-                moves_bb = _get_bishop_moves(board, color, from);
+                moves_bb = get_bishop_moves(board, color, from);
                 break;
             case 'R':
-                moves_bb = _get_rook_moves(board, color, from);
+                moves_bb = get_rook_moves(board, color, from);
                 break;
             case 'Q':
-                moves_bb = _get_queen_moves(board, color, from);
+                moves_bb = get_queen_moves(board, color, from);
                 break;
             case 'K':
-                moves_bb = _get_king_moves(board, color, from);
+                moves_bb = get_king_moves(board, color, from);
                 break;
         }
 
@@ -208,7 +208,7 @@ void gen_pseudolegal_moves(Move* moves, Board* board, bool color) {
  * @param to the square the piece is moving to 
  * @return the appropriate flag for the move, excludes promotions
  */
-int _get_flag(Board* board, bool color, char piece, int from, int to) {
+static int _get_flag(Board* board, bool color, char piece, int from, int to) {
     uint64_t enemy = (color == WHITE) ? board->b_occupied : board->w_occupied;
     
     switch (toupper(piece)) {
@@ -228,7 +228,7 @@ int _get_flag(Board* board, bool color, char piece, int from, int to) {
  * @param square the square the pawn is on
  * @return where the pawn can move from the given square
  */
-uint64_t _get_pawn_moves(Board* board, bool color, int square) {
+uint64_t get_pawn_moves(Board* board, bool color, int square) {
     if (color == WHITE) {
         uint64_t pawn = BB_SQUARES[square];
 
@@ -271,7 +271,7 @@ uint64_t _get_pawn_moves(Board* board, bool color, int square) {
  * @param square the square the knight is on
  * @return where the knight can move from the given square
  */
-uint64_t _get_knight_moves(Board* board, bool color, int square) {
+uint64_t get_knight_moves(Board* board, bool color, int square) {
     uint64_t moves = BB_KNIGHT_ATTACKS[square];
 
     return (color == WHITE) ? moves & ~board->w_occupied : moves & ~board->b_occupied;
@@ -284,7 +284,7 @@ uint64_t _get_knight_moves(Board* board, bool color, int square) {
  * @param square the square the bishop is on
  * @return where the bishop can move from the given square
  */
-uint64_t _get_bishop_moves(Board *board, bool color, int square) {
+uint64_t get_bishop_moves(Board *board, bool color, int square) {
     uint64_t occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
     uint64_t key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t moves = BB_BISHOP_ATTACKS[square][key];
@@ -299,7 +299,7 @@ uint64_t _get_bishop_moves(Board *board, bool color, int square) {
  * @param square the square the rook is on
  * @return where the rook can move from the given square
  */
-uint64_t _get_rook_moves(Board* board, bool color, int square) {
+uint64_t get_rook_moves(Board* board, bool color, int square) {
     uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
     uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
     uint64_t moves = BB_ROOK_ATTACKS[square][key];
@@ -314,7 +314,7 @@ uint64_t _get_rook_moves(Board* board, bool color, int square) {
  * @param square the square the queen is on
  * @return where the queen can move from the given square
  */
-uint64_t _get_queen_moves(Board* board, bool color, int square) {
+uint64_t get_queen_moves(Board* board, bool color, int square) {
     uint64_t bishop_occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
     uint64_t bishop_key = (bishop_occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t bishop_moves = BB_BISHOP_ATTACKS[square][bishop_key];
@@ -335,7 +335,7 @@ uint64_t _get_queen_moves(Board* board, bool color, int square) {
  * @param square the square the king is on
  * @return where the king can move from the given square
  */
-uint64_t _get_king_moves(Board* board, bool color, int square) {
+uint64_t get_king_moves(Board* board, bool color, int square) {
     uint64_t moves = BB_KING_ATTACKS[square];
     if (color == WHITE) {
         if (board->w_kingside_castling_rights) set_bit(&moves, G1);
@@ -409,7 +409,7 @@ void init_rook_attacks(void) {
  * @return the bishop attack bitboard
  * @author github.com/nkarve
  */
-uint64_t _init_bishop_attacks_helper(int square, uint64_t subset) {
+static uint64_t _init_bishop_attacks_helper(int square, uint64_t subset) {
     uint64_t square_mask = BB_SQUARES[square];
     uint64_t diagonal_mask = BB_DIAGONALS[diagonal_of(square)];
     uint64_t anti_diagonal_mask = BB_ANTI_DIAGONALS[anti_diagonal_of(square)];
@@ -434,7 +434,7 @@ uint64_t _init_bishop_attacks_helper(int square, uint64_t subset) {
  * @return the rook attack bitboard
  * @author github.com/nkarve
  */
-uint64_t _init_rook_attacks_helper(int square, uint64_t subset) {
+static uint64_t _init_rook_attacks_helper(int square, uint64_t subset) {
     uint64_t square_mask = BB_SQUARES[square];
     uint64_t rank_mask = BB_RANKS[rank_of(square)];
     uint64_t file_mask = BB_FILES[file_of(square)];

@@ -23,19 +23,19 @@ void print_divided_perft(Board* board, Stack** stack, int depth);
 uint64_t perft(Board* board, Stack** stack, int depth);
 
 void gen_pseudolegal_moves(Move* moves, Board* board, bool color);
-int _get_flag(Board* board, bool color, char piece, int from, int to);
+static int _get_flag(Board* board, bool color, char piece, int from, int to);
 
-uint64_t _get_pawn_moves(Board* board, bool color, int square);
-uint64_t _get_knight_moves(Board* board, bool color, int square);
-uint64_t _get_bishop_moves(Board* board, bool color, int square);
-uint64_t _get_rook_moves(Board* board, bool color, int square);
-uint64_t _get_queen_moves(Board* board, bool color, int square);
-uint64_t _get_king_moves(Board* board, bool color, int square);
+uint64_t get_pawn_moves(Board* board, bool color, int square);
+uint64_t get_knight_moves(Board* board, bool color, int square);
+uint64_t get_bishop_moves(Board* board, bool color, int square);
+uint64_t get_rook_moves(Board* board, bool color, int square);
+uint64_t get_queen_moves(Board* board, bool color, int square);
+uint64_t get_king_moves(Board* board, bool color, int square);
 
 void init_bishop_attacks(void);
 void init_rook_attacks(void);
-uint64_t _init_bishop_attacks_helper(int square, uint64_t subset);
-uint64_t _init_rook_attacks_helper(int square, uint64_t subset);
+static uint64_t _init_bishop_attacks_helper(int square, uint64_t subset);
+static uint64_t _init_rook_attacks_helper(int square, uint64_t subset);
 
 
 #endif

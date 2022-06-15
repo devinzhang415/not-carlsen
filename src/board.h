@@ -6,16 +6,17 @@
 
 
 void init(Board* board, Stack** stack, char* fen);
+static void _init_zobrist(Board* board);
 
 bool legal_push(Board* board, Stack** stack, Move move);
-
 void push(Board* board, Stack** stack, Move move);
 void pop(Board* board, Stack** stack);
-void _make_move(Board* board, Move move);
-void _toggle_victim(Board* board, char victim, int to);
+static void _make_move(Board* board, Move move);
 
 bool is_check(Board* board, bool color);
 bool is_attacked(Board* board, bool color, int square);
+
+uint64_t* get_bitboard(Board* board, char piece);
 
 
 #endif

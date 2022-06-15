@@ -1,8 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
-#include <stdlib.h>
+#include <time.h>
 #include <ctype.h>
 #include "board.h"
 #include "util.h"
@@ -16,8 +17,12 @@
  * @param fen the FEN string to initalize the board to. Assumed valid
  */
 void init(Board* board, Stack** stack, char* fen) {
-    // Initalize random
+    // Initalize misc
     srand(time(NULL)); 
+    init_zobrist_table();
+    init_rays(); // TODO unused?
+    init_bishop_attacks();
+    init_rook_attacks();
 
     char fen_copy[100];
     strcpy(fen_copy, fen);
@@ -40,6 +45,18 @@ void init(Board* board, Stack** stack, char* fen) {
     board->b_rooks = 0;
     board->b_queens = 0;
     board->b_king = 0;
+    board->bitboards[0] = &board->w_pawns;
+    board->bitboards[1] = &board->w_knights;
+    board->bitboards[2] = &board->w_bishops;
+    board->bitboards[3] = &board->w_rooks;
+    board->bitboards[4] = &board->w_queens;
+    board->bitboards[5] = &board->w_king;
+    board->bitboards[6] = &board->b_pawns;
+    board->bitboards[7] = &board->b_knights;
+    board->bitboards[8] = &board->b_bishops;
+    board->bitboards[9] = &board->b_rooks;
+    board->bitboards[10] = &board->b_queens;
+    board->bitboards[11] = &board->b_king;
     for (int rank = 7; rank >= 0; rank--) {
         char *fen_board = strtok_r(token, "/", &token);
         int file = 0;
@@ -52,44 +69,8 @@ void init(Board* board, Stack** stack, char* fen) {
             } else {
                 int square = 8*rank + file;
                 board->mailbox[square] = piece;
-                switch (piece) {
-                    case 'P':
-                        set_bit(&board->w_pawns, square);
-                        break;
-                    case 'N':
-                        set_bit(&board->w_knights, square);
-                        break;
-                    case 'B':
-                        set_bit(&board->w_bishops, square);
-                        break;
-                    case 'R':
-                        set_bit(&board->w_rooks, square);
-                        break;
-                    case 'Q':
-                        set_bit(&board->w_queens, square);
-                        break;
-                    case 'K':
-                        set_bit(&board->w_king, square);
-                        break;
-                    case 'p':
-                        set_bit(&board->b_pawns, square);
-                        break;
-                    case 'n':
-                        set_bit(&board->b_knights, square);
-                        break;
-                    case 'b':
-                        set_bit(&board->b_bishops, square);
-                        break;
-                    case 'r':
-                        set_bit(&board->b_rooks, square);
-                        break;
-                    case 'q':
-                        set_bit(&board->b_queens, square);
-                        break;
-                    case 'k':
-                        set_bit(&board->b_king, square);
-                        break;
-                }
+                uint64_t* bitboard = get_bitboard(board, piece);
+                set_bit(bitboard, square);
                 file++;
             }
         }
@@ -138,17 +119,48 @@ void init(Board* board, Stack** stack, char* fen) {
     token = strtok_r(rest, " ", &rest);
     board->fullmove_number = atoi(token);
 
+    // Initalize zobrist
+    _init_zobrist(board);
+
     // Initalize stack
     Stack* node = malloc(sizeof(Stack));
     node->move = NULL_MOVE;
     node->board = *board;
     node->next = *stack;
     *stack = node;
+}
 
-    // Initalize tables
-    init_rays(); // TODO unused?
-    init_bishop_attacks();
-    init_rook_attacks();
+
+/**
+ * Initalizes the zobrist value of the starting position.
+ * @param board 
+ */
+static void _init_zobrist(Board* board) {
+    board->zobrist = 0;
+    for (int square = A1; square <= H8; square++) {
+        char piece = board->mailbox[square];
+        if (piece != '-') {
+            board->zobrist ^= ZOBRIST_VALUES[64*parse_piece(piece) + square];
+        }
+    }
+    if (board->turn == BLACK) {
+        board->zobrist ^= ZOBRIST_VALUES[768];
+    }
+    if (board->w_kingside_castling_rights) {
+        board->zobrist ^= ZOBRIST_VALUES[769];
+    }
+    if (board->w_queenside_castling_rights) {
+        board->zobrist ^= ZOBRIST_VALUES[770];
+    }
+    if (board->b_kingside_castling_rights) {
+        board->zobrist ^= ZOBRIST_VALUES[771];
+    }
+    if (board->b_queenside_castling_rights) {
+        board->zobrist ^= ZOBRIST_VALUES[772];
+    }
+    if (board->en_passant_square != NULL_SQUARE) {
+        board->zobrist ^= ZOBRIST_VALUES[773 + rank_of(board->en_passant_square)];
+    }
 }
 
 
@@ -253,7 +265,7 @@ void pop(Board* board, Stack** stack) {
  * @param board
  * @param move 
  */
-void _make_move(Board* board, Move move) {
+static void _make_move(Board* board, Move move) {
     int from = move.from;
     int to = move.to;
     int flag = move.flag;
@@ -461,7 +473,8 @@ void _make_move(Board* board, Move move) {
 
     if (victim != '-') {
         reset_halfmove = true;
-        _toggle_victim(board, victim, to);
+        uint64_t* victim_bb = board->bitboards[parse_piece(victim)];
+        clear_bit(victim_bb, to);
     }
 
     board->w_occupied = board->w_pawns | board->w_knights | board->w_bishops | board->w_rooks | board->w_queens | board->w_king;
@@ -477,54 +490,6 @@ void _make_move(Board* board, Move move) {
     if (color == BLACK) board->fullmove_number++;
 
     board->turn = !color;
-}
-
-
-/**
- * Helper function for captures to remove the victim from their bitboard.
- * @param board 
- * @param victim the piece that was taken.
- * @param to the square the piece was on.
- */
-void _toggle_victim(Board* board, char victim, int to) {
-    switch (victim) {
-        case 'P':
-            clear_bit(&board->w_pawns, to);
-            break;
-        case 'N':
-            clear_bit(&board->w_knights, to);
-            break;
-        case 'B':
-            clear_bit(&board->w_bishops, to);
-            break;
-        case 'R':
-            clear_bit(&board->w_rooks, to);
-            break;
-        case 'Q':
-            clear_bit(&board->w_queens, to);
-            break;
-        case 'K':
-            clear_bit(&board->w_king, to);
-            break;
-        case 'p':
-            clear_bit(&board->b_pawns, to);
-            break;
-        case 'n':
-            clear_bit(&board->b_knights, to);
-            break;
-        case 'b':
-            clear_bit(&board->b_bishops, to);
-            break;
-        case 'r':
-            clear_bit(&board->b_rooks, to);
-            break;
-        case 'q':
-            clear_bit(&board->b_queens, to);
-            break;
-        case 'k':
-            clear_bit(&board->b_king, to);
-            break;
-    }
 }
 
 
@@ -552,22 +517,32 @@ bool is_attacked(Board* board, bool color, int square) {
     if (color == BLACK) {
         uint64_t square_bb = BB_SQUARES[square];
 
-        if (_get_queen_moves(board, WHITE, square) & board->b_queens) return true;
-        if (_get_rook_moves(board, WHITE, square) & board->b_rooks) return true;
-        if (_get_bishop_moves(board, WHITE, square) & board->b_bishops) return true;
-        if (_get_knight_moves(board, WHITE, square) & board->b_knights) return true;
+        if (get_queen_moves(board, WHITE, square) & board->b_queens) return true;
+        if (get_rook_moves(board, WHITE, square) & board->b_rooks) return true;
+        if (get_bishop_moves(board, WHITE, square) & board->b_bishops) return true;
+        if (get_knight_moves(board, WHITE, square) & board->b_knights) return true;
         if ((((square_bb << 9) & ~BB_FILE_A) | ((square_bb << 7) & ~BB_FILE_H)) & board->b_pawns) return true;
 
         return false;
     } else {
         uint64_t square_bb = BB_SQUARES[square];
 
-        if (_get_queen_moves(board, BLACK, square) & board->w_queens) return true;
-        if (_get_rook_moves(board, BLACK, square) & board->w_rooks) return true;
-        if (_get_bishop_moves(board, BLACK, square) & board->w_bishops) return true;
-        if (_get_knight_moves(board, BLACK, square) & board->w_knights) return true;
+        if (get_queen_moves(board, BLACK, square) & board->w_queens) return true;
+        if (get_rook_moves(board, BLACK, square) & board->w_rooks) return true;
+        if (get_bishop_moves(board, BLACK, square) & board->w_bishops) return true;
+        if (get_knight_moves(board, BLACK, square) & board->w_knights) return true;
         if ((((square_bb >> 9) & ~BB_FILE_H) | ((square_bb >> 7) & ~BB_FILE_A)) & board->w_pawns) return true;
 
         return false;
     }
+}
+
+
+/**
+ * @param board 
+ * @param piece 
+ * @return a pointer to the bitboard of the piece.
+ */
+uint64_t* get_bitboard(Board* board, char piece) {
+    return board->bitboards[parse_piece(piece)];
 }

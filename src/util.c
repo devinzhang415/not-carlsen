@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <ctype.h>
@@ -85,21 +86,63 @@ const uint64_t BB_ANTI_DIAGONALS[15] = {BB_ANTI_DIAGONAL_1, BB_ANTI_DIAGONAL_2, 
 
 uint64_t BB_RAYS[64][64];
 
+/**
+ * - 000-767: numbers for each piece on each square
+ * -     768: number to indicate side to move is black
+ * - 769-772: numbers for castling rights
+ * - 773-780: numbers to indicate en passant file
+ */
+uint64_t ZOBRIST_VALUES[781];
 
 // Misc
-Move NULL_MOVE = {A1, A1, PASS};
-
+const Move NULL_MOVE = {A1, A1, PASS};
 const int NULL_SQUARE = -1;
 
 
 /**
- * @param square the string of the square name, ie "A1."
+ * @param square the string of the square name, ie "A1".
  * @return the square's integer value.
  */
 int parse_square(char* square) {
     int file = square[0] - 'a';
     int rank = square[1] - '0';
     return 8 * (rank - 1) + file;
+}
+
+
+/**
+ * @param piece the char of the piece, ie 'K', 'B', 'q'.
+ * @return [0-11] depending on the piece
+ */
+int parse_piece(char piece) {
+    switch (piece) {
+        case 'P':
+            return 0;
+        case 'N':
+            return 1;
+        case 'B':
+            return 2;
+        case 'R':
+            return 3;
+        case 'Q':
+            return 4;
+        case 'K':
+            return 5;
+        case 'p':
+            return 6;
+        case 'n':
+            return 7;
+        case 'b':
+            return 8;
+        case 'r':
+            return 9;
+        case 'q':
+            return 10;
+        case 'k':
+            return 11;
+        default:
+            return NULL_SQUARE;
+    }
 }
 
 
@@ -346,7 +389,7 @@ uint64_t get_ray_between(int square1, int square2) {
  *         for example, there is a ray between a1 and c3, but not betweem a1 and b3.
  *         returns empty bitboard if the two squares are equal
  */
-uint64_t _get_ray(int square1, int square2) {
+static uint64_t _get_ray(int square1, int square2) {
     if (square1 == square2) return 0;
 
     uint64_t square2_bb = BB_SQUARES[square2];
@@ -364,6 +407,20 @@ uint64_t _get_ray(int square1, int square2) {
     if (anti_diagonal & square2_bb) return anti_diagonal;
     
     return 0;
+}
+
+
+/**
+ * Initalizes ZOBRIST_VALUES[781] with random unsigned 64-bit integers.
+ * - 768 numbers for each piece on each square
+ * - 1 number to indicate side to move is black
+ * - 4 numbers for castling rights
+ * - 8 numbers to indicate en passant file
+ */
+void init_zobrist_table(void) {
+    for (int i = 0; i < 781; i++) {
+        ZOBRIST_VALUES[i] = rand_ull();
+    }
 }
 
 

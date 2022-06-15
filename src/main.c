@@ -36,7 +36,9 @@ int main(void) {
      * pos 6 accurate to depth 5
     **/
 
-    print_divided_perft(&board, &stack, 5);
+    // print_divided_perft(&board, &stack, 1);
+
+    printf("\n%llu\n", board.zobrist);
 
  
     return 0;
