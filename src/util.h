@@ -106,6 +106,24 @@ typedef struct Stack {
 } Stack;
 
 
+/**
+ * Hashtable entry to store number of times position has occured for
+ * threefold repetition purposes.
+ */
+typedef struct RTable_Entry {
+    uint64_t key;
+    int num;
+    bool del;
+} RTable_Entry;
+
+
+typedef struct RTable {
+    size_t size;
+    size_t capacity;
+    RTable_Entry* entries;
+} RTable;
+
+
 extern const bool WHITE;
 extern const bool BLACK;
 
@@ -170,13 +188,13 @@ extern const uint64_t BB_ANTI_DIAGONAL_14;
 extern const uint64_t BB_ANTI_DIAGONAL_15;
 extern const uint64_t BB_ANTI_DIAGONALS[15];
 
-extern uint64_t BB_RAYS[64][64];
-
 extern uint64_t ZOBRIST_VALUES[781];
 
 extern const Move NULL_MOVE;
 extern const int NULL_SQUARE;
 
+
+uint64_t rand_ull(void);
 
 int parse_square(char* square);
 int parse_piece(char piece);
@@ -201,9 +219,7 @@ uint64_t get_reverse_bb(uint64_t bb);
 int get_lsb(uint64_t bb);
 int pull_lsb(uint64_t* bb);
 
-uint64_t get_ray_between(int square1, int square2);
-
-uint64_t rand_ull(void);
+void init_zobrist_table(void);
 
 
 #endif

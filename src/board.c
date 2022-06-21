@@ -8,20 +8,20 @@
 #include "board.h"
 #include "util.h"
 #include "movegen.h"
+#include "stack.h"
 
 
 /**
  * Initalizes the board and other values.
  * @param board the uninitalized board structure.
  * @param stack history of board positions and the moves it took to reach them.
+ * @param rtable threefold repetition hashtable.
  * @param fen the FEN string to initalize the board to. Assumed valid.
  */
 void init(Board* board, Stack** stack, char* fen) {
     // Initalize misc
-    // srand(time(NULL));
-    srand(0);
-    _init_zobrist_table();
-    _init_rays(); // TODO unused?
+    srand(time(NULL));
+    init_zobrist_table();
     init_bishop_attacks();
     init_rook_attacks();
 
@@ -121,22 +121,6 @@ void init(Board* board, Stack** stack, char* fen) {
     board->fullmove_number = atoi(token);
 
     // Initalize zobrist
-    _init_zobrist(board);
-
-    // Initalize stack
-    Stack* node = malloc(sizeof(Stack));
-    node->move = NULL_MOVE;
-    node->board = *board;
-    node->next = *stack;
-    *stack = node;
-}
-
-
-/**
- * Initalizes the zobrist value of the starting position.
- * @param board 
- */
-static void _init_zobrist(Board* board) {
     board->zobrist = 0;
     for (int square = A1; square <= H8; square++) {
         char piece = board->mailbox[square];
@@ -162,157 +146,9 @@ static void _init_zobrist(Board* board) {
     if (board->en_passant_square != NULL_SQUARE) {
         board->zobrist ^= ZOBRIST_VALUES[773 + file_of(board->en_passant_square)];
     }
-}
 
-
-/**
- * Initalizes BB_RAYS[64][64] with all rays that connect from one square to another
- * (see _get_ray())
- */
-static void _init_rays(void) {
-    for (int square1 = A1; square1 <= H8; square1++) {
-        for (int square2 = A1; square2 <= H8; square2++) {
-            BB_RAYS[square1][square2] = _get_ray(square1, square2);
-        }
-    }
-}
-
-
-/**
- * Initalizes ZOBRIST_VALUES[781] with random unsigned 64-bit integers.
- * - 768 numbers for each piece on each square
- * - 1 number to indicate side to move is black
- * - 4 numbers for castling rights
- * - 8 numbers to indicate en passant file
- */
-static void _init_zobrist_table(void) {
-    for (int i = 0; i < 781; i++) {
-        ZOBRIST_VALUES[i] = rand_ull();
-    }
-}
-
-
-/**
- * @param square1 
- * @param square2 
- * @return the ray (rank, file, or diagonal) that connects the two squares, if any.
- *         for example, there is a ray between a1 and c3, but not betweem a1 and b3.
- *         returns empty bitboard if the two squares are equal
- */
-static uint64_t _get_ray(int square1, int square2) {
-    if (square1 == square2) return 0;
-
-    uint64_t square2_bb = BB_SQUARES[square2];
-
-    uint64_t rank = BB_RANKS[rank_of(square1)];
-    if (rank & square2_bb) return rank;
-
-    uint64_t file = BB_FILES[file_of(square1)];
-    if (file & square2_bb) return file;
-
-    uint64_t diagonal = BB_DIAGONALS[diagonal_of(square1)];
-    if (diagonal & square2_bb) return diagonal;
-
-    uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square1)];
-    if (anti_diagonal & square2_bb) return anti_diagonal;
-    
-    return 0;
-}
-
-
-/**
- * Makes the given move. If it is illegal, revert it.
- * @param board 
- * @param stack history of board positions and the moves it took to reach them.
- * @param move
- * @return true if the move was legal.
- */
-bool legal_push(Board* board, Stack** stack, Move move) {
-    int from = move.from;
-    int to = move.to;
-    int flag = move.flag;
-
-    // Determine if castling is legal
-    if (flag == CASTLING) {
-        if (is_check(board, board->turn)) return false; // Assert the king is not in check
-        if (board->turn == WHITE) {
-            if (from != E1) return false; // Assert the king is still alive
-            if (to == G1) { // Kingside
-                if (!board->w_kingside_castling_rights) return false; // Assert king or rook has not moved
-                if (!(board->w_rooks & BB_SQUARES[H1])) return false; // Assert rook is still alive
-                if (board->occupied & (BB_SQUARES[F1] | BB_SQUARES[G1])) return false; // Assert there are no pieces between the king and rook
-                if (is_attacked(board, BLACK, F1) || is_attacked(board, BLACK, G1)) return false; // Assert the squares the king moves through are not attacked
-
-                push(board, stack, move);
-                return true;
-            } else if (to == C1) { // Queenside
-                if (!board->w_queenside_castling_rights) return false;
-                if (!(board->w_rooks & BB_SQUARES[A1])) return false;
-                if (board->occupied & (BB_SQUARES[D1] | BB_SQUARES[C1] | BB_SQUARES[B1])) return false;
-                if (is_attacked(board, BLACK, D1) || is_attacked(board, BLACK, C1)) return false;
-
-                push(board, stack, move);
-                return true;
-            }
-            return false;
-        } else {
-            if (from != E8) return false;
-            if (to == G8) { // Kingside
-                if (!board->b_kingside_castling_rights) return false;
-                if (!(board->b_rooks & BB_SQUARES[H8])) return false;
-                if (board->occupied & (BB_SQUARES[F8] | BB_SQUARES[G8])) return false;
-                if (is_attacked(board, WHITE, F8) || is_attacked(board, WHITE, G8)) return false;
-
-                push(board, stack, move);
-                return true;
-            } else if (to == C8) { // Queenside
-                if (!board->b_queenside_castling_rights) return false;
-                if (!(board->b_rooks & BB_SQUARES[A8])) return false;
-                if (board->occupied & (BB_SQUARES[D8] | BB_SQUARES[C8] | BB_SQUARES[B8])) return false;
-                if (is_attacked(board, WHITE, D8) || is_attacked(board, WHITE, C8)) return false;
-
-                push(board, stack, move);
-                return true;
-            }
-            return false;
-        }
-    }
-
-    push(board, stack, move);
-    if (is_check(board, !board->turn)) {
-        pop(board, stack);
-        return false;
-    }
-    return true;
-}
-
-
-/**
- * Makes the given move and updates the stack.
- * @param board
- * @param stack history of board positions and the moves it took to reach them.
- * @param move
- */
-void push(Board* board, Stack** stack, Move move) {
-    Stack* node = malloc(sizeof(Stack));
-    _make_move(board, move);
-    node->board = *board;
-    node->move = move;
-    node->next = *stack;
-    *stack = node;
-}
-
-
-/**
- * Unmakes the most recent move and updates the stack.
- * @param board
- * @param stack history of board positions and the moves it took to reach them.
- */
-void pop(Board* board, Stack** stack) {
-    Stack* temp = *stack;
-    *stack = (*stack)->next;
-    *board = (*stack)->board;
-    free(temp);
+    // Initalize stack
+    init_stack(board, stack);
 }
 
 
@@ -321,7 +157,7 @@ void pop(Board* board, Stack** stack) {
  * @param board
  * @param move 
  */
-static void _make_move(Board* board, Move move) {
+void _make_move(Board* board, Move move) {
     int from = move.from;
     int to = move.to;
     int flag = move.flag;

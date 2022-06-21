@@ -11,9 +11,10 @@ int main(void) {
     char* fen = "rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1";
 
     Board board;
-    Stack* stack = malloc(sizeof(Stack));
+    Stack* stack;
+    RTable* rtable;
 
-    init(&board, &stack, fen);
+    init(&board, &stack, DEFAULT_FEN);
 
     ////////////////////////////////////////////////////////////////////////////////
     /**
@@ -31,7 +32,7 @@ int main(void) {
      * pos 6 accurate to depth 5
     **/
 
-    // print_divided_perft(&board, &stack, 6);
+    print_divided_perft(&board, &stack, 3);
 
  
     return 0;

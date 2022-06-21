@@ -84,7 +84,6 @@ const uint64_t BB_ANTI_DIAGONALS[15] = {BB_ANTI_DIAGONAL_1, BB_ANTI_DIAGONAL_2, 
                                         BB_ANTI_DIAGONAL_7, BB_ANTI_DIAGONAL_8, BB_ANTI_DIAGONAL_9, BB_ANTI_DIAGONAL_10, BB_ANTI_DIAGONAL_11, BB_ANTI_DIAGONAL_12,
                                         BB_ANTI_DIAGONAL_13, BB_ANTI_DIAGONAL_14, BB_ANTI_DIAGONAL_15};
 
-uint64_t BB_RAYS[64][64];
 
 /**
  * - 000-767: numbers for each piece on each square
@@ -97,6 +96,19 @@ uint64_t ZOBRIST_VALUES[781];
 // Misc
 const Move NULL_MOVE = {A1, A1, PASS};
 const int NULL_SQUARE = -1;
+
+
+/**
+ * @return a random unsigned 64-bit integer.
+ * @author https://stackoverflow.com/a/28116032.
+ */
+uint64_t rand_ull(void) {
+    uint64_t n = 0;
+    for (int i = 0; i < 5; i++) {
+        n = (n << 15) | (rand() & 0x7FFF);
+    }
+    return n & 0xFFFFFFFFFFFFFFFF;
+}
 
 
 /**
@@ -360,23 +372,14 @@ int pull_lsb(uint64_t* bb) {
 
 
 /**
- * @param square1 
- * @param square2 
- * @return the bitboard of the ray between the two squares (including the squares), if any
+ * Initalizes ZOBRIST_VALUES[781] with random unsigned 64-bit integers.
+ * - 768 numbers for each piece on each square
+ * - 1 number to indicate side to move is black
+ * - 4 numbers for castling rights
+ * - 8 numbers to indicate en passant file
  */
-uint64_t get_ray_between(int square1, int square2) {
-    return (BB_RAYS[square1][square2] & ((BB_ALL << square1) ^ (BB_ALL << square2))) | BB_SQUARES[square2];
-}
-
-
-/**
- * @return a random unsigned 64-bit integer.
- * @author https://stackoverflow.com/a/28116032.
- */
-uint64_t rand_ull(void) {
-    uint64_t n = 0;
-    for (int i = 0; i < 5; i++) {
-        n = (n << 15) | (rand() & 0x7FFF);
+void init_zobrist_table(void) {
+    for (int i = 0; i < 781; i++) {
+        ZOBRIST_VALUES[i] = rand_ull();
     }
-    return n & 0xFFFFFFFFFFFFFFFF;
 }

@@ -5,6 +5,7 @@
 #include "movegen.h"
 #include "util.h"
 #include "board.h"
+#include "stack.h"
 
 
 // Pseudo-legal bitboards indexed by square to determine where that piece can attack
