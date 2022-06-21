@@ -7,6 +7,9 @@
 
 void init(Board* board, Stack** stack, char* fen);
 static void _init_zobrist(Board* board);
+static void _init_rays(void);
+static void _init_zobrist_table(void);
+static uint64_t _get_ray(int square1, int square2);
 
 bool legal_push(Board* board, Stack** stack, Move move);
 void push(Board* board, Stack** stack, Move move);

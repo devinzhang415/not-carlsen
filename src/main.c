@@ -8,12 +8,12 @@
 int main(void) {
     ////////////////////////////////////////////////////////////////////////////////
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    char* fen = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8";
+    char* fen = "rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1";
 
     Board board;
     Stack* stack = malloc(sizeof(Stack));
 
-    init(&board, &stack, DEFAULT_FEN);
+    init(&board, &stack, fen);
 
     ////////////////////////////////////////////////////////////////////////////////
     /**
@@ -31,7 +31,7 @@ int main(void) {
      * pos 6 accurate to depth 5
     **/
 
-    print_divided_perft(&board, &stack, 6);
+    // print_divided_perft(&board, &stack, 6);
 
  
     return 0;

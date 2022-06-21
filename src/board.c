@@ -18,9 +18,10 @@
  */
 void init(Board* board, Stack** stack, char* fen) {
     // Initalize misc
-    srand(time(NULL)); 
-    init_zobrist_table();
-    init_rays(); // TODO unused?
+    // srand(time(NULL));
+    srand(0);
+    _init_zobrist_table();
+    _init_rays(); // TODO unused?
     init_bishop_attacks();
     init_rook_attacks();
 
@@ -159,8 +160,63 @@ static void _init_zobrist(Board* board) {
         board->zobrist ^= ZOBRIST_VALUES[772];
     }
     if (board->en_passant_square != NULL_SQUARE) {
-        board->zobrist ^= ZOBRIST_VALUES[773 + rank_of(board->en_passant_square)];
+        board->zobrist ^= ZOBRIST_VALUES[773 + file_of(board->en_passant_square)];
     }
+}
+
+
+/**
+ * Initalizes BB_RAYS[64][64] with all rays that connect from one square to another
+ * (see _get_ray())
+ */
+static void _init_rays(void) {
+    for (int square1 = A1; square1 <= H8; square1++) {
+        for (int square2 = A1; square2 <= H8; square2++) {
+            BB_RAYS[square1][square2] = _get_ray(square1, square2);
+        }
+    }
+}
+
+
+/**
+ * Initalizes ZOBRIST_VALUES[781] with random unsigned 64-bit integers.
+ * - 768 numbers for each piece on each square
+ * - 1 number to indicate side to move is black
+ * - 4 numbers for castling rights
+ * - 8 numbers to indicate en passant file
+ */
+static void _init_zobrist_table(void) {
+    for (int i = 0; i < 781; i++) {
+        ZOBRIST_VALUES[i] = rand_ull();
+    }
+}
+
+
+/**
+ * @param square1 
+ * @param square2 
+ * @return the ray (rank, file, or diagonal) that connects the two squares, if any.
+ *         for example, there is a ray between a1 and c3, but not betweem a1 and b3.
+ *         returns empty bitboard if the two squares are equal
+ */
+static uint64_t _get_ray(int square1, int square2) {
+    if (square1 == square2) return 0;
+
+    uint64_t square2_bb = BB_SQUARES[square2];
+
+    uint64_t rank = BB_RANKS[rank_of(square1)];
+    if (rank & square2_bb) return rank;
+
+    uint64_t file = BB_FILES[file_of(square1)];
+    if (file & square2_bb) return file;
+
+    uint64_t diagonal = BB_DIAGONALS[diagonal_of(square1)];
+    if (diagonal & square2_bb) return diagonal;
+
+    uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square1)];
+    if (anti_diagonal & square2_bb) return anti_diagonal;
+    
+    return 0;
 }
 
 
@@ -276,58 +332,76 @@ static void _make_move(Board* board, Move move) {
 
     if (flag == PASS) {
         board->turn = !color;
+        board->zobrist ^= ZOBRIST_VALUES[768];
         return;
     }
 
     bool reset_halfmove = false;
-    board->en_passant_square = NULL_SQUARE;
+
+    if (board->en_passant_square != NULL_SQUARE) {
+        board->zobrist ^= ZOBRIST_VALUES[773 + file_of(board->en_passant_square)];
+        board->en_passant_square = NULL_SQUARE;
+    }
 
     uint64_t* attacker_bb = get_bitboard(board, attacker);
     clear_bit(attacker_bb, from);
     set_bit(attacker_bb, to);
     board->mailbox[from] = '-';
     board->mailbox[to] = attacker;
+    board->zobrist ^= ZOBRIST_VALUES[64*parse_piece(attacker) + from];
+    board->zobrist ^= ZOBRIST_VALUES[64*parse_piece(attacker) + to];
 
     switch (attacker) {
         case 'P':
             reset_halfmove = true;
 
-            if (rank_of(to) - rank_of(from) == 2) board->en_passant_square = to - 8;
+            if (rank_of(to) - rank_of(from) == 2) {
+                board->en_passant_square = to - 8;
+                board->zobrist ^= ZOBRIST_VALUES[773 + file_of(board->en_passant_square)];
+            }
 
             else if (flag == EN_PASSANT) {
                 clear_bit(&board->b_pawns, to - 8);
                 board->mailbox[to - 8] = '-';
+                board->zobrist ^= ZOBRIST_VALUES[64*6 + (to - 8)];
             }
 
             else if (rank_of(to) == 7) { // Promotions
+                clear_bit(&board->w_pawns, to);
+                board->zobrist ^= ZOBRIST_VALUES[64*0 + to];
                 switch (flag) {
                     case PROMOTION_QUEEN:
-                        clear_bit(&board->w_pawns, to);
                         set_bit(&board->w_queens, to);
                         board->mailbox[to] = 'Q';
+                        board->zobrist ^= ZOBRIST_VALUES[64*4 + to];
                         break;
                     case PROMOTION_ROOK:
-                        clear_bit(&board->w_pawns, to);
                         set_bit(&board->w_rooks, to);
                         board->mailbox[to] = 'R';
+                        board->zobrist ^= ZOBRIST_VALUES[64*3 + to];
                         break;
                     case PROMOTION_BISHOP:
-                        clear_bit(&board->w_pawns, to);
                         set_bit(&board->w_bishops, to);
                         board->mailbox[to] = 'B';
+                        board->zobrist ^= ZOBRIST_VALUES[64*2 + to];
                         break;
                     case PROMOTION_KNIGHT:
-                        clear_bit(&board->w_pawns, to);
                         set_bit(&board->w_knights, to);
                         board->mailbox[to] = 'N';
+                        board->zobrist ^= ZOBRIST_VALUES[64*1 + to];
                         break;
                 }
             }
 
             break;
         case 'R':
-            if (from == H8) board->w_kingside_castling_rights = false;
-            else if (from == A1) board->w_queenside_castling_rights = false;
+            if (from == H8 && board->w_kingside_castling_rights) {
+                board->w_kingside_castling_rights = false;
+                board->zobrist ^= ZOBRIST_VALUES[769];
+            } else if (from == A1 && board->w_queenside_castling_rights) {
+                board->w_queenside_castling_rights = false;
+                board->zobrist ^= ZOBRIST_VALUES[770];
+            }
             break;
         case 'K':
             if (flag == CASTLING) {
@@ -336,57 +410,78 @@ static void _make_move(Board* board, Move move) {
                     set_bit(&board->w_rooks, F1);
                     board->mailbox[H1] = '-';
                     board->mailbox[F1] = 'R';
+                    board->zobrist ^= ZOBRIST_VALUES[64*3 + H1];
+                    board->zobrist ^= ZOBRIST_VALUES[64*3 + F1];
                 } else { // Queenside
                     clear_bit(&board->w_rooks, A1);
                     set_bit(&board->w_rooks, D1);
                     board->mailbox[A1] = '-';
                     board->mailbox[D1] = 'R';
+                    board->zobrist ^= ZOBRIST_VALUES[64*3 + A1];
+                    board->zobrist ^= ZOBRIST_VALUES[64*3 + D1];
                 }
             }
 
-            board->w_kingside_castling_rights = false;
-            board->w_queenside_castling_rights = false;
+            if (board->w_kingside_castling_rights) {
+                board->w_kingside_castling_rights = false;
+                board->zobrist ^= ZOBRIST_VALUES[769];
+            }
+            if (board->w_queenside_castling_rights) {
+                board->w_queenside_castling_rights = false;
+                board->zobrist ^= ZOBRIST_VALUES[770];
+            }
 
             break;
         case 'p':
             reset_halfmove = true;
 
-            if (rank_of(to) - rank_of(from) == -2) board->en_passant_square = to + 8;
+            if (rank_of(to) - rank_of(from) == -2) {
+                board->en_passant_square = to + 8;
+                board->zobrist ^= ZOBRIST_VALUES[773 + file_of(board->en_passant_square)];
+            }
 
             else if (flag == EN_PASSANT) {
                 clear_bit(&board->w_pawns, to + 8);
                 board->mailbox[to + 8] = '-';
+                board->zobrist ^= ZOBRIST_VALUES[64*0 + (to + 8)];
             }
 
             else if (rank_of(to) == 0) { // Promotions
+                clear_bit(&board->b_pawns, to);
+                board->zobrist ^= ZOBRIST_VALUES[64*6 + to];
                 switch (flag) {
                     case PROMOTION_QUEEN:
-                        clear_bit(&board->b_pawns, to);
                         set_bit(&board->b_queens, to);
                         board->mailbox[to] = 'q';
+                        board->zobrist ^= ZOBRIST_VALUES[64*10 + to];
                         break;
                     case PROMOTION_ROOK:
-                        clear_bit(&board->b_pawns, to);
                         set_bit(&board->b_rooks, to);
                         board->mailbox[to] = 'r';
+                        board->zobrist ^= ZOBRIST_VALUES[64*9 + to];
                         break;
                     case PROMOTION_BISHOP:
-                        clear_bit(&board->b_pawns, to);
                         set_bit(&board->b_bishops, to);
                         board->mailbox[to] = 'b';
+                        board->zobrist ^= ZOBRIST_VALUES[64*8 + to];
                         break;
                     case PROMOTION_KNIGHT:
-                        clear_bit(&board->b_pawns, to);
                         set_bit(&board->b_knights, to);
                         board->mailbox[to] = 'n';
+                        board->zobrist ^= ZOBRIST_VALUES[64*7 + to];
                         break;
                 }
             }
 
             break;
         case 'r':
-            if (from == H8) board->b_kingside_castling_rights = false;
-            else if (from == A1) board->b_queenside_castling_rights = false;
+            if (from == H8 && board->b_kingside_castling_rights) {
+                board->b_kingside_castling_rights = false;
+                board->zobrist ^= ZOBRIST_VALUES[771];
+            } else if (from == A1 && board->b_queenside_castling_rights) {
+                board->b_queenside_castling_rights = false;
+                board->zobrist ^= ZOBRIST_VALUES[772];
+            }
             break;
         case 'k':
             if (flag == CASTLING) {
@@ -395,16 +490,26 @@ static void _make_move(Board* board, Move move) {
                     set_bit(&board->b_rooks, F8);
                     board->mailbox[H8] = '-';
                     board->mailbox[F8] = 'r';
+                    board->zobrist ^= ZOBRIST_VALUES[64*9 + H8];
+                    board->zobrist ^= ZOBRIST_VALUES[64*9 + F8];
                 } else { // Queenside
                     clear_bit(&board->b_rooks, A8);
                     set_bit(&board->b_rooks, D8);
                     board->mailbox[A8] = '-';
                     board->mailbox[D8] = 'r';
+                    board->zobrist ^= ZOBRIST_VALUES[64*9 + A8];
+                    board->zobrist ^= ZOBRIST_VALUES[64*9 + D8];
                 }
             }
 
-            board->b_kingside_castling_rights = false;
-            board->b_queenside_castling_rights = false;
+            if (board->b_kingside_castling_rights) {
+                board->b_kingside_castling_rights = false;
+                board->zobrist ^= ZOBRIST_VALUES[771];
+            }
+            if (board->b_queenside_castling_rights) {
+                board->b_queenside_castling_rights = false;
+                board->zobrist ^= ZOBRIST_VALUES[772];
+            }
 
             break;
     }
@@ -413,6 +518,7 @@ static void _make_move(Board* board, Move move) {
         reset_halfmove = true;
         uint64_t* victim_bb = board->bitboards[parse_piece(victim)];
         clear_bit(victim_bb, to);
+        board->zobrist ^= ZOBRIST_VALUES[64*parse_piece(victim) + to];
     }
 
     board->w_occupied = board->w_pawns | board->w_knights | board->w_bishops | board->w_rooks | board->w_queens | board->w_king;
@@ -428,6 +534,7 @@ static void _make_move(Board* board, Move move) {
     if (color == BLACK) board->fullmove_number++;
 
     board->turn = !color;
+    board->zobrist ^= ZOBRIST_VALUES[768];
 }
 
 
