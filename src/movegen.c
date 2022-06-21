@@ -90,9 +90,10 @@ uint64_t BISHOP_ATTACK_SHIFTS[64];
  * Prints out the perft grouped by the first moves made.
  * @param board 
  * @param stack history of board positions and the moves it took to reach them.
+ * @param rtable
  * @param depth what depth to perform moves to.
  */
-void print_divided_perft(Board* board, Stack** stack, int depth) {
+void print_divided_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
     uint64_t total_nodes = 0;
     Move moves[1000];
 
@@ -100,15 +101,16 @@ void print_divided_perft(Board* board, Stack** stack, int depth) {
     for (int i = 0; i < 1000; i++) {
         if (moves[i].flag == INVALID) break;
 
-        if (!legal_push(board, stack, moves[i])) continue;
+        if (!legal_push(board, stack, rtable, moves[i])) continue;
+        if (is_game_over(board, rtable)) break;
 
         print_move_post(board, moves[i]);
-        uint64_t nodes = perft(board, stack, depth - 1);
+        uint64_t nodes = perft(board, stack, rtable, depth - 1);
         total_nodes += nodes;
         printf(": %llu\n", nodes);
-        pop(board, stack);
+        pop(board, stack, rtable);
     }
-    printf("\nNodes searched: %llu\n", total_nodes);
+    printf("\nNodes searched: %llu\n\n", total_nodes);
 }
 
 
@@ -119,7 +121,7 @@ void print_divided_perft(Board* board, Stack** stack, int depth) {
  * @param depth what depth to perform moves to.
  * @return the number of legal moves at depth n.
  */
-uint64_t perft(Board* board, Stack** stack, int depth) {
+uint64_t perft(Board* board, Stack** stack, RTable* rtable, int depth) {
     uint64_t nodes = 0;
 
     if (depth == 0) return 1ULL;
@@ -130,14 +132,12 @@ uint64_t perft(Board* board, Stack** stack, int depth) {
     for (int i = 0; i < 1000; i++) {
         if (moves[i].flag == INVALID) break;
 
-        if (!legal_push(board, stack, moves[i])) continue;
+        if (!legal_push(board, stack, rtable, moves[i])) continue;
+        if (is_game_over(board, rtable)) break;
 
-        // print_move_post(board, moves[i]);
-        // printf(" ");
-        nodes += perft(board, stack, depth - 1);
-        pop(board, stack);
+        nodes += perft(board, stack, rtable, depth - 1);
+        pop(board, stack, rtable);
     }
-    // printf("\n");
     return nodes;
 }
 

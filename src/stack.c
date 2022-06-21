@@ -3,6 +3,7 @@
 #include "stack.h"
 #include "util.h"
 #include "board.h"
+#include "rtable.h"
 
 
 /**
@@ -27,7 +28,7 @@ void init_stack(Board* board, Stack** stack) {
  * @param move
  * @return true if the move was legal.
  */
-bool legal_push(Board* board, Stack** stack, Move move) {
+bool legal_push(Board* board, Stack** stack, RTable* rtable, Move move) {
     int from = move.from;
     int to = move.to;
     int flag = move.flag;
@@ -43,7 +44,7 @@ bool legal_push(Board* board, Stack** stack, Move move) {
                 if (board->occupied & (BB_SQUARES[F1] | BB_SQUARES[G1])) return false; // Assert there are no pieces between the king and rook
                 if (is_attacked(board, BLACK, F1) || is_attacked(board, BLACK, G1)) return false; // Assert the squares the king moves through are not attacked
 
-                push(board, stack, move);
+                push(board, stack, rtable, move);
                 return true;
             } else if (to == C1) { // Queenside
                 if (!board->w_queenside_castling_rights) return false;
@@ -51,7 +52,7 @@ bool legal_push(Board* board, Stack** stack, Move move) {
                 if (board->occupied & (BB_SQUARES[D1] | BB_SQUARES[C1] | BB_SQUARES[B1])) return false;
                 if (is_attacked(board, BLACK, D1) || is_attacked(board, BLACK, C1)) return false;
 
-                push(board, stack, move);
+                push(board, stack, rtable, move);
                 return true;
             }
             return false;
@@ -63,7 +64,7 @@ bool legal_push(Board* board, Stack** stack, Move move) {
                 if (board->occupied & (BB_SQUARES[F8] | BB_SQUARES[G8])) return false;
                 if (is_attacked(board, WHITE, F8) || is_attacked(board, WHITE, G8)) return false;
 
-                push(board, stack, move);
+                push(board, stack, rtable, move);
                 return true;
             } else if (to == C8) { // Queenside
                 if (!board->b_queenside_castling_rights) return false;
@@ -71,16 +72,16 @@ bool legal_push(Board* board, Stack** stack, Move move) {
                 if (board->occupied & (BB_SQUARES[D8] | BB_SQUARES[C8] | BB_SQUARES[B8])) return false;
                 if (is_attacked(board, WHITE, D8) || is_attacked(board, WHITE, C8)) return false;
 
-                push(board, stack, move);
+                push(board, stack, rtable, move);
                 return true;
             }
             return false;
         }
     }
 
-    push(board, stack, move);
+    push(board, stack, rtable, move);
     if (is_check(board, !board->turn)) {
-        pop(board, stack);
+        pop(board, stack, rtable);
         return false;
     }
     return true;
@@ -88,27 +89,37 @@ bool legal_push(Board* board, Stack** stack, Move move) {
 
 
 /**
- * Makes the given move and updates the stack.
+ * Makes the given move and updates the tables.
  * @param board
  * @param stack history of board positions and the moves it took to reach them.
+ * @param rtable threefold rep table.
  * @param move
  */
-void push(Board* board, Stack** stack, Move move) {
+void push(Board* board, Stack** stack, RTable* rtable, Move move) {
+    // Update move stack
     Stack* node = malloc(sizeof(Stack));
     _make_move(board, move);
     node->board = *board;
     node->move = move;
     node->next = *stack;
     *stack = node;
+
+    // Update threefold rep table
+    rtable_add(rtable, board->zobrist);
 }
 
 
 /**
- * Unmakes the most recent move and updates the stack.
+ * Unmakes the most recent move and updates the tables.
  * @param board
  * @param stack history of board positions and the moves it took to reach them.
+ * @param rtable threefold rep table.
  */
-void pop(Board* board, Stack** stack) {
+void pop(Board* board, Stack** stack, RTable* rtable) {
+    // Update threefold rep table
+    rtable_remove(rtable, board->zobrist);
+    
+    // Update move stack
     Stack* temp = *stack;
     *stack = (*stack)->next;
     *board = (*stack)->board;

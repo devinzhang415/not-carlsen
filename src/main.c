@@ -3,24 +3,25 @@
 #include "util.h"
 #include "board.h"
 #include "movegen.h"
+#include "stack.h"
+#include "rtable.h"
 
 
 int main(void) {
     ////////////////////////////////////////////////////////////////////////////////
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    char* fen = "rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1";
+    char* fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
 
     Board board;
     Stack* stack;
-    RTable* rtable;
+    RTable rtable;
 
-    init(&board, &stack, DEFAULT_FEN);
+    init(&board, &stack, &rtable, fen);
 
     ////////////////////////////////////////////////////////////////////////////////
     /**
      * TODO
      * perft: speedups in move generation for check and checkmate.
-     *  also not fully accurate until 3-fold rep and 50 move rule detection
      * UCI
      * legal move gen
      * 
@@ -32,8 +33,10 @@ int main(void) {
      * pos 6 accurate to depth 5
     **/
 
-    print_divided_perft(&board, &stack, 3);
-
+    print_divided_perft(&board, &stack, &rtable, 4);
+    for (int i = 0; i < rtable.capacity; i++) {
+        printf("%llu, %d, %d\n", rtable.entries[i].key, rtable.entries[i].num, rtable.entries[i].deleted);
+    }
  
     return 0;
 }

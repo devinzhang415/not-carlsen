@@ -9,6 +9,7 @@
 #include "util.h"
 #include "movegen.h"
 #include "stack.h"
+#include "rtable.h"
 
 
 /**
@@ -18,9 +19,10 @@
  * @param rtable threefold repetition hashtable.
  * @param fen the FEN string to initalize the board to. Assumed valid.
  */
-void init(Board* board, Stack** stack, char* fen) {
+void init(Board* board, Stack** stack, RTable* rtable, char* fen) {
     // Initalize misc
     srand(time(NULL));
+    init_rtable(rtable);
     init_zobrist_table();
     init_bishop_attacks();
     init_rook_attacks();
@@ -149,6 +151,9 @@ void init(Board* board, Stack** stack, char* fen) {
 
     // Initalize stack
     init_stack(board, stack);
+
+    // Add position to threefold history
+    rtable_add(rtable, board->zobrist);
 }
 
 
@@ -416,6 +421,39 @@ bool is_attacked(Board* board, bool color, int square) {
 
         return false;
     }
+}
+
+
+/**
+ * @param board 
+ * @param rtable 
+ * @return true if the game is ended by:
+ * - checkmate // TODO
+ * - stalemate // TODO
+ * - threefold rep
+ * - or 50-move rule
+ */
+bool is_game_over(Board* board, RTable* rtable) {
+    return (_is_threefold_rep(board, rtable) || _is_fifty_move_rule(board));
+}
+
+
+/**
+ * @param board 
+ * @param rtable 
+ * @return true if the position has occured 3+ times.
+ */
+static bool _is_threefold_rep(Board* board, RTable* rtable) {
+    return (rtable_get(rtable, board->zobrist) >= 3);
+}
+
+
+/**
+ * @param board 
+ * @return true if the position has not had a pawn move or capture in the last 50 full moves.
+ */
+static bool _is_fifty_move_rule(Board* board) {
+    return (board->halfmove_clock >= 50);
 }
 
 

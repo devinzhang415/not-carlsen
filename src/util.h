@@ -113,10 +113,13 @@ typedef struct Stack {
 typedef struct RTable_Entry {
     uint64_t key;
     int num;
-    bool del;
+    bool deleted;
 } RTable_Entry;
 
 
+/**
+ * Threefold repetition hashtable structure.
+ */
 typedef struct RTable {
     size_t size;
     size_t capacity;

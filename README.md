@@ -14,6 +14,9 @@ Special thanks to:
 ------
 
 ## Devlog
+6/21/22 v0.3
+> Added threefold repetition and 50-move rule detection.
+
 6/15/22 v0.2.6
 > Added zobrist hash to the position.
 
