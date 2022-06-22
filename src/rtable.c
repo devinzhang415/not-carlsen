@@ -15,13 +15,6 @@ void init_rtable(RTable* rtable) {
     rtable->size = 0;
     rtable->capacity = RTABLE_INIT_CAPACITY;
     rtable->entries = malloc(RTABLE_INIT_CAPACITY * sizeof(RTable_Entry));
-
-    // Initalize each entry to default values.
-    for (int i = 0; i < RTABLE_INIT_CAPACITY; i++) {
-        rtable->entries[i].key = 0;
-        rtable->entries[i].num = 0;
-        rtable->entries[i].deleted = true;
-    }
 }
 
 
@@ -33,7 +26,7 @@ void init_rtable(RTable* rtable) {
 int rtable_get(RTable* rtable, uint64_t key) {
     for (int i = 0; i < rtable->capacity; i++) {
         int index = (key + i) % rtable->capacity;
-        if (rtable->entries[index].deleted) {
+        if (!rtable->entries[index].initalized) {
             return 0;
         }
         if (rtable->entries[index].key == key) {
@@ -57,10 +50,10 @@ void rtable_add(RTable* rtable, uint64_t key) {
 
     for (int i = 0; i < rtable->capacity; i++) {
         int index = (key + i) % rtable->capacity;
-        if (rtable->entries[index].deleted) {
+        if (!rtable->entries[index].initalized) {
             rtable->entries[index].key = key;
             rtable->entries[index].num = 1;
-            rtable->entries[index].deleted = false;
+            rtable->entries[index].initalized = true;
             rtable->size++;
             break;
         } else {
@@ -81,13 +74,13 @@ void rtable_add(RTable* rtable, uint64_t key) {
 void rtable_remove(RTable* rtable, uint64_t key) {
     for (int i = 0; i < rtable->capacity; i++) {
         int index = (key + i) % rtable->capacity;
-        if (rtable->entries[index].deleted) {
+        if (rtable->entries[index].initalized) {
             break;
         }
         if (rtable->entries[index].key == key) {
             rtable->entries[index].num--;
             if (rtable->entries[index].num <= 0) {
-                rtable->entries[index].deleted = true;
+                rtable->entries[index].initalized = false;
                 rtable->size--;
             }
             break;

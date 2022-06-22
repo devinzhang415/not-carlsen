@@ -33,9 +33,10 @@ int main(void) {
      * pos 6 accurate to depth 5
     **/
 
-    print_divided_perft(&board, &stack, &rtable, 4);
-    for (int i = 0; i < rtable.capacity; i++) {
-        printf("%llu, %d, %d\n", rtable.entries[i].key, rtable.entries[i].num, rtable.entries[i].deleted);
+    // print_divided_perft(&board, &stack, &rtable, 4);
+    rtable.entries = realloc(rtable.entries, rtable.capacity * 2 * sizeof(RTable_Entry));
+    for (int i = 0; i < rtable.capacity * 2; i++) {
+        printf("%llu, %d, %d\n", rtable.entries[i].key, rtable.entries[i].num, rtable.entries[i].initalized);
     }
  
     return 0;

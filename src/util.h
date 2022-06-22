@@ -113,7 +113,7 @@ typedef struct Stack {
 typedef struct RTable_Entry {
     uint64_t key;
     int num;
-    bool deleted;
+    bool initalized;
 } RTable_Entry;
 
 
