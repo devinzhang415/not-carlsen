@@ -16,7 +16,7 @@ int main(void) {
     Stack* stack;
     RTable rtable;
 
-    init(&board, &stack, &rtable, fen);
+    init(&board, &stack, &rtable, DEFAULT_FEN);
 
     ////////////////////////////////////////////////////////////////////////////////
     /**
@@ -33,11 +33,13 @@ int main(void) {
      * pos 6 accurate to depth 5
     **/
 
-    // print_divided_perft(&board, &stack, &rtable, 4);
-    rtable.entries = realloc(rtable.entries, rtable.capacity * 2 * sizeof(RTable_Entry));
-    for (int i = 0; i < rtable.capacity * 2; i++) {
-        printf("%llu, %d, %d\n", rtable.entries[i].key, rtable.entries[i].num, rtable.entries[i].initalized);
-    }
+    print_divided_perft(&board, &stack, &rtable, 4);
+
+
+    // rtable.entries = realloc(rtable.entries, rtable.capacity * 2 * sizeof(RTable_Entry));
+    // for (int i = 0; i < rtable.capacity * 2; i++) {
+        // printf("%llu, %d, %d\n", rtable.entries[i].key, rtable.entries[i].num, rtable.entries[i].initalized);
+    // }
  
     return 0;
 }

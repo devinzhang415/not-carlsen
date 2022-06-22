@@ -50,17 +50,17 @@ void rtable_add(RTable* rtable, uint64_t key) {
 
     for (int i = 0; i < rtable->capacity; i++) {
         int index = (key + i) % rtable->capacity;
-        if (!rtable->entries[index].initalized) {
+        if (rtable->entries[index].initalized) {
+            if (rtable->entries[index].key == key) {
+                rtable->entries[index].num++;
+                break;
+            }
+        } else {
             rtable->entries[index].key = key;
             rtable->entries[index].num = 1;
             rtable->entries[index].initalized = true;
             rtable->size++;
             break;
-        } else {
-            if (rtable->entries[index].key == key) {
-                rtable->entries[index].num++;
-                break;
-            }
         }
     }
 }
@@ -74,15 +74,15 @@ void rtable_add(RTable* rtable, uint64_t key) {
 void rtable_remove(RTable* rtable, uint64_t key) {
     for (int i = 0; i < rtable->capacity; i++) {
         int index = (key + i) % rtable->capacity;
-        if (rtable->entries[index].initalized) {
-            break;
-        }
         if (rtable->entries[index].key == key) {
             rtable->entries[index].num--;
             if (rtable->entries[index].num <= 0) {
                 rtable->entries[index].initalized = false;
                 rtable->size--;
             }
+            break;
+        }
+        if (!rtable->entries[index].initalized) {
             break;
         }
     }
