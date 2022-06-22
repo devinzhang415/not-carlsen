@@ -2,18 +2,22 @@
 Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-Magnus's goal was to learn the popular algorithims and techniques in modern chess engines, this engine will efficently implement them. Thus, the goal of this engine is simply to be strong while providing me an opportunity to solidify my C programming skills.
 
 Special thanks to:
-- Github.com/nkarve for their magic bitboard generation
+- Github.com/nkarve for their magic bitboard generation.
+- Peter Jones for their famous guide on legal move generation.
 
 ------
 
 ## Current Features
 - FEN board initialization
 - Magic bitboard sliding move generation
-- Pseudolegal move generator (6.5 million nps)
+- Legal and pseudolegal move generator (6.5 million nps)
 
 ------
 
 ## Devlog
+6/22/22 v0.4
+> Successfully implemented a legal move generator. Optimizations and bug fixes still need to be made, but I am extremely happy with the speed at which I was able to implement this considering my previous attempt failed after a few days worth of effort. The coming updates will focus on speeding up this generator and squashing perft mismatches.
+
 6/21/22 v0.3
 > Added threefold repetition and 50-move rule detection.
 

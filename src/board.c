@@ -23,6 +23,7 @@ void init(Board* board, Stack** stack, RTable* rtable, char* fen) {
     // Initalize misc
     srand(time(NULL));
     init_rtable(rtable);
+    init_rays();
     init_zobrist_table();
     init_bishop_attacks();
     init_rook_attacks();
@@ -464,4 +465,60 @@ static bool _is_fifty_move_rule(Board* board) {
  */
 uint64_t* get_bitboard(Board* board, char piece) {
     return board->bitboards[parse_piece(piece)];
+}
+
+
+/**
+ * Prints the labeled representation of the mailbox board.
+ * @param board 
+ */
+void print_mailbox(char* mailbox) {
+    for (int rank = 7; rank >= 0; rank--) {
+        for (int file = 0; file <= 7; file++) {
+            char piece = mailbox[8*rank + file];
+            switch (piece) {
+                case 'P':
+                    printf("♙");
+                    break;
+                case 'N':
+                    printf("♘");
+                    break;
+                case 'B':
+                    printf("♗");
+                    break;
+                case 'R':
+                    printf("♖");
+                    break;
+                case 'Q':
+                    printf("♕");
+                    break;
+                case 'K':
+                    printf("♔");
+                    break;
+                case 'p':
+                    printf("♟");
+                    break;
+                case 'n':
+                    printf("♞");
+                    break;
+                case 'b':
+                    printf("♝");
+                    break;
+                case 'r':
+                    printf("♜");
+                    break;
+                case 'q':
+                    printf("♛");
+                    break;
+                case 'k':
+                    printf("♚");
+                    break;
+                default:
+                    printf("- ");
+                    break;
+            }
+        }
+        printf("\n");
+    }
+    printf("\n");
 }

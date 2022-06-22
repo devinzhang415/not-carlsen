@@ -19,11 +19,18 @@ extern uint64_t ROOK_ATTACK_SHIFTS[64];
 extern uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
-void print_divided_perft(Board* board, Stack** stack, RTable* rtable, int depth);
-uint64_t perft(Board* board, Stack** stack, RTable* rtable, int depth);
+uint64_t print_divided_legal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
+uint64_t legal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
+uint64_t print_divided_pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
+uint64_t pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
 
+void gen_legal_moves(Move* moves, Board* board, bool color);
 void gen_pseudolegal_moves(Move* moves, Board* board, bool color);
+
 static int _get_flag(Board* board, bool color, char piece, int from, int to);
+static uint64_t _get_attackmask(Board* board, bool color);
+static uint64_t _get_checkmask(Board* board, bool color);
+static uint64_t _get_pinmask(Board* board, bool color, int square);
 
 uint64_t get_pawn_moves(Board* board, bool color, int square);
 uint64_t get_knight_moves(Board* board, bool color, int square);

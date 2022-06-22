@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <ctype.h> 
 #include <stdlib.h>
+#include <time.h>
 #include "movegen.h"
 #include "util.h"
 #include "board.h"
@@ -87,13 +88,89 @@ uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
 /**
- * Prints out the perft grouped by the first moves made.
+ * Prints out the legal perft grouped by the first moves made.
  * @param board 
  * @param stack history of board positions and the moves it took to reach them.
  * @param rtable
  * @param depth what depth to perform moves to.
+ * @return the number of legal moves at depth n.
  */
-void print_divided_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
+uint64_t print_divided_legal_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
+    clock_t start = clock();
+
+    uint64_t total_nodes = 0;
+    Move moves[1000];
+
+    gen_legal_moves(moves, board, board->turn);
+    for (int i = 0; i < 1000; i++) {
+        if (moves[i].flag == INVALID) break;
+
+        push(board, stack, rtable, moves[i]);
+        if (is_game_over(board, rtable)) break;
+
+        print_move_post(board, moves[i]);
+        uint64_t nodes = legal_perft(board, stack, rtable, depth - 1);
+        total_nodes += nodes;
+        printf(": %llu\n", nodes);
+        pop(board, stack, rtable);
+    }
+    printf("\nNodes searched: %llu\n", total_nodes);
+
+    clock_t elapsed = clock() - start;
+    double time = (double) elapsed / CLOCKS_PER_SEC;
+    printf("nps: %.0f\n\n", total_nodes / time);
+
+    return total_nodes;
+}
+
+
+/**
+ * Performance test debug function to determine the accuracy of the legal move generator.
+ * @param board
+ * @param stack history of board positions and the moves it took to reach them.
+ * @param depth what depth to perform moves to.
+ * @return the number of legal moves at depth n.
+ */
+uint64_t legal_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
+    uint64_t nodes = 0;
+
+    if (depth == 0) return 1ULL;
+
+    Move moves[1000];
+    gen_legal_moves(moves, board, board->turn);
+
+    for (int i = 0; i < 1000; i++) {
+        if (moves[i].flag == INVALID) break;
+
+        push(board, stack, rtable, moves[i]);
+        if (is_game_over(board, rtable)) break;
+
+        nodes += legal_perft(board, stack, rtable, depth - 1);
+        pop(board, stack, rtable);
+    }
+    return nodes;
+}
+
+
+/**
+ * Prints out the pseudolegal perft grouped by the first moves made.
+ * @param board 
+ * @param stack history of board positions and the moves it took to reach them.
+ * @param rtable
+ * @param depth what depth to perform moves to.
+ * @return the number of legal moves at depth n.
+ * 
+ * https://www.chessprogramming.org/Perft_Results
+ * pos 1 accurate to depth 7
+ * pos 2 fails on depth 5
+ * pos 3 fails on depth 7
+ * pos 4 fails on depth 4
+ * pos 5 fails on depth 5
+ * pos 6 accurate to depth 5
+ */
+uint64_t print_divided_pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
+    clock_t start = clock();
+
     uint64_t total_nodes = 0;
     Move moves[1000];
 
@@ -105,23 +182,29 @@ void print_divided_perft(Board* board, Stack** stack, RTable* rtable, int depth)
         if (is_game_over(board, rtable)) break;
 
         print_move_post(board, moves[i]);
-        uint64_t nodes = perft(board, stack, rtable, depth - 1);
+        uint64_t nodes = pseudolegal_perft(board, stack, rtable, depth - 1);
         total_nodes += nodes;
         printf(": %llu\n", nodes);
         pop(board, stack, rtable);
     }
-    printf("\nNodes searched: %llu\n\n", total_nodes);
+    printf("\nNodes searched: %llu\n", total_nodes);
+
+    clock_t elapsed = clock() - start;
+    double time = (double) elapsed / CLOCKS_PER_SEC;
+    printf("nps: %.0f\n\n", total_nodes / time);
+
+    return total_nodes;
 }
 
 
 /**
- * Performance test debug function to determine the accuracy of the move generator.
+ * Performance test debug function to determine the accuracy of the pseudolegal move generator.
  * @param board
  * @param stack history of board positions and the moves it took to reach them.
  * @param depth what depth to perform moves to.
  * @return the number of legal moves at depth n.
  */
-uint64_t perft(Board* board, Stack** stack, RTable* rtable, int depth) {
+uint64_t pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
     uint64_t nodes = 0;
 
     if (depth == 0) return 1ULL;
@@ -135,10 +218,159 @@ uint64_t perft(Board* board, Stack** stack, RTable* rtable, int depth) {
         if (!legal_push(board, stack, rtable, moves[i])) continue;
         if (is_game_over(board, rtable)) break;
 
-        nodes += perft(board, stack, rtable, depth - 1);
+        nodes += pseudolegal_perft(board, stack, rtable, depth - 1);
         pop(board, stack, rtable);
     }
     return nodes;
+}
+
+
+/**
+ * Takes in an empty array and generates the list of legal moves in it.
+ * @param moves the array to store the moves in.
+ * @param board 
+ * @param color the side to move.
+ */
+void gen_legal_moves(Move* moves, Board* board, bool color) {
+    int i = 0;
+
+    uint64_t pieces;
+    uint64_t king_bb;
+    char piece;
+    uint64_t enemy_pawns_attacks;
+    if (color == WHITE) {
+        pieces = board->w_occupied;
+        king_bb = board->w_king;
+        piece = 'K';
+        enemy_pawns_attacks = (((board->b_pawns >> 9) & ~BB_FILE_H) | ((board->b_pawns >> 7) & ~BB_FILE_A))
+                               & board->w_occupied;
+    } else {
+        pieces = board->b_occupied;
+        king_bb = board->b_king;
+        piece = 'k';
+        enemy_pawns_attacks = (((board->w_pawns << 9) & ~BB_FILE_A) | ((board->w_pawns << 7) & ~BB_FILE_H))
+                               & board->b_occupied;
+    }
+    int king_square = get_lsb(king_bb);
+
+    uint64_t checkmask = _get_checkmask(board, color);
+    uint64_t pos_pinned = get_queen_moves(board, !color, king_square);
+
+    // King is in double check, only moves are to move king away
+    if (!checkmask) {
+        uint64_t moves_bb = get_king_moves(board, color, king_square) & ~_get_attackmask(board, !color);
+        while (moves_bb) {
+            int to = pull_lsb(&moves_bb);
+            int flag = _get_flag(board, color, piece, king_square, to);
+            Move move = {king_square, to, flag};
+            moves[i++] = move;
+        }
+        Move end = {A1, A1, INVALID};
+        moves[i] = end;
+        return;
+    }
+
+    while (pieces) {
+        int from = pull_lsb(&pieces);
+        char piece = board->mailbox[from];
+
+        uint64_t pinmask;
+        if (BB_SQUARES[from] & pos_pinned) {
+            pinmask = _get_pinmask(board, color, from);
+        } else {
+            pinmask = BB_ALL;
+        }
+
+        uint64_t moves_bb;
+        switch (toupper(piece)) {
+            case 'P':
+                uint64_t pawn_moves = get_pawn_moves(board, color, from);
+                moves_bb = pawn_moves & checkmask & pinmask;
+
+                // Add possible en passant capture to remove check
+                if (board->en_passant_square != NULL_SQUARE) {
+                    if (pawn_moves & pinmask & BB_SQUARES[board->en_passant_square]) {
+                        if (king_bb & enemy_pawns_attacks) {
+                            set_bit(&moves_bb, board->en_passant_square);
+                        }
+                    }
+                }
+
+                break;
+            case 'N':
+                moves_bb = get_knight_moves(board, color, from) & checkmask & pinmask;
+                break;
+            case 'B':
+                moves_bb = get_bishop_moves(board, color, from) & checkmask & pinmask;
+                break;
+            case 'R':
+                moves_bb = get_rook_moves(board, color, from) & checkmask & pinmask;
+                break;
+            case 'Q':
+                moves_bb = get_queen_moves(board, color, from) & checkmask & pinmask;
+                break;
+            case 'K':
+                moves_bb = get_king_moves(board, color, from) & ~_get_attackmask(board, !color);
+                break;
+        }
+
+        while (moves_bb) {
+            int to = pull_lsb(&moves_bb);
+            if (toupper(piece) == 'P' && (rank_of(to) == 0 || rank_of(to) == 7)) { // Add all promotions
+                Move queen_promotion = {from, to, PROMOTION_QUEEN};
+                moves[i++] = queen_promotion;
+                Move rook_promotion = {from, to, PROMOTION_ROOK};
+                moves[i++] = rook_promotion;
+                Move bishop_promotion = {from, to, PROMOTION_BISHOP};
+                moves[i++] = bishop_promotion;
+                Move knight_promotion = {from, to, PROMOTION_KNIGHT};
+                moves[i++] = knight_promotion;
+            } else {
+                int flag = _get_flag(board, color, piece, from, to);
+
+                // Determine if castling is legal
+                if (flag == CASTLING) {
+                    if (is_check(board, board->turn)) continue; // Assert the king is not in check
+                    if (board->turn == WHITE) {
+                        if (from != E1) continue; // Assert the king is still alive
+                        if (to == G1) { // Kingside
+                            if (!board->w_kingside_castling_rights) continue; // Assert king or rook has not moved
+                            if (!(board->w_rooks & BB_SQUARES[H1])) continue; // Assert rook is still alive
+                            if (board->occupied & (BB_SQUARES[F1] | BB_SQUARES[G1])) continue; // Assert there are no pieces between the king and rook
+                            if (is_attacked(board, BLACK, F1) || is_attacked(board, BLACK, G1)) continue; // Assert the squares the king moves through are not attacked
+                        } else if (to == C1) { // Queenside
+                            if (!board->w_queenside_castling_rights) continue;
+                            if (!(board->w_rooks & BB_SQUARES[A1])) continue;
+                            if (board->occupied & (BB_SQUARES[D1] | BB_SQUARES[C1] | BB_SQUARES[B1])) continue;
+                            if (is_attacked(board, BLACK, D1) || is_attacked(board, BLACK, C1)) continue;
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        if (from != E8) continue;
+                        if (to == G8) { // Kingside
+                            if (!board->b_kingside_castling_rights) continue;
+                            if (!(board->b_rooks & BB_SQUARES[H8])) continue;
+                            if (board->occupied & (BB_SQUARES[F8] | BB_SQUARES[G8])) continue;
+                            if (is_attacked(board, WHITE, F8) || is_attacked(board, WHITE, G8)) continue;
+                        } else if (to == C8) { // Queenside
+                            if (!board->b_queenside_castling_rights) continue;
+                            if (!(board->b_rooks & BB_SQUARES[A8])) continue;
+                            if (board->occupied & (BB_SQUARES[D8] | BB_SQUARES[C8] | BB_SQUARES[B8])) continue;
+                            if (is_attacked(board, WHITE, D8) || is_attacked(board, WHITE, C8)) continue;
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+
+                Move move = {from, to, flag};
+                moves[i++] = move;
+            }
+        }
+    }
+    Move end = {A1, A1, INVALID};
+    moves[i] = end;
 }
 
 
@@ -149,7 +381,7 @@ uint64_t perft(Board* board, Stack** stack, RTable* rtable, int depth) {
  * @param color the side to move.
  */
 void gen_pseudolegal_moves(Move* moves, Board* board, bool color) {
-    size_t i = 0;
+    int i = 0;
 
     uint64_t pieces = (color == WHITE) ? board->w_occupied : board->b_occupied;
     while (pieces) {
@@ -224,10 +456,258 @@ static int _get_flag(Board* board, bool color, char piece, int from, int to) {
 
 
 /**
+ * @param board 
+ * @param color 
+ * @return the bitboard of squares the king of the color can't go.
+ */
+static uint64_t _get_attackmask(Board* board, bool color) {
+    uint64_t occupied;
+    uint64_t key;
+
+    uint64_t moves_bb = 0;
+
+    uint64_t pieces;
+    int king_square;
+    if (color == WHITE) {
+        pieces = board->w_occupied & ~board->w_pawns;
+        king_square = get_lsb(board->b_king);
+        moves_bb |= (((board->w_pawns << 9) & ~BB_FILE_A) | ((board->w_pawns << 7) & ~BB_FILE_H));
+    } else {
+        pieces = board->b_occupied & ~board->b_pawns;
+        king_square = get_lsb(board->w_king);
+        moves_bb |= (((board->b_pawns >> 9) & ~BB_FILE_H) | ((board->b_pawns >> 7) & ~BB_FILE_A));
+    }
+
+    clear_bit(&board->occupied, king_square);
+
+    while (pieces) {
+        int square = pull_lsb(&pieces);
+        char piece = board->mailbox[square];
+        switch (toupper(piece)) {
+            case 'N':
+                moves_bb |= BB_KNIGHT_ATTACKS[square];
+                break;
+            case 'B':
+                occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
+                key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
+                moves_bb |= BB_BISHOP_ATTACKS[square][key];
+                break;
+            case 'R':
+                occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
+                key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
+                moves_bb |= BB_ROOK_ATTACKS[square][key];
+                break;
+            case 'Q':
+                occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
+                key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
+                moves_bb |= BB_BISHOP_ATTACKS[square][key];
+
+                occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
+                key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
+                moves_bb |= BB_ROOK_ATTACKS[square][key];
+                break;
+            case 'K':
+                moves_bb |= BB_KING_ATTACKS[square];
+                break;
+        }
+    }
+
+    set_bit(&board->occupied, king_square);
+
+    return moves_bb;
+}
+
+
+/**
+ * @param board 
+ * @param color the color of the king possibly in check.
+ * @return all squares if the king is not in check, else
+ * the path between the attacking piece and the color's king. 
+ * Returns empty bitboard if in double or more check.
+ */
+static uint64_t _get_checkmask(Board* board, bool color) {
+    if (color == WHITE) {
+        int num_attackers = 0;
+
+        uint64_t checkmask = 0;
+        int king_square = get_lsb(board->w_king);
+
+        uint64_t queens = get_queen_moves(board, WHITE, king_square) & board->b_queens;
+        num_attackers += pop_count(queens);
+        if (num_attackers >= 2) {
+            return 0;
+        }
+        while (queens) {
+            int queen_square = pull_lsb(&queens);
+            checkmask |= get_ray_between(king_square, queen_square);
+        }
+
+        uint64_t rooks = get_rook_moves(board, WHITE, king_square) & board->b_rooks;
+        num_attackers += pop_count(rooks);
+        if (num_attackers >= 2) {
+            return 0;
+        }
+        while (rooks) {
+            int rook_square = pull_lsb(&rooks);
+            checkmask |= get_ray_between(king_square, rook_square);
+        }
+
+        uint64_t bishops = get_bishop_moves(board, WHITE, king_square) & board->b_bishops;
+        num_attackers += pop_count(bishops);
+        if (num_attackers >= 2) {
+            return 0;
+        }
+        while (bishops) {
+            int bishop_square = pull_lsb(&bishops);
+            checkmask |= get_ray_between(king_square, bishop_square);
+        }
+
+        uint64_t knights = get_knight_moves(board, WHITE, king_square) & board->b_knights;
+        num_attackers += pop_count(knights);
+        if (num_attackers >= 2) {
+            return 0;
+        }
+        checkmask |= knights;
+
+        uint64_t pawns = ((((board->w_king << 9) & ~BB_FILE_A) | ((board->w_king << 7) & ~BB_FILE_H))
+                           & board->b_pawns);
+        num_attackers += pop_count(pawns);
+        if (num_attackers >= 2) {
+            return 0;
+        }
+        checkmask |= pawns;
+        
+        if (!num_attackers) return BB_ALL;
+        return checkmask;
+    } else {
+        int num_attackers = 0;
+
+        uint64_t checkmask = 0;
+        int king_square = get_lsb(board->b_king);
+
+        uint64_t queens = get_queen_moves(board, BLACK, king_square) & board->w_queens;
+        num_attackers += pop_count(queens);
+        if (num_attackers >= 2) {
+            return 0;
+        }
+        while (queens) {
+            int queen_square = pull_lsb(&queens);
+            checkmask |= get_ray_between(king_square, queen_square);
+        }
+
+        uint64_t rooks = get_rook_moves(board, BLACK, king_square) & board->w_rooks;
+        num_attackers += pop_count(rooks);
+        if (num_attackers >= 2) {
+            return 0;
+        }
+        while (rooks) {
+            int rook_square = pull_lsb(&rooks);
+            checkmask |= get_ray_between(king_square, rook_square);
+        }
+
+        uint64_t bishops = get_bishop_moves(board, BLACK, king_square) & board->w_bishops;
+        num_attackers += pop_count(bishops);
+        if (num_attackers >= 2) {
+            return 0;
+        }
+        while (bishops) {
+            int bishop_square = pull_lsb(&bishops);
+            checkmask |= get_ray_between(king_square, bishop_square);
+        }
+
+        uint64_t knights = get_knight_moves(board, BLACK, king_square) & board->w_knights;
+        num_attackers += pop_count(knights);
+        if (num_attackers >= 2) {
+            return 0;
+        }
+        checkmask |= knights;
+
+        uint64_t pawns = ((((board->b_king >> 9) & ~BB_FILE_H) | ((board->b_king >> 7) & ~BB_FILE_A))
+                           & board->w_pawns);
+        num_attackers += pop_count(pawns);
+        if (num_attackers >= 2) {
+            return 0;
+        }
+        checkmask |= pawns;
+        
+        if (!num_attackers) return BB_ALL;
+        return checkmask;
+    }
+}
+
+
+/**
+ * @param board 
+ * @param color
+ * @param square the square the possibly pinned piece is on.
+ * @return a possible pin ray for the piece.
+ */
+static uint64_t _get_pinmask(Board* board, bool color, int square) {
+    if (color == WHITE) {
+        uint64_t pinmask = 0;
+
+        uint64_t rook_attacks = get_rook_moves(board, WHITE, square);
+        uint64_t bishop_attacks = get_bishop_moves(board, WHITE, square);
+
+        uint64_t rank = BB_RANKS[rank_of(square)] & rook_attacks;
+        if (rank & (board->b_rooks | board->b_queens)) {
+            pinmask |= rank;
+        }
+
+        uint64_t file = BB_FILES[file_of(square)] & rook_attacks;
+        if (file & (board->b_rooks | board->b_queens)) {
+            pinmask |= file;
+        }
+
+        uint64_t diagonal = BB_DIAGONALS[diagonal_of(square)] & bishop_attacks;
+        if (diagonal & (board->b_bishops | board->b_queens)) {
+            pinmask |= diagonal;
+        }
+
+        uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square)] & bishop_attacks;
+        if (anti_diagonal & (board->b_bishops | board->b_queens)) {
+            pinmask |= anti_diagonal;
+        }
+        
+        if (!pinmask) return BB_ALL;
+        return pinmask;
+    } else {
+        uint64_t pinmask = 0;
+
+        uint64_t rook_attacks = get_rook_moves(board, BLACK, square);
+        uint64_t bishop_attacks = get_bishop_moves(board, BLACK, square);
+
+        uint64_t rank = BB_RANKS[rank_of(square)] & rook_attacks;
+        if (rank & (board->w_rooks | board->w_queens)) {
+            pinmask |= rank;
+        }
+
+        uint64_t file = BB_FILES[file_of(square)] & rook_attacks;
+        if (file & (board->w_rooks | board->w_queens)) {
+            pinmask |= file;
+        }
+
+        uint64_t diagonal = BB_DIAGONALS[diagonal_of(square)] & bishop_attacks;
+        if (diagonal & (board->w_bishops | board->w_queens)) {
+            pinmask |= diagonal;
+        }
+
+        uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square)] & bishop_attacks;
+        if (anti_diagonal & (board->w_bishops | board->w_queens)) {
+            pinmask |= anti_diagonal;
+        }
+        
+        if (!pinmask) return BB_ALL;
+        return pinmask;
+    }
+}
+
+
+/**
  * @param board
- * @param color the color of the pawn
- * @param square the square the pawn is on
- * @return where the pawn can move from the given square
+ * @param color the color of the pawn.
+ * @param square the square the pawn is on.
+ * @return where the pawn can move from the given square.
  */
 uint64_t get_pawn_moves(Board* board, bool color, int square) {
     if (color == WHITE) {

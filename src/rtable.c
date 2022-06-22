@@ -3,7 +3,7 @@
 #include "rtable.h"
 
 
-const int RTABLE_INIT_CAPACITY = 256; // Power of 2 for modulo efficiency
+const int RTABLE_INIT_CAPACITY = 65536; // Power of 2 for modulo efficiency
 const double MAX_LOAD_FACTOR = .75;
 
 

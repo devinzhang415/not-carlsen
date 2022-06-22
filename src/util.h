@@ -191,6 +191,8 @@ extern const uint64_t BB_ANTI_DIAGONAL_14;
 extern const uint64_t BB_ANTI_DIAGONAL_15;
 extern const uint64_t BB_ANTI_DIAGONALS[15];
 
+extern uint64_t BB_RAYS[64][64];
+
 extern uint64_t ZOBRIST_VALUES[781];
 
 extern const Move NULL_MOVE;
@@ -208,7 +210,6 @@ void clear_bit(uint64_t* bb, int square);
 int pop_count(uint64_t bb);
 
 void print_bb(uint64_t bb);
-void print_mailbox(char* mailbox);
 void print_move_pre(Board* board, Move move);
 void print_move_post(Board* board, Move move);
 
@@ -216,6 +217,10 @@ int rank_of(int square);
 int file_of(int file);
 int diagonal_of(int square);
 int anti_diagonal_of(int square);
+
+void init_rays(void);
+uint64_t get_ray_between(int square1, int square2);
+static uint64_t _get_ray(int square1, int square2);
 
 uint64_t get_reverse_bb(uint64_t bb);
 

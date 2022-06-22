@@ -18,5 +18,7 @@ static bool _is_fifty_move_rule(Board* board);
 
 uint64_t* get_bitboard(Board* board, char piece);
 
+void print_mailbox(char* mailbox);
+
 
 #endif
