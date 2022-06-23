@@ -3,14 +3,14 @@ Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-
 
 Special thanks to:
 - Github.com/nkarve for their magic bitboard generation.
-- Peter Jones for their famous guide on legal move generation.
+- Peter Jones for their guide on legal move generation.
 
 ------
 
 ## Current Features
 - FEN board initialization
-- Magic bitboard sliding move generation
 - Legal and pseudolegal move generator (6.5 million nps)
+- - Magic bitboard sliding move generation
 
 ------
 

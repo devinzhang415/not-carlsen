@@ -106,6 +106,71 @@ const int MAX_MOVE_NUM = 219; // 218 + invalid move to signal end of list
 
 
 /**
+ * Initalizes BB_RAYS[64][64] with all rays that connect from one square to another
+ * (see _get_ray())
+ */
+void init_rays(void) {
+    for (int square1 = A1; square1 <= H8; square1++) {
+        for (int square2 = A1; square2 <= H8; square2++) {
+            BB_RAYS[square1][square2] = _get_ray(square1, square2);
+        }
+    }
+}
+
+
+/**
+ * @param square1 
+ * @param square2 
+ * @return the bitboard of the ray between the two squares (including the squares), if any
+ */
+uint64_t get_ray_between(int square1, int square2) {
+    return (BB_RAYS[square1][square2] & ((BB_ALL << square1) ^ (BB_ALL << square2))) | BB_SQUARES[square2];
+}
+
+
+/**
+ * @param square1 
+ * @param square2 
+ * @return the ray (rank, file, or diagonal) that connects the two squares, if any.
+ *         for example, there is a ray between a1 and c3, but not betweem a1 and b3.
+ *         returns empty bitboard if the two squares are equal
+ */
+static uint64_t _get_ray(int square1, int square2) {
+    if (square1 == square2) return 0;
+
+    uint64_t square2_bb = BB_SQUARES[square2];
+
+    uint64_t rank = BB_RANKS[rank_of(square1)];
+    if (rank & square2_bb) return rank;
+
+    uint64_t file = BB_FILES[file_of(square1)];
+    if (file & square2_bb) return file;
+
+    uint64_t diagonal = BB_DIAGONALS[diagonal_of(square1)];
+    if (diagonal & square2_bb) return diagonal;
+
+    uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square1)];
+    if (anti_diagonal & square2_bb) return anti_diagonal;
+    
+    return 0;
+}
+
+
+/**
+ * Initalizes ZOBRIST_VALUES[781] with random unsigned 64-bit integers.
+ * - 768 numbers for each piece on each square
+ * - 1 number to indicate side to move is black
+ * - 4 numbers for castling rights
+ * - 8 numbers to indicate en passant file
+ */
+void init_zobrist_table(void) {
+    for (int i = 0; i < 781; i++) {
+        ZOBRIST_VALUES[i] = rand_ull();
+    }
+}
+
+
+/**
  * @return a random unsigned 64-bit integer.
  * @author https://stackoverflow.com/a/28116032.
  */
@@ -326,57 +391,6 @@ int anti_diagonal_of(int square) {
 
 
 /**
- * Initalizes BB_RAYS[64][64] with all rays that connect from one square to another
- * (see _get_ray())
- */
-void init_rays(void) {
-    for (int square1 = A1; square1 <= H8; square1++) {
-        for (int square2 = A1; square2 <= H8; square2++) {
-            BB_RAYS[square1][square2] = _get_ray(square1, square2);
-        }
-    }
-}
-
-
-/**
- * @param square1 
- * @param square2 
- * @return the bitboard of the ray between the two squares (including the squares), if any
- */
-uint64_t get_ray_between(int square1, int square2) {
-    return (BB_RAYS[square1][square2] & ((BB_ALL << square1) ^ (BB_ALL << square2))) | BB_SQUARES[square2];
-}
-
-
-/**
- * @param square1 
- * @param square2 
- * @return the ray (rank, file, or diagonal) that connects the two squares, if any.
- *         for example, there is a ray between a1 and c3, but not betweem a1 and b3.
- *         returns empty bitboard if the two squares are equal
- */
-static uint64_t _get_ray(int square1, int square2) {
-    if (square1 == square2) return 0;
-
-    uint64_t square2_bb = BB_SQUARES[square2];
-
-    uint64_t rank = BB_RANKS[rank_of(square1)];
-    if (rank & square2_bb) return rank;
-
-    uint64_t file = BB_FILES[file_of(square1)];
-    if (file & square2_bb) return file;
-
-    uint64_t diagonal = BB_DIAGONALS[diagonal_of(square1)];
-    if (diagonal & square2_bb) return diagonal;
-
-    uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square1)];
-    if (anti_diagonal & square2_bb) return anti_diagonal;
-    
-    return 0;
-}
-
-
-/**
  * @param bb
  * @return the reverse of the bitboard. Flips the perspective of the board
  * @author github.com/nkarve
@@ -409,18 +423,4 @@ int pull_lsb(uint64_t* bb) {
     int square = get_lsb(*bb);
     *bb &= *bb - 1;
     return square;
-}
-
-
-/**
- * Initalizes ZOBRIST_VALUES[781] with random unsigned 64-bit integers.
- * - 768 numbers for each piece on each square
- * - 1 number to indicate side to move is black
- * - 4 numbers for castling rights
- * - 8 numbers to indicate en passant file
- */
-void init_zobrist_table(void) {
-    for (int i = 0; i < 781; i++) {
-        ZOBRIST_VALUES[i] = rand_ull();
-    }
 }
