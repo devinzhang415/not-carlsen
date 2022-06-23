@@ -9,7 +9,7 @@ Special thanks to:
 
 ## Current Features
 - FEN board initialization
-- Legal move generator (6.5 million nps)
+- Legal move generator (24 million nps)
   - Magic bitboard sliding move generation
 - Threefold repetition hashtable
 
@@ -20,6 +20,8 @@ Special thanks to:
 > Completely replaced pseudolegal move generator with the legal one.
 >
 > Fixed all known perft errors. Focusing on optimizations before further testing as lack of speed makes testing difficult on high depths.
+>
+> Switching to perft bulk counting adjusts speed to 24 million nps.
 
 6/22/22 v0.4
 > Successfully implemented a legal move generator. Optimizations and bug fixes still need to be made, but I am extremely happy with the speed at which I was able to implement this considering my previous attempt failed after a few days worth of effort. The coming updates will focus on speeding up this generator and squashing perft mismatches.

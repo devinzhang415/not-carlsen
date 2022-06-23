@@ -236,15 +236,16 @@ uint64_t print_divided_legal_perft(int depth) {
 
 /**
  * Performance test debug function to determine the accuracy of the legal move generator.
+ * Uses bulk counting.
  * @return the number of legal moves at depth n.
  */
 static uint64_t legal_perft(int depth) {
     uint64_t nodes = 0;
 
-    if (depth == 0) return 1ULL;
-
     Move moves[MAX_MOVE_NUM];
     int n = gen_legal_moves(moves, board.turn);
+
+    if (depth == 1) return n;
 
     for (int i = 0; i < n; i++) {
         push(moves[i]);
