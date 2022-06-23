@@ -8,11 +8,11 @@ extern const uint64_t RTABLE_INIT_CAPACITY;
 extern const double MAX_LOAD_FACTOR;
 
 
-void init_rtable(RTable* rtable);
+void init_rtable(void);
 
-int rtable_get(RTable* rtable, uint64_t key);
-void rtable_add(RTable* rtable, uint64_t key);
-void rtable_remove(RTable* rtable, uint64_t key);
+int rtable_get(uint64_t key);
+void rtable_add(uint64_t key);
+void rtable_remove(uint64_t key);
 
 
 #endif

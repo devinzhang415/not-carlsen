@@ -23,25 +23,25 @@ void init_rook_attacks(void);
 static uint64_t _init_bishop_attacks_helper(int square, uint64_t subset);
 static uint64_t _init_rook_attacks_helper(int square, uint64_t subset);
 
-uint64_t print_divided_legal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
-static uint64_t legal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
-uint64_t print_divided_pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
-static uint64_t pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
+uint64_t print_divided_legal_perft(int depth);
+static uint64_t legal_perft(int depth);
+uint64_t print_divided_pseudolegal_perft(int depth);
+static uint64_t pseudolegal_perft(int depth);
 
-void gen_legal_moves(Move* moves, Board* board, Stack** stack, RTable* rtable, bool color);
-void gen_pseudolegal_moves(Move* moves, Board* board, bool color);
+void gen_legal_moves(Move* moves, bool color);
+void gen_pseudolegal_moves(Move* moves, bool color);
 
-static int _get_flag(Board* board, bool color, char piece, int from, int to);
-static uint64_t _get_attackmask(Board* board, bool color);
-static uint64_t _get_checkmask(Board* board, bool color);
-static uint64_t _get_pinmask(Board* board, bool color, int square);
+static int _get_flag(bool color, char piece, int from, int to);
+static uint64_t _get_attackmask(bool color);
+static uint64_t _get_checkmask(bool color);
+static uint64_t _get_pinmask(bool color, int square);
 
-uint64_t get_pawn_moves(Board* board, bool color, int square);
-uint64_t get_knight_moves(Board* board, bool color, int square);
-uint64_t get_bishop_moves(Board* board, bool color, int square);
-uint64_t get_rook_moves(Board* board, bool color, int square);
-uint64_t get_queen_moves(Board* board, bool color, int square);
-uint64_t get_king_moves(Board* board, bool color, int square);
+uint64_t get_pawn_moves(bool color, int square);
+uint64_t get_knight_moves(bool color, int square);
+uint64_t get_bishop_moves(bool color, int square);
+uint64_t get_rook_moves(bool color, int square);
+uint64_t get_queen_moves(bool color, int square);
+uint64_t get_king_moves(bool color, int square);
 
 
 #endif

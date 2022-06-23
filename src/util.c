@@ -6,6 +6,11 @@
 #include "util.h"
 
 
+extern Board board;
+extern Stack* stack;
+extern RTable rtable;
+
+
 const bool WHITE = true;
 const bool BLACK = false;
 
@@ -217,11 +222,10 @@ void print_bb(uint64_t bb) {
 /**
  * Prints the move (before its been made) in algebraic notation.
  * Does not accurately print all moves. Primarily for debug purposes.
- * @param board
  * @param move the move to be made.
  */
-void print_move_pre(Board* board, Move move) {
-    char piece = toupper(board->mailbox[move.from]);
+void print_move_pre(Move move) {
+    char piece = toupper(board.mailbox[move.from]);
 
     if (piece == 'P') {
         printf("%c", 104 - (7 - file_of(move.to)));
@@ -252,10 +256,9 @@ void print_move_pre(Board* board, Move move) {
 /**
  * Prints the move (after its been made) in algebraic notation.
  * Does not accurately print all moves. Primarily for debug purposes.
- * @param board
  * @param move the move that has just been made.
  */
-void print_move_post(Board* board, Move move) {
+void print_move_post(Move move) {
     switch (move.flag) {
         case PROMOTION_QUEEN:
             printf("%c", 104 - (7 - file_of(move.to)));
@@ -278,7 +281,7 @@ void print_move_post(Board* board, Move move) {
             printf("B");
             break;
         default:
-            char piece = toupper(board->mailbox[move.to]);
+            char piece = toupper(board.mailbox[move.to]);
             if (piece != 'P') printf("%c", piece);
             printf("%c", 104 - (7 - file_of(move.to)));
             printf("%d", rank_of(move.to) + 1);

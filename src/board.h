@@ -5,20 +5,20 @@
 #include "util.h"
 
 
-void init(Board* board, Stack** stack, RTable* rtable, char* fen);
+void init(char* fen);
 
-void _make_move(Board* board, Move move);
+void _make_move(Move move);
 
-bool is_check(Board* board, bool color);
-bool is_attacked(Board* board, bool color, int square);
+bool is_check(bool color);
+bool is_attacked(bool color, int square);
 
-bool is_game_over(Board* board, RTable* rtable);
-static bool _is_threefold_rep(Board* board, RTable* rtable);
-static bool _is_fifty_move_rule(Board* board);
+bool is_game_over(void);
+static bool _is_threefold_rep(void);
+static bool _is_fifty_move_rule(void);
 
-uint64_t* get_bitboard(Board* board, char piece);
+uint64_t* get_bitboard(char piece);
 
-void print_mailbox(char* mailbox);
+void print_mailbox(void);
 
 
 #endif

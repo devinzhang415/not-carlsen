@@ -5,10 +5,10 @@
 #include "rtable.h"
 
 
-void init_stack(Board* board, Stack** stack);
+void init_stack(void);
 
-bool legal_push(Board* board, Stack** stack, RTable* rtable, Move move);
-void push(Board* board, Stack** stack, RTable* rtable, Move move);
-void pop(Board* board, Stack** stack, RTable* rtable);
+bool legal_push(Move move);
+void push(Move move);
+void pop(void);
 
 #endif
