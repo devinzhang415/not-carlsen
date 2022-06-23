@@ -213,10 +213,8 @@ uint64_t print_divided_legal_perft(int depth) {
     uint64_t total_nodes = 0;
     Move moves[MAX_MOVE_NUM];
 
-    gen_legal_moves(moves, board.turn);
-    for (int i = 0; i < MAX_MOVE_NUM; i++) {
-        if (moves[i].flag == INVALID) break;
-
+    int n = gen_legal_moves(moves, board.turn);
+    for (int i = 0; i < n; i++) {
         push(moves[i]);
         if (is_game_over()) break;
 
@@ -246,11 +244,9 @@ static uint64_t legal_perft(int depth) {
     if (depth == 0) return 1ULL;
 
     Move moves[MAX_MOVE_NUM];
-    gen_legal_moves(moves, board.turn);
+    int n = gen_legal_moves(moves, board.turn);
 
-    for (int i = 0; i < MAX_MOVE_NUM; i++) {
-        if (moves[i].flag == INVALID) break;
-
+    for (int i = 0; i < n; i++) {
         push(moves[i]);
         if (is_game_over()) break;
 
@@ -262,79 +258,12 @@ static uint64_t legal_perft(int depth) {
 
 
 /**
- * Prints out the pseudolegal perft grouped by the first moves made.
- * @param depth what depth to perform moves to.
- * @return the number of legal moves at depth n.
- * 
- * https://www.chessprogramming.org/Perft_Results
- * pos 1 accurate to depth 7
- * pos 2 fails on depth 5
- * pos 3 fails on depth 7
- * pos 4 fails on depth 4
- * pos 5 fails on depth 5
- * pos 6 accurate to depth 5
- */
-uint64_t print_divided_pseudolegal_perft(int depth) {
-    clock_t start = clock();
-
-    uint64_t total_nodes = 0;
-    Move moves[MAX_MOVE_NUM];
-
-    gen_pseudolegal_moves(moves, board.turn);
-    for (int i = 0; i < MAX_MOVE_NUM; i++) {
-        if (moves[i].flag == INVALID) break;
-
-        if (!legal_push(moves[i])) continue;
-        if (is_game_over()) break;
-
-        print_move_post(moves[i]);
-        uint64_t nodes = pseudolegal_perft(depth - 1);
-        total_nodes += nodes;
-        printf(": %llu\n", nodes);
-        pop();
-    }
-    printf("\nNodes searched: %llu\n", total_nodes);
-
-    clock_t elapsed = clock() - start;
-    double time = (double) elapsed / CLOCKS_PER_SEC;
-    printf("nps: %.0f\n\n", total_nodes / time);
-
-    return total_nodes;
-}
-
-
-/**
- * Performance test debug function to determine the accuracy of the pseudolegal move generator.
- * @param depth what depth to perform moves to.
- * @return the number of legal moves at depth n.
- */
-static uint64_t pseudolegal_perft(int depth) {
-    uint64_t nodes = 0;
-
-    if (depth == 0) return 1ULL;
-
-    Move moves[MAX_MOVE_NUM];
-    gen_pseudolegal_moves(moves, board.turn);
-
-    for (int i = 0; i < MAX_MOVE_NUM; i++) {
-        if (moves[i].flag == INVALID) break;
-
-        if (!legal_push(moves[i])) continue;
-        if (is_game_over()) break;
-
-        nodes += pseudolegal_perft(depth - 1);
-        pop();
-    }
-    return nodes;
-}
-
-
-/**
  * Takes in an empty array and generates the list of legal moves in it.
  * @param moves the array to store the moves in.
  * @param color the side to move.
+ * @param return the number of moves.
  */
-void gen_legal_moves(Move* moves, bool color) {
+int gen_legal_moves(Move* moves, bool color) {
     int i = 0;
 
     uint64_t pieces;
@@ -376,9 +305,7 @@ void gen_legal_moves(Move* moves, bool color) {
             Move move = {king_square, to, flag};
             moves[i++] = move;
         }
-        Move end = {A1, A1, INVALID};
-        moves[i] = end;
-        return;
+        return i;
     }
 
     while (pieces) {
@@ -492,66 +419,7 @@ void gen_legal_moves(Move* moves, bool color) {
             }
         }
     }
-    Move end = {A1, A1, INVALID}; // Flag move list end
-    moves[i] = end;
-}
-
-
-/**
- * Takes in an empty array and generates the list of pseudolegal moves in it.
- * @param moves the array to store the moves in.
- * @param color the side to move.
- */
-void gen_pseudolegal_moves(Move* moves, bool color) {
-    int i = 0;
-
-    uint64_t pieces = (color == WHITE) ? board.w_occupied : board.b_occupied;
-    while (pieces) {
-        int from = pull_lsb(&pieces);
-        char piece = board.mailbox[from];
-
-        uint64_t moves_bb;
-        switch (toupper(piece)) {
-            case 'P':
-                moves_bb = get_pawn_moves(color, from);
-                break;
-            case 'N':
-                moves_bb = get_knight_moves(color, from);
-                break;
-            case 'B':
-                moves_bb = get_bishop_moves(color, from);
-                break;
-            case 'R':
-                moves_bb = get_rook_moves(color, from);
-                break;
-            case 'Q':
-                moves_bb = get_queen_moves(color, from);
-                break;
-            case 'K':
-                moves_bb = get_king_moves(color, from);
-                break;
-        }
-
-        while (moves_bb) {
-            int to = pull_lsb(&moves_bb);
-            if (toupper(piece) == 'P' && (rank_of(to) == 0 || rank_of(to) == 7)) { // Add all promotions
-                Move queen_promotion = {from, to, PROMOTION_QUEEN};
-                moves[i++] = queen_promotion;
-                Move rook_promotion = {from, to, PROMOTION_ROOK};
-                moves[i++] = rook_promotion;
-                Move bishop_promotion = {from, to, PROMOTION_BISHOP};
-                moves[i++] = bishop_promotion;
-                Move knight_promotion = {from, to, PROMOTION_KNIGHT};
-                moves[i++] = knight_promotion;
-            } else {
-                int flag = _get_flag(color, piece, from, to);
-                Move move = {from, to, flag};
-                moves[i++] = move;
-            }
-        }
-    }
-    Move end = {A1, A1, INVALID};
-    moves[i] = end;
+    return i;
 }
 
 

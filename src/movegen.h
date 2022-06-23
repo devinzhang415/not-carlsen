@@ -25,11 +25,8 @@ static uint64_t _init_rook_attacks_helper(int square, uint64_t subset);
 
 uint64_t print_divided_legal_perft(int depth);
 static uint64_t legal_perft(int depth);
-uint64_t print_divided_pseudolegal_perft(int depth);
-static uint64_t pseudolegal_perft(int depth);
 
-void gen_legal_moves(Move* moves, bool color);
-void gen_pseudolegal_moves(Move* moves, bool color);
+int gen_legal_moves(Move* moves, bool color);
 
 static int _get_flag(bool color, char piece, int from, int to);
 static uint64_t _get_attackmask(bool color);

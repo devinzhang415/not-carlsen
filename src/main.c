@@ -28,6 +28,9 @@ int main(void) {
     **/
 
     print_divided_legal_perft(4); // 2,103,487
+    // Move moves[MAX_MOVE_NUM];
+    // int n = gen_legal_moves(moves, WHITE);
+    // printf("%d\n", n);
 
 
     

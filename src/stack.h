@@ -7,7 +7,6 @@
 
 void init_stack(void);
 
-bool legal_push(Move move);
 void push(Move move);
 void pop(void);
 

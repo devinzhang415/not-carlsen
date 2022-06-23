@@ -359,7 +359,7 @@ void _make_move(Move move) {
 
     if (victim != '-') {
         reset_halfmove = true;
-        uint64_t* victim_bb = board.bitboards[parse_piece(victim)];
+        uint64_t* victim_bb = get_bitboard(victim);
         clear_bit(victim_bb, to);
         board.zobrist ^= ZOBRIST_VALUES[64*parse_piece(victim) + to];
     }
