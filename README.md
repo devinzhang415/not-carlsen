@@ -9,8 +9,9 @@ Special thanks to:
 
 ## Current Features
 - FEN board initialization
-- Legal and pseudolegal move generator (6.5 million nps)
+- Legal move generator (6.5 million nps)
   - Magic bitboard sliding move generation
+- Threefold repetition hashtable
 
 ------
 
