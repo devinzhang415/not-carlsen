@@ -22,9 +22,10 @@ void init_bishop_attacks(void);
 void init_rook_attacks(void);
 static uint64_t _init_bishop_attacks_helper(int square, uint64_t subset);
 static uint64_t _init_rook_attacks_helper(int square, uint64_t subset);
+static uint64_t _get_reverse_bb(uint64_t bb);
 
-uint64_t print_divided_legal_perft(int depth);
-static uint64_t legal_perft(int depth);
+uint64_t print_divided_perft(int depth);
+static uint64_t _perft(int depth);
 
 int gen_legal_moves(Move* moves, bool color);
 

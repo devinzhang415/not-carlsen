@@ -165,7 +165,7 @@ static uint64_t _get_ray(int square1, int square2) {
  */
 void init_zobrist_table(void) {
     for (int i = 0; i < 781; i++) {
-        ZOBRIST_VALUES[i] = rand_ull();
+        ZOBRIST_VALUES[i] = _rand_ull();
     }
 }
 
@@ -174,7 +174,7 @@ void init_zobrist_table(void) {
  * @return a random unsigned 64-bit integer.
  * @author https://stackoverflow.com/a/28116032.
  */
-uint64_t rand_ull(void) {
+static uint64_t _rand_ull(void) {
     uint64_t n = 0;
     for (int i = 0; i < 5; i++) {
         n = (n << 15) | (rand() & 0x7FFF);
@@ -387,20 +387,6 @@ int diagonal_of(int square) {
  */
 int anti_diagonal_of(int square) {
     return rank_of(square) + file_of(square);
-}
-
-
-/**
- * @param bb
- * @return the reverse of the bitboard. Flips the perspective of the board
- * @author github.com/nkarve
- */
-uint64_t get_reverse_bb(uint64_t bb) {
-	bb = (bb & 0x5555555555555555) << 1 | (bb >> 1) & 0x5555555555555555;
-	bb = (bb & 0x3333333333333333) << 2 | (bb >> 2) & 0x3333333333333333;
-	bb = (bb & 0x0f0f0f0f0f0f0f0f) << 4 | (bb >> 4) & 0x0f0f0f0f0f0f0f0f;
-	bb = (bb & 0x00ff00ff00ff00ff) << 8 | (bb >> 8) & 0x00ff00ff00ff00ff;
-	return (bb << 48) | ((bb & 0xffff0000) << 16) | ((bb >> 16) & 0xffff0000) | (bb >> 48);
 }
 
 

@@ -27,10 +27,7 @@ int main(void) {
      * legal move gen optimization
     **/
 
-    print_divided_legal_perft(6);
-    // Move moves[MAX_MOVE_NUM];
-    // int n = gen_legal_moves(moves, WHITE);
-    // printf("%d\n", n);
+    print_divided_perft(5);
 
 
     

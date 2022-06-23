@@ -18,7 +18,6 @@ enum squares {
 
 
 enum flags {
-    INVALID, // Move is uninitialized
     NONE, // No special flag
     PASS, // Null move
     CAPTURE,
@@ -205,8 +204,7 @@ uint64_t get_ray_between(int square1, int square2);
 static uint64_t _get_ray(int square1, int square2);
 
 void init_zobrist_table(void);
-
-uint64_t rand_ull(void);
+static uint64_t _rand_ull(void);
 
 int parse_square(char* square);
 int parse_piece(char piece);
@@ -224,8 +222,6 @@ int rank_of(int square);
 int file_of(int file);
 int diagonal_of(int square);
 int anti_diagonal_of(int square);
-
-uint64_t get_reverse_bb(uint64_t bb);
 
 int get_lsb(uint64_t bb);
 int pull_lsb(uint64_t* bb);

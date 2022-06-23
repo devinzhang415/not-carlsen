@@ -158,11 +158,11 @@ static uint64_t _init_bishop_attacks_helper(int square, uint64_t subset) {
     uint64_t anti_diagonal_mask = BB_ANTI_DIAGONALS[anti_diagonal_of(square)];
 
     uint64_t diagonal_attacks = (((diagonal_mask & subset) - square_mask * 2) ^
-                            get_reverse_bb(get_reverse_bb(diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            _get_reverse_bb(_get_reverse_bb(diagonal_mask & subset) - _get_reverse_bb(square_mask) * 2)) &
                             diagonal_mask;
 
     uint64_t anti_diagonal_attacks = (((anti_diagonal_mask & subset) - square_mask * 2) ^
-                            get_reverse_bb(get_reverse_bb(anti_diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            _get_reverse_bb(_get_reverse_bb(anti_diagonal_mask & subset) - _get_reverse_bb(square_mask) * 2)) &
                             anti_diagonal_mask;
 
     return diagonal_attacks | anti_diagonal_attacks;
@@ -183,14 +183,28 @@ static uint64_t _init_rook_attacks_helper(int square, uint64_t subset) {
     uint64_t file_mask = BB_FILES[file_of(square)];
 
     uint64_t rank_attacks = (((rank_mask & subset) - square_mask * 2) ^
-                            get_reverse_bb(get_reverse_bb(rank_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            _get_reverse_bb(_get_reverse_bb(rank_mask & subset) - _get_reverse_bb(square_mask) * 2)) &
                             rank_mask;
 
     uint64_t file_attacks = (((file_mask & subset) - square_mask * 2) ^
-                            get_reverse_bb(get_reverse_bb(file_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            _get_reverse_bb(_get_reverse_bb(file_mask & subset) - _get_reverse_bb(square_mask) * 2)) &
                             file_mask;
 
     return rank_attacks | file_attacks;
+}
+
+
+/**
+ * @param bb
+ * @return the reverse of the bitboard. Flips the perspective of the board
+ * @author github.com/nkarve
+ */
+static uint64_t _get_reverse_bb(uint64_t bb) {
+	bb = (bb & 0x5555555555555555) << 1 | (bb >> 1) & 0x5555555555555555;
+	bb = (bb & 0x3333333333333333) << 2 | (bb >> 2) & 0x3333333333333333;
+	bb = (bb & 0x0f0f0f0f0f0f0f0f) << 4 | (bb >> 4) & 0x0f0f0f0f0f0f0f0f;
+	bb = (bb & 0x00ff00ff00ff00ff) << 8 | (bb >> 8) & 0x00ff00ff00ff00ff;
+	return (bb << 48) | ((bb & 0xffff0000) << 16) | ((bb >> 16) & 0xffff0000) | (bb >> 48);
 }
 
 
@@ -204,22 +218,23 @@ static uint64_t _init_rook_attacks_helper(int square, uint64_t subset) {
  * pos 2 accurate to depth 5
  * pos 3 accurate to depth 8
  * pos 4 accurate to depth 6
- * pos 5 accurate to depth 5
+ * pos 5 accurate to depth 6
  * pos 6 accurate to depth 5
  */
-uint64_t print_divided_legal_perft(int depth) {
+uint64_t print_divided_perft(int depth) {
     clock_t start = clock();
 
     uint64_t total_nodes = 0;
-    Move moves[MAX_MOVE_NUM];
 
+    Move moves[MAX_MOVE_NUM];
     int n = gen_legal_moves(moves, board.turn);
+
     for (int i = 0; i < n; i++) {
         push(moves[i]);
         if (is_game_over()) break;
 
         print_move_post(moves[i]);
-        uint64_t nodes = legal_perft(depth - 1);
+        uint64_t nodes = _perft(depth - 1);
         total_nodes += nodes;
         printf(": %llu\n", nodes);
         pop();
@@ -239,19 +254,20 @@ uint64_t print_divided_legal_perft(int depth) {
  * Uses bulk counting.
  * @return the number of legal moves at depth n.
  */
-static uint64_t legal_perft(int depth) {
+static uint64_t _perft(int depth) {
     uint64_t nodes = 0;
 
     Move moves[MAX_MOVE_NUM];
     int n = gen_legal_moves(moves, board.turn);
 
+    if (depth == 0) return 1;
     if (depth == 1) return n;
 
     for (int i = 0; i < n; i++) {
         push(moves[i]);
         if (is_game_over()) break;
 
-        nodes += legal_perft(depth - 1);
+        nodes += _perft(depth - 1);
         pop();
     }
     return nodes;
