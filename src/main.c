@@ -24,15 +24,15 @@ int main(void) {
      * TODO
      * UCI
      * legal move gen
-     * - 5.5 nps for some reason, need to tackle every area and see what is slow (could be everything)
+     * - 5.5-6.1 mnps for some reason, need to tackle every area and see what is slow
      * 
      * https://www.chessprogramming.org/Perft_Results
-     * pos 1 fails on depth 6
-     * pos 2 fails on depth 5
+     * pos 1 accurate to depth 7
+     * pos 2 accurate to depth 5
      * pos 3 accurate to depth 8
-     * pos 4 fails on depth 6
+     * pos 4 accurate to depth 6
      * pos 5 fails on depth 5
-     * pos 6 fails on depth 5
+     * pos 6 accurate to depth 5
     **/
 
 
@@ -44,10 +44,7 @@ int main(void) {
     //     printf("\n");
     // }
 
-    // Move move = {C1, H6, NONE};
-    // push(&board, &stack, &rtable, move);
     print_divided_legal_perft(&board, &stack, &rtable, 5);
-
     
  
     return 0;

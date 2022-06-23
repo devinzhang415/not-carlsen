@@ -237,7 +237,7 @@ void _make_move(Board* board, Move move) {
 
             break;
         case 'R':
-            if (from == H8 && board->w_kingside_castling_rights) {
+            if (from == H1 && board->w_kingside_castling_rights) {
                 board->w_kingside_castling_rights = false;
                 board->zobrist ^= ZOBRIST_VALUES[769];
             } else if (from == A1 && board->w_queenside_castling_rights) {
@@ -320,7 +320,7 @@ void _make_move(Board* board, Move move) {
             if (from == H8 && board->b_kingside_castling_rights) {
                 board->b_kingside_castling_rights = false;
                 board->zobrist ^= ZOBRIST_VALUES[771];
-            } else if (from == A1 && board->b_queenside_castling_rights) {
+            } else if (from == A8 && board->b_queenside_castling_rights) {
                 board->b_queenside_castling_rights = false;
                 board->zobrist ^= ZOBRIST_VALUES[772];
             }
@@ -475,48 +475,7 @@ uint64_t* get_bitboard(Board* board, char piece) {
 void print_mailbox(char* mailbox) {
     for (int rank = 7; rank >= 0; rank--) {
         for (int file = 0; file <= 7; file++) {
-            char piece = mailbox[8*rank + file];
-            switch (piece) {
-                case 'P':
-                    printf("♙");
-                    break;
-                case 'N':
-                    printf("♘");
-                    break;
-                case 'B':
-                    printf("♗");
-                    break;
-                case 'R':
-                    printf("♖");
-                    break;
-                case 'Q':
-                    printf("♕");
-                    break;
-                case 'K':
-                    printf("♔");
-                    break;
-                case 'p':
-                    printf("♟");
-                    break;
-                case 'n':
-                    printf("♞");
-                    break;
-                case 'b':
-                    printf("♝");
-                    break;
-                case 'r':
-                    printf("♜");
-                    break;
-                case 'q':
-                    printf("♛");
-                    break;
-                case 'k':
-                    printf("♚");
-                    break;
-                default:
-                    printf("- ");
-                    break;
-            }
+            printf("%c ", mailbox[8*rank + file]);
         }
         printf("\n");
     }
