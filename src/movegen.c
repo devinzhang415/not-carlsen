@@ -270,6 +270,7 @@ void gen_legal_moves(Move* moves, Board* board, Stack** stack, RTable* rtable, b
         while (moves_bb) {
             int to = pull_lsb(&moves_bb);
             int flag = _get_flag(board, color, piece, king_square, to);
+            if (flag == CASTLING) continue;
             Move move = {king_square, to, flag};
             moves[i++] = move;
         }
