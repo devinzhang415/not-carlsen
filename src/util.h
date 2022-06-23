@@ -121,8 +121,8 @@ typedef struct RTable_Entry {
  * Threefold repetition hashtable structure.
  */
 typedef struct RTable {
-    size_t size;
-    size_t capacity;
+    uint64_t size;
+    uint64_t capacity;
     RTable_Entry* entries;
 } RTable;
 

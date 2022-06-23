@@ -11,7 +11,7 @@
 int main(void) {
     ////////////////////////////////////////////////////////////////////////////////
     char* DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    char* fen = "8/8/8/8/k2Pp2Q/8/8/3K4 w - d3 0 1";
+    char* fen = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8";
 
     Board board;
     Stack* stack;
@@ -24,27 +24,29 @@ int main(void) {
      * TODO
      * UCI
      * legal move gen
+     * - 5.5 nps for some reason, need to tackle every area and see what is slow (could be everything)
      * 
      * https://www.chessprogramming.org/Perft_Results
-     * pos 1 fails on depth 4
-     * pos 2
-     * pos 3
-     * pos 4
-     * pos 5
-     * pos 6
+     * pos 1 fails on depth 6
+     * pos 2 fails on depth 5
+     * pos 3 accurate to depth 8
+     * pos 4 fails on depth 6
+     * pos 5 fails on depth 5
+     * pos 6 fails on depth 5
     **/
 
 
-    Move moves[1000];
-    gen_legal_moves(moves, &board, BLACK);
-    for (int i = 0; i < 1000; i++) {
-        if (moves[i].flag == INVALID) break;
-        print_move_pre(&board, moves[i]);
-        printf("\n");
-    }
+    // Move moves[1000];
+    // gen_legal_moves(moves, &board, &stack, &rtable, BLACK);
+    // for (int i = 0; i < 1000; i++) {
+    //     if (moves[i].flag == INVALID) break;
+    //     print_move_pre(&board, moves[i]);
+    //     printf("\n");
+    // }
 
-
-    // print_divided_legal_perft(&board, &stack, &rtable, 1);
+    // Move move = {C1, H6, NONE};
+    // push(&board, &stack, &rtable, move);
+    print_divided_legal_perft(&board, &stack, &rtable, 5);
 
     
  

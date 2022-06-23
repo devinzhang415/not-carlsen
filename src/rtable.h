@@ -4,7 +4,7 @@
 #include "util.h"
 
 
-extern const int RTABLE_INIT_CAPACITY;
+extern const uint64_t RTABLE_INIT_CAPACITY;
 extern const double MAX_LOAD_FACTOR;
 
 

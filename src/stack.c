@@ -25,6 +25,7 @@ void init_stack(Board* board, Stack** stack) {
  * Makes the given move. If it is illegal, revert it.
  * @param board 
  * @param stack history of board positions and the moves it took to reach them.
+ * @param rtable threefold rep table.
  * @param move
  * @return true if the move was legal.
  */
@@ -105,7 +106,7 @@ void push(Board* board, Stack** stack, RTable* rtable, Move move) {
     *stack = node;
 
     // Update threefold rep table
-    rtable_add(rtable, board->zobrist);
+    rtable_add(rtable, board->zobrist); // TODO rep table causes seg fault at high node counts
 }
 
 

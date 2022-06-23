@@ -24,7 +24,7 @@ uint64_t legal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
 uint64_t print_divided_pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
 uint64_t pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int depth);
 
-void gen_legal_moves(Move* moves, Board* board, bool color);
+void gen_legal_moves(Move* moves, Board* board, Stack** stack, RTable* rtable, bool color);
 void gen_pseudolegal_moves(Move* moves, Board* board, bool color);
 
 static int _get_flag(Board* board, bool color, char piece, int from, int to);

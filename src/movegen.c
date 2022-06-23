@@ -101,7 +101,7 @@ uint64_t print_divided_legal_perft(Board* board, Stack** stack, RTable* rtable, 
     uint64_t total_nodes = 0;
     Move moves[1000];
 
-    gen_legal_moves(moves, board, board->turn);
+    gen_legal_moves(moves, board, stack, rtable, board->turn);
     for (int i = 0; i < 1000; i++) {
         if (moves[i].flag == INVALID) break;
 
@@ -137,7 +137,7 @@ uint64_t legal_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
     if (depth == 0) return 1ULL;
 
     Move moves[1000];
-    gen_legal_moves(moves, board, board->turn);
+    gen_legal_moves(moves, board, stack, rtable, board->turn);
 
     for (int i = 0; i < 1000; i++) {
         if (moves[i].flag == INVALID) break;
@@ -229,27 +229,35 @@ uint64_t pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int dept
  * Takes in an empty array and generates the list of legal moves in it.
  * @param moves the array to store the moves in.
  * @param board 
+ * @param stack
+ * @param rtable threefold rep table.
  * @param color the side to move.
  */
-void gen_legal_moves(Move* moves, Board* board, bool color) {
+void gen_legal_moves(Move* moves, Board* board, Stack** stack, RTable* rtable, bool color) {
     int i = 0;
 
     uint64_t pieces;
     uint64_t king_bb;
     char piece;
     uint64_t enemy_pawns_attacks;
+    uint64_t enemy_rq_bb;
+    uint64_t enemy_bq_bb;
     if (color == WHITE) {
         pieces = board->w_occupied;
         king_bb = board->w_king;
         piece = 'K';
         enemy_pawns_attacks = (((board->b_pawns >> 9) & ~BB_FILE_H) | ((board->b_pawns >> 7) & ~BB_FILE_A))
                                & board->w_occupied;
+        enemy_rq_bb = board->b_rooks | board->b_queens;
+        enemy_bq_bb = board->b_bishops | board->b_queens;
     } else {
         pieces = board->b_occupied;
         king_bb = board->b_king;
         piece = 'k';
         enemy_pawns_attacks = (((board->w_pawns << 9) & ~BB_FILE_A) | ((board->w_pawns << 7) & ~BB_FILE_H))
                                & board->b_occupied;
+        enemy_rq_bb = board->w_rooks | board->w_queens;
+        enemy_bq_bb = board->w_bishops | board->w_queens;
     }
     int king_square = get_lsb(king_bb);
 
@@ -287,9 +295,11 @@ void gen_legal_moves(Move* moves, Board* board, bool color) {
                 uint64_t pawn_moves = get_pawn_moves(board, color, from);
                 moves_bb = pawn_moves & checkmask & pinmask;
 
-                // Add possible en passant capture to remove check
                 if (board->en_passant_square != NULL_SQUARE) {
                     if (pawn_moves & pinmask & BB_SQUARES[board->en_passant_square]) {
+                        // Add possible en passant capture to remove check
+                        // For example en passant is legal here:
+                        // 8/8/8/2k5/3Pp3/8/8/3K4 b - d3 0 1
                         if (king_bb & enemy_pawns_attacks) {
                             set_bit(&moves_bb, board->en_passant_square);
                         }
@@ -327,6 +337,7 @@ void gen_legal_moves(Move* moves, Board* board, bool color) {
                 moves[i++] = knight_promotion;
             } else {
                 int flag = _get_flag(board, color, piece, from, to);
+                Move move = {from, to, flag};
 
                 // Determine if castling is legal
                 if (flag == CASTLING) {
@@ -362,9 +373,17 @@ void gen_legal_moves(Move* moves, Board* board, bool color) {
                             continue;
                         }
                     }
+                } else if (flag == EN_PASSANT) {
+                    // Remove possible en passant capture that leaves king in check
+                    // For example en passant is illegal here:
+                    // 8/8/8/8/k2Pp2Q/8/8/3K4 b - d3 0 1
+                    // k7/1q6/8/3pP3/8/5K2/8/8 w - d6 0 1
+                    push(board, stack, rtable, move);
+                    bool invalid = is_check(board, color);
+                    pop(board, stack, rtable);
+                    if (invalid) continue;
                 }
 
-                Move move = {from, to, flag};
                 moves[i++] = move;
             }
         }
@@ -646,26 +665,31 @@ static uint64_t _get_pinmask(Board* board, bool color, int square) {
     if (color == WHITE) {
         uint64_t pinmask = 0;
 
-        uint64_t rook_attacks = get_rook_moves(board, WHITE, square);
-        uint64_t bishop_attacks = get_bishop_moves(board, WHITE, square);
+        uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
+        uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
+        uint64_t rook_attacks = BB_ROOK_ATTACKS[square][key];
+
+        occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
+        key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
+        uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][key];
 
         uint64_t rank = BB_RANKS[rank_of(square)] & rook_attacks;
-        if (rank & (board->b_rooks | board->b_queens)) {
+        if (rank & board->w_king && rank & (board->b_rooks | board->b_queens)) {
             pinmask |= rank;
         }
 
         uint64_t file = BB_FILES[file_of(square)] & rook_attacks;
-        if (file & (board->b_rooks | board->b_queens)) {
+        if (file & board->w_king && file & (board->b_rooks | board->b_queens)) {
             pinmask |= file;
         }
 
         uint64_t diagonal = BB_DIAGONALS[diagonal_of(square)] & bishop_attacks;
-        if (diagonal & (board->b_bishops | board->b_queens)) {
+        if (diagonal & board->w_king && diagonal & (board->b_bishops | board->b_queens)) {
             pinmask |= diagonal;
         }
 
         uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square)] & bishop_attacks;
-        if (anti_diagonal & (board->b_bishops | board->b_queens)) {
+        if (anti_diagonal & board->w_king && anti_diagonal & (board->b_bishops | board->b_queens)) {
             pinmask |= anti_diagonal;
         }
         
@@ -674,26 +698,31 @@ static uint64_t _get_pinmask(Board* board, bool color, int square) {
     } else {
         uint64_t pinmask = 0;
 
-        uint64_t rook_attacks = get_rook_moves(board, BLACK, square);
-        uint64_t bishop_attacks = get_bishop_moves(board, BLACK, square);
+        uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
+        uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
+        uint64_t rook_attacks = BB_ROOK_ATTACKS[square][key];
+
+        occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
+        key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
+        uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][key];
 
         uint64_t rank = BB_RANKS[rank_of(square)] & rook_attacks;
-        if (rank & (board->w_rooks | board->w_queens)) {
+        if (rank & board->b_king && rank & (board->w_rooks | board->w_queens)) {
             pinmask |= rank;
         }
 
         uint64_t file = BB_FILES[file_of(square)] & rook_attacks;
-        if (file & (board->w_rooks | board->w_queens)) {
+        if (file & board->b_king && file & (board->w_rooks | board->w_queens)) {
             pinmask |= file;
         }
 
         uint64_t diagonal = BB_DIAGONALS[diagonal_of(square)] & bishop_attacks;
-        if (diagonal & (board->w_bishops | board->w_queens)) {
+        if (diagonal & board->b_king && diagonal & (board->w_bishops | board->w_queens)) {
             pinmask |= diagonal;
         }
 
         uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square)] & bishop_attacks;
-        if (anti_diagonal & (board->w_bishops | board->w_queens)) {
+        if (anti_diagonal & board->b_king && anti_diagonal & (board->w_bishops | board->w_queens)) {
             pinmask |= anti_diagonal;
         }
         
