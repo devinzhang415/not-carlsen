@@ -197,6 +197,7 @@ extern uint64_t ZOBRIST_VALUES[781];
 
 extern const Move NULL_MOVE;
 extern const int NULL_SQUARE;
+extern const int MAX_MOVE_NUM;
 
 
 uint64_t rand_ull(void);

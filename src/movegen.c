@@ -88,21 +88,131 @@ uint64_t BISHOP_ATTACK_SHIFTS[64];
 
 
 /**
+ * Initalizes the bishop attack magic bitboard
+ * @author github.com/nkarve
+ */
+void init_bishop_attacks(void) {
+    for (int square = A1; square <= H8; square++) {
+        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
+                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
+        BB_BISHOP_ATTACK_MASKS[square] = (BB_DIAGONALS[diagonal_of(square)] ^ BB_ANTI_DIAGONALS[anti_diagonal_of(square)]) & ~edges;
+        uint64_t attack_mask = BB_BISHOP_ATTACK_MASKS[square];
+
+        int shift = 64 - pop_count(attack_mask);
+        BISHOP_ATTACK_SHIFTS[square] = shift;
+
+        uint64_t subset = 0;
+        do {
+            uint64_t index = subset;
+            index *= BISHOP_MAGICS[square];
+            index >>= shift;
+            BB_BISHOP_ATTACKS[square][index] = _init_bishop_attacks_helper(square, subset);
+            subset = (subset - attack_mask) & attack_mask;
+        } while (subset);
+    }
+}
+
+
+/**
+ * Initalizes the rook attack magic bitboard
+ * @author github.com/nkarve
+ */
+void init_rook_attacks(void) {
+    for (int square = A1; square <= H8; square++) {
+        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
+                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
+        BB_ROOK_ATTACK_MASKS[square] = (BB_RANKS[rank_of(square)] ^ BB_FILES[file_of(square)]) & ~edges;
+        uint64_t attack_mask = BB_ROOK_ATTACK_MASKS[square];
+
+        int shift = 64 - pop_count(attack_mask);
+        ROOK_ATTACK_SHIFTS[square] = shift;
+
+        uint64_t subset = 0;
+        do {
+            uint64_t index = subset;
+            index *= ROOK_MAGICS[square];
+            index >>= shift;
+            BB_ROOK_ATTACKS[square][index] = _init_rook_attacks_helper(square, subset);
+            subset = (subset - attack_mask) & attack_mask;
+        } while (subset);
+    }
+}
+
+
+/**
+ * Helper method to initalizes the bishop attack magic bitboard
+ * @param square the current square
+ * @param subset the current occupancy
+ * @param attack_mask the bishop's attack mask without edges
+ * @return the bishop attack bitboard
+ * @author github.com/nkarve
+ */
+static uint64_t _init_bishop_attacks_helper(int square, uint64_t subset) {
+    uint64_t square_mask = BB_SQUARES[square];
+    uint64_t diagonal_mask = BB_DIAGONALS[diagonal_of(square)];
+    uint64_t anti_diagonal_mask = BB_ANTI_DIAGONALS[anti_diagonal_of(square)];
+
+    uint64_t diagonal_attacks = (((diagonal_mask & subset) - square_mask * 2) ^
+                            get_reverse_bb(get_reverse_bb(diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            diagonal_mask;
+
+    uint64_t anti_diagonal_attacks = (((anti_diagonal_mask & subset) - square_mask * 2) ^
+                            get_reverse_bb(get_reverse_bb(anti_diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            anti_diagonal_mask;
+
+    return diagonal_attacks | anti_diagonal_attacks;
+}
+
+
+/**
+ * Helper method to initalizes the rook attack magic bitboard
+ * @param square the current square
+ * @param subset the current occupancy
+ * @param attack_mask the rook's attack mask without edges
+ * @return the rook attack bitboard
+ * @author github.com/nkarve
+ */
+static uint64_t _init_rook_attacks_helper(int square, uint64_t subset) {
+    uint64_t square_mask = BB_SQUARES[square];
+    uint64_t rank_mask = BB_RANKS[rank_of(square)];
+    uint64_t file_mask = BB_FILES[file_of(square)];
+
+    uint64_t rank_attacks = (((rank_mask & subset) - square_mask * 2) ^
+                            get_reverse_bb(get_reverse_bb(rank_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            rank_mask;
+
+    uint64_t file_attacks = (((file_mask & subset) - square_mask * 2) ^
+                            get_reverse_bb(get_reverse_bb(file_mask & subset) - get_reverse_bb(square_mask) * 2)) &
+                            file_mask;
+
+    return rank_attacks | file_attacks;
+}
+
+
+/**
  * Prints out the legal perft grouped by the first moves made.
  * @param board 
  * @param stack history of board positions and the moves it took to reach them.
  * @param rtable
  * @param depth what depth to perform moves to.
  * @return the number of legal moves at depth n.
+ * 
+ * https://www.chessprogramming.org/Perft_Results
+ * pos 1 accurate to depth 7
+ * pos 2 accurate to depth 5
+ * pos 3 accurate to depth 8
+ * pos 4 accurate to depth 6
+ * pos 5 accurate to depth 5
+ * pos 6 accurate to depth 5
  */
 uint64_t print_divided_legal_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
     clock_t start = clock();
 
     uint64_t total_nodes = 0;
-    Move moves[1000];
+    Move moves[MAX_MOVE_NUM];
 
     gen_legal_moves(moves, board, stack, rtable, board->turn);
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < MAX_MOVE_NUM; i++) {
         if (moves[i].flag == INVALID) break;
 
         push(board, stack, rtable, moves[i]);
@@ -131,15 +241,15 @@ uint64_t print_divided_legal_perft(Board* board, Stack** stack, RTable* rtable, 
  * @param depth what depth to perform moves to.
  * @return the number of legal moves at depth n.
  */
-uint64_t legal_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
+static uint64_t legal_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
     uint64_t nodes = 0;
 
     if (depth == 0) return 1ULL;
 
-    Move moves[1000];
+    Move moves[MAX_MOVE_NUM];
     gen_legal_moves(moves, board, stack, rtable, board->turn);
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < MAX_MOVE_NUM; i++) {
         if (moves[i].flag == INVALID) break;
 
         push(board, stack, rtable, moves[i]);
@@ -172,10 +282,10 @@ uint64_t print_divided_pseudolegal_perft(Board* board, Stack** stack, RTable* rt
     clock_t start = clock();
 
     uint64_t total_nodes = 0;
-    Move moves[1000];
+    Move moves[MAX_MOVE_NUM];
 
     gen_pseudolegal_moves(moves, board, board->turn);
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < MAX_MOVE_NUM; i++) {
         if (moves[i].flag == INVALID) break;
 
         if (!legal_push(board, stack, rtable, moves[i])) continue;
@@ -204,15 +314,15 @@ uint64_t print_divided_pseudolegal_perft(Board* board, Stack** stack, RTable* rt
  * @param depth what depth to perform moves to.
  * @return the number of legal moves at depth n.
  */
-uint64_t pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
+static uint64_t pseudolegal_perft(Board* board, Stack** stack, RTable* rtable, int depth) {
     uint64_t nodes = 0;
 
     if (depth == 0) return 1ULL;
 
-    Move moves[1000];
+    Move moves[MAX_MOVE_NUM];
     gen_pseudolegal_moves(moves, board, board->turn);
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < MAX_MOVE_NUM; i++) {
         if (moves[i].flag == INVALID) break;
 
         if (!legal_push(board, stack, rtable, moves[i])) continue;
@@ -261,6 +371,7 @@ void gen_legal_moves(Move* moves, Board* board, Stack** stack, RTable* rtable, b
     }
     int king_square = get_lsb(king_bb);
 
+    uint64_t attackmask = _get_attackmask(board, !color);
     uint64_t checkmask = _get_checkmask(board, color);
     uint64_t pos_pinned = get_queen_moves(board, !color, king_square);
 
@@ -321,12 +432,13 @@ void gen_legal_moves(Move* moves, Board* board, Stack** stack, RTable* rtable, b
                 moves_bb = get_queen_moves(board, color, from) & checkmask & pinmask;
                 break;
             case 'K':
-                moves_bb = get_king_moves(board, color, from) & ~_get_attackmask(board, !color);
+                moves_bb = get_king_moves(board, color, from) & ~attackmask;
                 break;
         }
 
         while (moves_bb) {
             int to = pull_lsb(&moves_bb);
+
             if (toupper(piece) == 'P' && (rank_of(to) == 0 || rank_of(to) == 7)) { // Add all promotions
                 Move queen_promotion = {from, to, PROMOTION_QUEEN};
                 moves[i++] = queen_promotion;
@@ -342,19 +454,19 @@ void gen_legal_moves(Move* moves, Board* board, Stack** stack, RTable* rtable, b
 
                 // Determine if castling is legal
                 if (flag == CASTLING) {
-                    if (is_check(board, board->turn)) continue; // Assert the king is not in check
+                    if (attackmask & king_bb) continue; // Assert the king is not in check
                     if (board->turn == WHITE) {
                         if (from != E1) continue; // Assert the king is still alive
                         if (to == G1) { // Kingside
                             if (!board->w_kingside_castling_rights) continue; // Assert king or rook has not moved
                             if (!(board->w_rooks & BB_SQUARES[H1])) continue; // Assert rook is still alive
                             if (board->occupied & (BB_SQUARES[F1] | BB_SQUARES[G1])) continue; // Assert there are no pieces between the king and rook
-                            if (is_attacked(board, BLACK, F1) || is_attacked(board, BLACK, G1)) continue; // Assert the squares the king moves through are not attacked
+                            if (attackmask & (BB_SQUARES[F1] | BB_SQUARES[G1])) continue; // Assert the squares the king moves through are not attacked
                         } else if (to == C1) { // Queenside
                             if (!board->w_queenside_castling_rights) continue;
                             if (!(board->w_rooks & BB_SQUARES[A1])) continue;
                             if (board->occupied & (BB_SQUARES[D1] | BB_SQUARES[C1] | BB_SQUARES[B1])) continue;
-                            if (is_attacked(board, BLACK, D1) || is_attacked(board, BLACK, C1)) continue;
+                            if (attackmask & (BB_SQUARES[D1] | BB_SQUARES[C1])) continue;
                         } else {
                             continue;
                         }
@@ -364,12 +476,12 @@ void gen_legal_moves(Move* moves, Board* board, Stack** stack, RTable* rtable, b
                             if (!board->b_kingside_castling_rights) continue;
                             if (!(board->b_rooks & BB_SQUARES[H8])) continue;
                             if (board->occupied & (BB_SQUARES[F8] | BB_SQUARES[G8])) continue;
-                            if (is_attacked(board, WHITE, F8) || is_attacked(board, WHITE, G8)) continue;
+                            if (attackmask & (BB_SQUARES[F8] | BB_SQUARES[G8])) continue;
                         } else if (to == C8) { // Queenside
                             if (!board->b_queenside_castling_rights) continue;
                             if (!(board->b_rooks & BB_SQUARES[A8])) continue;
                             if (board->occupied & (BB_SQUARES[D8] | BB_SQUARES[C8] | BB_SQUARES[B8])) continue;
-                            if (is_attacked(board, WHITE, D8) || is_attacked(board, WHITE, C8)) continue;
+                            if (attackmask & (BB_SQUARES[D8] | BB_SQUARES[C8])) continue;
                         } else {
                             continue;
                         }
@@ -389,7 +501,7 @@ void gen_legal_moves(Move* moves, Board* board, Stack** stack, RTable* rtable, b
             }
         }
     }
-    Move end = {A1, A1, INVALID};
+    Move end = {A1, A1, INVALID}; // Flag move list end
     moves[i] = end;
 }
 
@@ -462,15 +574,13 @@ void gen_pseudolegal_moves(Move* moves, Board* board, bool color) {
  * @return the appropriate flag for the move, excludes promotions
  */
 static int _get_flag(Board* board, bool color, char piece, int from, int to) {
-    uint64_t enemy = (color == WHITE) ? board->b_occupied : board->w_occupied;
-    
     switch (toupper(piece)) {
         case 'P':
             if (to == board->en_passant_square) return EN_PASSANT;
         case 'K':
             if (abs(file_of(from) - file_of(to)) == 2) return CASTLING;
     }
-    if (BB_SQUARES[to] & enemy) return CAPTURE;
+    if (BB_SQUARES[to] & board->occupied) return CAPTURE;
     return NONE;
 }
 
@@ -479,23 +589,23 @@ static int _get_flag(Board* board, bool color, char piece, int from, int to) {
  * @param board 
  * @param color 
  * @return the bitboard of squares the king of the color can't go.
+ * All squares the color is attacking.
  */
 static uint64_t _get_attackmask(Board* board, bool color) {
     uint64_t occupied;
     uint64_t key;
 
-    uint64_t moves_bb = 0;
-
+    uint64_t moves_bb;
     uint64_t pieces;
     int king_square;
     if (color == WHITE) {
-        pieces = board->w_occupied & ~board->w_pawns;
+        pieces = board->w_occupied ^ board->w_pawns;
         king_square = get_lsb(board->b_king);
-        moves_bb |= (((board->w_pawns << 9) & ~BB_FILE_A) | ((board->w_pawns << 7) & ~BB_FILE_H));
+        moves_bb = (((board->w_pawns << 9) & ~BB_FILE_A) | ((board->w_pawns << 7) & ~BB_FILE_H));
     } else {
-        pieces = board->b_occupied & ~board->b_pawns;
+        pieces = board->b_occupied ^ board->b_pawns;
         king_square = get_lsb(board->w_king);
-        moves_bb |= (((board->b_pawns >> 9) & ~BB_FILE_H) | ((board->b_pawns >> 7) & ~BB_FILE_A));
+        moves_bb = (((board->b_pawns >> 9) & ~BB_FILE_H) | ((board->b_pawns >> 7) & ~BB_FILE_A));
     }
 
     clear_bit(&board->occupied, king_square);
@@ -546,113 +656,78 @@ static uint64_t _get_attackmask(Board* board, bool color) {
  * Returns empty bitboard if in double or more check.
  */
 static uint64_t _get_checkmask(Board* board, bool color) {
+    int num_attackers = 0;
+    uint64_t checkmask = 0;
+
+    int king_square;
+    uint64_t enemy_queen_bb;
+    uint64_t enemy_rook_bb;
+    uint64_t enemy_bishop_bb;
+    uint64_t enemy_knight_bb;
+    uint64_t pawns;
     if (color == WHITE) {
-        int num_attackers = 0;
-
-        uint64_t checkmask = 0;
-        int king_square = get_lsb(board->w_king);
-
-        uint64_t queens = get_queen_moves(board, WHITE, king_square) & board->b_queens;
-        num_attackers += pop_count(queens);
-        if (num_attackers >= 2) {
-            return 0;
-        }
-        while (queens) {
-            int queen_square = pull_lsb(&queens);
-            checkmask |= get_ray_between(king_square, queen_square);
-        }
-
-        uint64_t rooks = get_rook_moves(board, WHITE, king_square) & board->b_rooks;
-        num_attackers += pop_count(rooks);
-        if (num_attackers >= 2) {
-            return 0;
-        }
-        while (rooks) {
-            int rook_square = pull_lsb(&rooks);
-            checkmask |= get_ray_between(king_square, rook_square);
-        }
-
-        uint64_t bishops = get_bishop_moves(board, WHITE, king_square) & board->b_bishops;
-        num_attackers += pop_count(bishops);
-        if (num_attackers >= 2) {
-            return 0;
-        }
-        while (bishops) {
-            int bishop_square = pull_lsb(&bishops);
-            checkmask |= get_ray_between(king_square, bishop_square);
-        }
-
-        uint64_t knights = get_knight_moves(board, WHITE, king_square) & board->b_knights;
-        num_attackers += pop_count(knights);
-        if (num_attackers >= 2) {
-            return 0;
-        }
-        checkmask |= knights;
-
-        uint64_t pawns = ((((board->w_king << 9) & ~BB_FILE_A) | ((board->w_king << 7) & ~BB_FILE_H))
-                           & board->b_pawns);
-        num_attackers += pop_count(pawns);
-        if (num_attackers >= 2) {
-            return 0;
-        }
-        checkmask |= pawns;
-        
-        if (!num_attackers) return BB_ALL;
-        return checkmask;
+        king_square = get_lsb(board->w_king);
+        enemy_queen_bb = board->b_queens;
+        enemy_rook_bb = board->b_rooks;
+        enemy_bishop_bb = board->b_bishops;
+        enemy_knight_bb = board->b_knights;
+        pawns = ((((board->w_king << 9) & ~BB_FILE_A) | ((board->w_king << 7) & ~BB_FILE_H))
+                  & board->b_pawns);
     } else {
-        int num_attackers = 0;
-
-        uint64_t checkmask = 0;
-        int king_square = get_lsb(board->b_king);
-
-        uint64_t queens = get_queen_moves(board, BLACK, king_square) & board->w_queens;
-        num_attackers += pop_count(queens);
-        if (num_attackers >= 2) {
-            return 0;
-        }
-        while (queens) {
-            int queen_square = pull_lsb(&queens);
-            checkmask |= get_ray_between(king_square, queen_square);
-        }
-
-        uint64_t rooks = get_rook_moves(board, BLACK, king_square) & board->w_rooks;
-        num_attackers += pop_count(rooks);
-        if (num_attackers >= 2) {
-            return 0;
-        }
-        while (rooks) {
-            int rook_square = pull_lsb(&rooks);
-            checkmask |= get_ray_between(king_square, rook_square);
-        }
-
-        uint64_t bishops = get_bishop_moves(board, BLACK, king_square) & board->w_bishops;
-        num_attackers += pop_count(bishops);
-        if (num_attackers >= 2) {
-            return 0;
-        }
-        while (bishops) {
-            int bishop_square = pull_lsb(&bishops);
-            checkmask |= get_ray_between(king_square, bishop_square);
-        }
-
-        uint64_t knights = get_knight_moves(board, BLACK, king_square) & board->w_knights;
-        num_attackers += pop_count(knights);
-        if (num_attackers >= 2) {
-            return 0;
-        }
-        checkmask |= knights;
-
-        uint64_t pawns = ((((board->b_king >> 9) & ~BB_FILE_H) | ((board->b_king >> 7) & ~BB_FILE_A))
-                           & board->w_pawns);
-        num_attackers += pop_count(pawns);
-        if (num_attackers >= 2) {
-            return 0;
-        }
-        checkmask |= pawns;
-        
-        if (!num_attackers) return BB_ALL;
-        return checkmask;
+        king_square = get_lsb(board->b_king);
+        enemy_queen_bb = board->w_queens;
+        enemy_rook_bb = board->w_rooks;
+        enemy_bishop_bb = board->w_bishops;
+        enemy_knight_bb = board->w_knights;
+        pawns = ((((board->b_king >> 9) & ~BB_FILE_H) | ((board->b_king >> 7) & ~BB_FILE_A))
+                  & board->w_pawns);
     }
+
+    num_attackers += pop_count(pawns);
+    if (num_attackers >= 2) {
+        return 0;
+    }
+    checkmask |= pawns;
+
+    uint64_t queens = get_queen_moves(board, color, king_square) & enemy_queen_bb;
+    num_attackers += pop_count(queens);
+    if (num_attackers >= 2) {
+        return 0;
+    }
+    while (queens) {
+        int queen_square = pull_lsb(&queens);
+        checkmask |= get_ray_between(king_square, queen_square);
+    }
+
+    uint64_t rooks = get_rook_moves(board, color, king_square) & enemy_rook_bb;
+    num_attackers += pop_count(rooks);
+    if (num_attackers >= 2) {
+        return 0;
+    }
+    while (rooks) {
+        int rook_square = pull_lsb(&rooks);
+        checkmask |= get_ray_between(king_square, rook_square);
+    }
+
+    uint64_t bishops = get_bishop_moves(board, color, king_square) & enemy_bishop_bb;
+    num_attackers += pop_count(bishops);
+    if (num_attackers >= 2) {
+        return 0;
+    }
+    while (bishops) {
+        int bishop_square = pull_lsb(&bishops);
+        checkmask |= get_ray_between(king_square, bishop_square);
+    }
+
+    uint64_t knights = get_knight_moves(board, color, king_square) & enemy_knight_bb;
+    num_attackers += pop_count(knights);
+    if (num_attackers >= 2) {
+        return 0;
+    }
+    checkmask |= knights;
+    
+    if (num_attackers == 0) return BB_ALL;
+    return checkmask;
 }
 
 
@@ -663,73 +738,51 @@ static uint64_t _get_checkmask(Board* board, bool color) {
  * @return a possible pin ray for the piece.
  */
 static uint64_t _get_pinmask(Board* board, bool color, int square) {
+    uint64_t pinmask = 0;
+
+    uint64_t king_bb;
+    uint64_t enemy_rq_bb;
+    uint64_t enemy_bq_bb;
     if (color == WHITE) {
-        uint64_t pinmask = 0;
-
-        uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
-        uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
-        uint64_t rook_attacks = BB_ROOK_ATTACKS[square][key];
-
-        occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
-        key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
-        uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][key];
-
-        uint64_t rank = BB_RANKS[rank_of(square)] & rook_attacks;
-        if (rank & board->w_king && rank & (board->b_rooks | board->b_queens)) {
-            pinmask |= rank;
-        }
-
-        uint64_t file = BB_FILES[file_of(square)] & rook_attacks;
-        if (file & board->w_king && file & (board->b_rooks | board->b_queens)) {
-            pinmask |= file;
-        }
-
-        uint64_t diagonal = BB_DIAGONALS[diagonal_of(square)] & bishop_attacks;
-        if (diagonal & board->w_king && diagonal & (board->b_bishops | board->b_queens)) {
-            pinmask |= diagonal;
-        }
-
-        uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square)] & bishop_attacks;
-        if (anti_diagonal & board->w_king && anti_diagonal & (board->b_bishops | board->b_queens)) {
-            pinmask |= anti_diagonal;
-        }
-        
-        if (!pinmask) return BB_ALL;
-        return pinmask;
+        king_bb = board->w_king;
+        enemy_rq_bb = board->b_rooks | board->b_queens;
+        enemy_bq_bb = board->b_bishops | board->b_queens;
     } else {
-        uint64_t pinmask = 0;
-
-        uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
-        uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
-        uint64_t rook_attacks = BB_ROOK_ATTACKS[square][key];
-
-        occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
-        key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
-        uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][key];
-
-        uint64_t rank = BB_RANKS[rank_of(square)] & rook_attacks;
-        if (rank & board->b_king && rank & (board->w_rooks | board->w_queens)) {
-            pinmask |= rank;
-        }
-
-        uint64_t file = BB_FILES[file_of(square)] & rook_attacks;
-        if (file & board->b_king && file & (board->w_rooks | board->w_queens)) {
-            pinmask |= file;
-        }
-
-        uint64_t diagonal = BB_DIAGONALS[diagonal_of(square)] & bishop_attacks;
-        if (diagonal & board->b_king && diagonal & (board->w_bishops | board->w_queens)) {
-            pinmask |= diagonal;
-        }
-
-        uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square)] & bishop_attacks;
-        if (anti_diagonal & board->b_king && anti_diagonal & (board->w_bishops | board->w_queens)) {
-            pinmask |= anti_diagonal;
-        }
-        
-        if (!pinmask) return BB_ALL;
-        return pinmask;
+        king_bb = board->b_king;
+        enemy_rq_bb = board->w_rooks | board->w_queens;
+        enemy_bq_bb = board->w_bishops | board->w_queens;
     }
+
+    uint64_t occupied = board->occupied & BB_ROOK_ATTACK_MASKS[square];
+    uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
+    uint64_t rook_attacks = BB_ROOK_ATTACKS[square][key];
+
+    occupied = board->occupied & BB_BISHOP_ATTACK_MASKS[square];
+    key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
+    uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][key];
+
+    uint64_t rank = BB_RANKS[rank_of(square)] & rook_attacks;
+    if (rank & king_bb && rank & enemy_rq_bb) {
+        pinmask |= rank;
+    }
+
+    uint64_t file = BB_FILES[file_of(square)] & rook_attacks;
+    if (file & king_bb && file & enemy_rq_bb) {
+        pinmask |= file;
+    }
+
+    uint64_t diagonal = BB_DIAGONALS[diagonal_of(square)] & bishop_attacks;
+    if (diagonal & king_bb && diagonal & enemy_bq_bb) {
+        pinmask |= diagonal;
+    }
+
+    uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square)] & bishop_attacks;
+    if (anti_diagonal & king_bb && anti_diagonal & enemy_bq_bb) {
+        pinmask |= anti_diagonal;
+    }
+    
+    if (!pinmask) return BB_ALL;
+    return pinmask;
 }
 
 
@@ -857,106 +910,4 @@ uint64_t get_king_moves(Board* board, bool color, int square) {
         if (board->b_queenside_castling_rights) set_bit(&moves, C8);
         return moves & ~board->b_occupied;
     }
-}
-
-
-/**
- * Initalizes the bishop attack magic bitboard
- * @author github.com/nkarve
- */
-void init_bishop_attacks(void) {
-    for (int square = A1; square <= H8; square++) {
-        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
-                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
-        BB_BISHOP_ATTACK_MASKS[square] = (BB_DIAGONALS[diagonal_of(square)] ^ BB_ANTI_DIAGONALS[anti_diagonal_of(square)]) & ~edges;
-        uint64_t attack_mask = BB_BISHOP_ATTACK_MASKS[square];
-
-        int shift = 64 - pop_count(attack_mask);
-        BISHOP_ATTACK_SHIFTS[square] = shift;
-
-        uint64_t subset = 0;
-        do {
-            uint64_t index = subset;
-            index *= BISHOP_MAGICS[square];
-            index >>= shift;
-            BB_BISHOP_ATTACKS[square][index] = _init_bishop_attacks_helper(square, subset);
-            subset = (subset - attack_mask) & attack_mask;
-        } while (subset);
-    }
-}
-
-
-/**
- * Initalizes the rook attack magic bitboard
- * @author github.com/nkarve
- */
-void init_rook_attacks(void) {
-    for (int square = A1; square <= H8; square++) {
-        uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
-                         ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
-        BB_ROOK_ATTACK_MASKS[square] = (BB_RANKS[rank_of(square)] ^ BB_FILES[file_of(square)]) & ~edges;
-        uint64_t attack_mask = BB_ROOK_ATTACK_MASKS[square];
-
-        int shift = 64 - pop_count(attack_mask);
-        ROOK_ATTACK_SHIFTS[square] = shift;
-
-        uint64_t subset = 0;
-        do {
-            uint64_t index = subset;
-            index *= ROOK_MAGICS[square];
-            index >>= shift;
-            BB_ROOK_ATTACKS[square][index] = _init_rook_attacks_helper(square, subset);
-            subset = (subset - attack_mask) & attack_mask;
-        } while (subset);
-    }
-}
-
-
-/**
- * Helper method to initalizes the bishop attack magic bitboard
- * @param square the current square
- * @param subset the current occupancy
- * @param attack_mask the bishop's attack mask without edges
- * @return the bishop attack bitboard
- * @author github.com/nkarve
- */
-static uint64_t _init_bishop_attacks_helper(int square, uint64_t subset) {
-    uint64_t square_mask = BB_SQUARES[square];
-    uint64_t diagonal_mask = BB_DIAGONALS[diagonal_of(square)];
-    uint64_t anti_diagonal_mask = BB_ANTI_DIAGONALS[anti_diagonal_of(square)];
-
-    uint64_t diagonal_attacks = (((diagonal_mask & subset) - square_mask * 2) ^
-                            get_reverse_bb(get_reverse_bb(diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
-                            diagonal_mask;
-
-    uint64_t anti_diagonal_attacks = (((anti_diagonal_mask & subset) - square_mask * 2) ^
-                            get_reverse_bb(get_reverse_bb(anti_diagonal_mask & subset) - get_reverse_bb(square_mask) * 2)) &
-                            anti_diagonal_mask;
-
-    return diagonal_attacks | anti_diagonal_attacks;
-}
-
-
-/**
- * Helper method to initalizes the rook attack magic bitboard
- * @param square the current square
- * @param subset the current occupancy
- * @param attack_mask the rook's attack mask without edges
- * @return the rook attack bitboard
- * @author github.com/nkarve
- */
-static uint64_t _init_rook_attacks_helper(int square, uint64_t subset) {
-    uint64_t square_mask = BB_SQUARES[square];
-    uint64_t rank_mask = BB_RANKS[rank_of(square)];
-    uint64_t file_mask = BB_FILES[file_of(square)];
-
-    uint64_t rank_attacks = (((rank_mask & subset) - square_mask * 2) ^
-                            get_reverse_bb(get_reverse_bb(rank_mask & subset) - get_reverse_bb(square_mask) * 2)) &
-                            rank_mask;
-
-    uint64_t file_attacks = (((file_mask & subset) - square_mask * 2) ^
-                            get_reverse_bb(get_reverse_bb(file_mask & subset) - get_reverse_bb(square_mask) * 2)) &
-                            file_mask;
-
-    return rank_attacks | file_attacks;
 }
