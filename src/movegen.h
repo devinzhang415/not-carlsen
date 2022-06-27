@@ -30,9 +30,9 @@ static uint64_t _perft(int depth);
 int gen_legal_moves(Move* moves, bool color);
 
 static int _get_flag(bool color, char piece, int from, int to);
-static uint64_t _get_attackmask(bool color);
+uint64_t _get_attackmask(bool color);
 static uint64_t _get_checkmask(bool color);
-static uint64_t _get_pinmask(bool color, int square, uint64_t direction);
+static uint64_t _get_pinmask(bool color, int square);
 
 uint64_t get_pawn_moves(bool color, int square);
 uint64_t get_knight_moves(bool color, int square);
@@ -40,6 +40,23 @@ uint64_t get_bishop_moves(bool color, int square);
 uint64_t get_rook_moves(bool color, int square);
 uint64_t get_queen_moves(bool color, int square);
 uint64_t get_king_moves(bool color, int square);
+
+uint64_t get_knight_moves_setwise(uint64_t knights);
+
+uint64_t get_pawn_attacks_setwise(bool color);
+
+uint64_t get_bishop_rays_setwise(uint64_t rooks, uint64_t empty);
+uint64_t get_rook_rays_setwise(uint64_t bishops, uint64_t empty);
+uint64_t get_queen_rays_setwise(uint64_t queens, uint64_t empty);
+
+static uint64_t _get_ray_setwise_south(uint64_t pieces, uint64_t empty);
+static uint64_t _get_ray_setwise_north(uint64_t pieces, uint64_t empty);
+static uint64_t _get_ray_setwise_east(uint64_t pieces, uint64_t empty);
+static uint64_t _get_ray_setwise_northeast(uint64_t pieces, uint64_t empty);
+static uint64_t _get_ray_setwise_southeast(uint64_t pieces, uint64_t empty);
+static uint64_t _get_ray_setwise_west(uint64_t pieces, uint64_t empty);
+static uint64_t _get_ray_setwise_southwest(uint64_t pieces, uint64_t empty);
+static uint64_t _get_ray_setwise_northwest(uint64_t pieces, uint64_t empty);
 
 
 #endif

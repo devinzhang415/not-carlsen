@@ -332,7 +332,7 @@ int gen_legal_moves(Move* moves, bool color) {
         uint64_t pinmask;
         uint64_t pinned_bb = BB_SQUARES[from] & pos_pinned;
         if (pinned_bb) {
-            pinmask = _get_pinmask(color, from, get_full_ray_between(king_square, get_lsb(pinned_bb)));
+            pinmask = _get_pinmask(color, from);
         } else {
             pinmask = BB_ALL;
         }
@@ -391,7 +391,7 @@ int gen_legal_moves(Move* moves, bool color) {
                 // Determine if castling is legal
                 if (flag == CASTLING) {
                     if (attackmask & king_bb) continue; // Assert the king is not in check
-                    if (board.turn == WHITE) {
+                    if (color == WHITE) {
                         if (from != E1) continue; // Assert the king is still alive
                         if (to == G1) { // Kingside
                             if (!board.w_kingside_castling_rights) continue; // Assert king or rook has not moved
@@ -465,7 +465,7 @@ static int _get_flag(bool color, char piece, int from, int to) {
  * @return the bitboard of squares the king of the color can't go.
  * All squares the color is attacking.
  */
-static uint64_t _get_attackmask(bool color) {
+uint64_t _get_attackmask(bool color) {
     uint64_t occupied;
     uint64_t key;
 
@@ -607,10 +607,9 @@ static uint64_t _get_checkmask(bool color) {
 /**
  * @param color
  * @param square the square the possibly pinned piece is on.
- * @param direction the direction of the pin.
  * @return a possible pin ray for the piece.
  */
-static uint64_t _get_pinmask(bool color, int square, uint64_t direction) {
+static uint64_t _get_pinmask(bool color, int square) {
     uint64_t pinmask = 0;
 
     uint64_t king_bb;
@@ -634,6 +633,8 @@ static uint64_t _get_pinmask(bool color, int square, uint64_t direction) {
     key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][key];
 
+    uint64_t direction = get_full_ray_between(get_lsb(king_bb), square);
+    
     uint64_t pin = direction & rook_attacks;
     if (pin & enemy_rq_bb) {
         pinmask |= pin;
@@ -766,4 +767,194 @@ uint64_t get_king_moves(bool color, int square) {
         if (board.b_queenside_castling_rights) set_bit(&moves, C8);
         return moves & ~board.b_occupied;
     }
+}
+
+
+/**
+ * @param knights 
+ * @return the attack mask of all the knights.
+ */
+uint64_t get_knight_moves_setwise(uint64_t knights) {
+    uint64_t l1 = (knights >> 1) & 0x7f7f7f7f7f7f7f7f;
+    uint64_t l2 = (knights >> 2) & 0x3f3f3f3f3f3f3f3f;
+    uint64_t r1 = (knights << 1) & 0xfefefefefefefefe;
+    uint64_t r2 = (knights << 2) & 0xfcfcfcfcfcfcfcfc;
+    uint64_t h1 = l1 | r1;
+    uint64_t h2 = l2 | r2;
+    return (h1 << 16) | (h1 >> 16) | (h2 << 8) | (h2 >> 8);
+}
+
+
+/** 
+ * @param color 
+ * @return the bitboard of all the attacks the color's pawn can make,
+ * excluding en passant.
+ */
+uint64_t get_pawn_attacks_setwise(bool color) {
+    if (color == WHITE) {
+        return (((board.w_pawns << 9) & ~BB_FILE_A) | ((board.w_pawns << 7) & ~BB_FILE_H));
+    } else {
+        return (((board.b_pawns >> 9) & ~BB_FILE_H) | ((board.b_pawns >> 7) & ~BB_FILE_A));
+    }
+}
+
+
+/**
+ * Generates bishop slider moves using the Kogge-Stone algorithm.
+ * @param bishops 
+ * @param empty the bitboard of space the ray can move through.
+ * @return a set of bishop rays, stopping before it hits an occupied piece.
+ */
+uint64_t get_bishop_rays_setwise(uint64_t bishops, uint64_t empty) {
+    return (_get_ray_setwise_northeast(bishops, empty) | _get_ray_setwise_northwest(bishops, empty)
+          | _get_ray_setwise_southeast(bishops, empty) | _get_ray_setwise_southwest(bishops, empty));
+}
+
+
+/**
+ * Generates rook slider moves using the Kogge-Stone algorithm.
+ * @param rooks 
+ * @param empty the bitboard of space the ray can move through.
+ * @return a set of rook rays, stopping before it hits an occupied piece.
+ */
+uint64_t get_rook_rays_setwise(uint64_t rooks, uint64_t empty) {
+    return (_get_ray_setwise_north(rooks, empty) | _get_ray_setwise_east(rooks, empty)
+          | _get_ray_setwise_south(rooks, empty) | _get_ray_setwise_west(rooks, empty));
+}
+
+
+/**
+ * Generates queen slider moves using the Kogge-Stone algorithm.
+ * @param rooks 
+ * @param empty the bitboard of space the ray can move through.
+ * @return a set of queen rays, stopping before it hits an occupied piece.
+ */
+uint64_t get_queen_rays_setwise(uint64_t queens, uint64_t empty) {
+    return (get_bishop_rays_setwise(queens, empty) | get_rook_rays_setwise(queens, empty));
+}
+
+
+/**
+ * @param pieces
+ * @param empty the bitboard of space the ray can move through.
+ * @return a ray in the direction, stopping before it hits an occupied piece.
+ */
+static uint64_t _get_ray_setwise_south(uint64_t pieces, uint64_t empty) {
+   pieces |= empty & (pieces >>  8);
+   empty &= (empty >>  8);
+   pieces |= empty & (pieces >> 16);
+   empty &= (empty >> 16);
+   pieces |= empty & (pieces >> 32);
+   return pieces;
+}
+
+
+/**
+ * @param pieces
+ * @param empty the bitboard of space the ray can move through.
+ * @return a ray in the direction, stopping before it hits an occupied piece.
+ */
+static uint64_t _get_ray_setwise_north(uint64_t pieces, uint64_t empty) {
+   pieces |= empty & (pieces <<  8);
+   empty &= (empty <<  8);
+   pieces |= empty & (pieces << 16);
+   empty &= (empty << 16);
+   pieces |= empty & (pieces << 32);
+   return pieces;
+}
+
+
+/**
+ * @param pieces
+ * @param empty the bitboard of space the ray can move through.
+ * @return a ray in the direction, stopping before it hits an occupied piece.
+ */
+static uint64_t _get_ray_setwise_east(uint64_t pieces, uint64_t empty) {
+   empty &= BB_FILE_NOT_A;
+   pieces |= empty & (pieces << 1);
+   empty &= (empty << 1);
+   pieces |= empty & (pieces << 2);
+   empty &= (empty << 2);
+   pieces |= empty & (pieces << 4);
+   return pieces;
+}
+
+
+/**
+ * @param pieces
+ * @param empty the bitboard of space the ray can move through.
+ * @return a ray in the direction, stopping before it hits an occupied piece.
+ */
+static uint64_t _get_ray_setwise_northeast(uint64_t pieces, uint64_t empty) {
+   empty &= BB_FILE_NOT_A;
+   pieces |= empty & (pieces <<  9);
+   empty &= (empty <<  9);
+   pieces |= empty & (pieces << 18);
+   empty &= (empty << 18);
+   pieces |= empty & (pieces << 36);
+   return pieces;
+}
+
+
+/**
+ * @param pieces
+ * @param empty the bitboard of space the ray can move through.
+ * @return a ray in the direction, stopping before it hits an occupied piece.
+ */
+static uint64_t _get_ray_setwise_southeast(uint64_t pieces, uint64_t empty) {
+   empty &= BB_FILE_NOT_A;
+   pieces |= empty & (pieces >>  7);
+   empty &= (empty >>  7);
+   pieces |= empty & (pieces >> 14);
+   empty &= (empty >> 14);
+   pieces |= empty & (pieces >> 28);
+   return pieces;
+}
+
+
+/**
+ * @param pieces
+ * @param empty the bitboard of space the ray can move through.
+ * @return a ray in the direction, stopping before it hits an occupied piece.
+ */
+static uint64_t _get_ray_setwise_west(uint64_t pieces, uint64_t empty) {
+   empty &= BB_FILE_NOT_H;
+   pieces |= empty & (pieces >> 1);
+   empty &= (empty >> 1);
+   pieces |= empty & (pieces >> 2);
+   empty &= (empty >> 2);
+   pieces |= empty & (pieces >> 4);
+   return pieces;
+}
+
+
+/**
+ * @param pieces
+ * @param empty the bitboard of space the ray can move through.
+ * @return a ray in the direction, stopping before it hits an occupied piece.
+ */
+static uint64_t _get_ray_setwise_southwest(uint64_t pieces, uint64_t empty) {
+   empty &= BB_FILE_NOT_H;
+   pieces |= empty & (pieces >>  9);
+   empty &= (empty >>  9);
+   pieces |= empty & (pieces >> 18);
+   empty &= (empty >> 18);
+   pieces |= empty & (pieces >> 36);
+   return pieces;
+}
+
+
+/**
+ * @param pieces
+ * @param empty the bitboard of space the ray can move through.
+ * @return a ray in the direction, stopping before it hits an occupied piece.
+ */
+static uint64_t _get_ray_setwise_northwest(uint64_t pieces, uint64_t empty) {
+   empty &= BB_FILE_NOT_H;
+   pieces |= empty & (pieces <<  7);
+   empty &= (empty <<  7);
+   pieces |= empty & (pieces << 14);
+   empty &= (empty << 14);
+   pieces |= empty & (pieces << 28);
+   return pieces;
 }

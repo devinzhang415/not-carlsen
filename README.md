@@ -9,13 +9,18 @@ Special thanks to:
 
 ## Current Features
 - FEN board initialization
-- Legal move generator (24 million nps)
+- Legal move generator (20-40 million nps)
   - Magic bitboard sliding move generation
 - Threefold repetition hashtable
 
 ------
 
 ## Devlog
+6/27/22 v0.4.2
+> Minor pinmask generation optimizations.
+>
+> Added Kogge-Stone setwise sliding piece move generation to attempt to speed up attackmask generation. Strangely the algorithim seems slower, and requires additional castling checks, so rolling back changes.
+
 6/23/22 v0.4.1
 > Completely replaced pseudolegal move generator with the legal one.
 >

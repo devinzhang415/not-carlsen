@@ -146,6 +146,9 @@ extern const uint64_t BB_FILE_G;
 extern const uint64_t BB_FILE_H;
 extern const uint64_t BB_FILES[8];
 
+extern const uint64_t BB_FILE_NOT_A;
+extern const uint64_t BB_FILE_NOT_H;
+
 extern const uint64_t BB_RANK_1;
 extern const uint64_t BB_RANK_2;
 extern const uint64_t BB_RANK_3;
@@ -206,6 +209,8 @@ static uint64_t _get_ray(int square1, int square2);
 
 void init_zobrist_table(void);
 static uint64_t _rand_ull(void);
+
+void init_lsb_indices(void);
 
 int parse_square(char* square);
 int parse_piece(char piece);

@@ -41,6 +41,9 @@ const uint64_t BB_FILE_G = BB_FILE_A << 6;
 const uint64_t BB_FILE_H = BB_FILE_A << 7;
 const uint64_t BB_FILES[8] = {BB_FILE_A, BB_FILE_B, BB_FILE_C, BB_FILE_D, BB_FILE_E, BB_FILE_F, BB_FILE_G, BB_FILE_H};
 
+const uint64_t BB_FILE_NOT_A = BB_ALL ^ BB_FILE_A;
+const uint64_t BB_FILE_NOT_H = BB_ALL ^ BB_FILE_H;
+
 const uint64_t BB_RANK_1 = 0xff;
 const uint64_t BB_RANK_2 = BB_RANK_1 << 8;
 const uint64_t BB_RANK_3 = BB_RANK_1 << 16;
