@@ -330,8 +330,9 @@ int gen_legal_moves(Move* moves, bool color) {
         char piece = board.mailbox[from];
 
         uint64_t pinmask;
-        if (BB_SQUARES[from] & pos_pinned) {
-            pinmask = _get_pinmask(color, from);
+        uint64_t pinned_bb = BB_SQUARES[from] & pos_pinned;
+        if (pinned_bb) {
+            pinmask = _get_pinmask(color, from, get_full_ray_between(king_square, get_lsb(pinned_bb)));
         } else {
             pinmask = BB_ALL;
         }
@@ -606,9 +607,10 @@ static uint64_t _get_checkmask(bool color) {
 /**
  * @param color
  * @param square the square the possibly pinned piece is on.
+ * @param direction the direction of the pin.
  * @return a possible pin ray for the piece.
  */
-static uint64_t _get_pinmask(bool color, int square) {
+static uint64_t _get_pinmask(bool color, int square, uint64_t direction) {
     uint64_t pinmask = 0;
 
     uint64_t king_bb;
@@ -632,26 +634,15 @@ static uint64_t _get_pinmask(bool color, int square) {
     key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][key];
 
-    uint64_t rank = BB_RANKS[rank_of(square)] & rook_attacks;
-    if (rank & king_bb && rank & enemy_rq_bb) {
-        pinmask |= rank;
+    uint64_t pin = direction & rook_attacks;
+    if (pin & enemy_rq_bb) {
+        pinmask |= pin;
+    } else {
+        pin = direction & bishop_attacks;
+        if (pin & enemy_bq_bb) {
+            pinmask |= pin;
+        }
     }
-
-    uint64_t file = BB_FILES[file_of(square)] & rook_attacks;
-    if (file & king_bb && file & enemy_rq_bb) {
-        pinmask |= file;
-    }
-
-    uint64_t diagonal = BB_DIAGONALS[diagonal_of(square)] & bishop_attacks;
-    if (diagonal & king_bb && diagonal & enemy_bq_bb) {
-        pinmask |= diagonal;
-    }
-
-    uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square)] & bishop_attacks;
-    if (anti_diagonal & king_bb && anti_diagonal & enemy_bq_bb) {
-        pinmask |= anti_diagonal;
-    }
-    
     if (!pinmask) return BB_ALL;
     return pinmask;
 }

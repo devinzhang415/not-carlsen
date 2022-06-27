@@ -201,6 +201,7 @@ extern const int MAX_MOVE_NUM;
 
 void init_rays(void);
 uint64_t get_ray_between(int square1, int square2);
+uint64_t get_full_ray_between(int square1, int square2);
 static uint64_t _get_ray(int square1, int square2);
 
 void init_zobrist_table(void);

@@ -121,10 +121,20 @@ void init_rays(void) {
 /**
  * @param square1 
  * @param square2 
- * @return the bitboard of the ray between the two squares (including the squares), if any
+ * @return the bitboard of the ray between the two squares (including the squares), if any.
  */
 uint64_t get_ray_between(int square1, int square2) {
     return (BB_RAYS[square1][square2] & ((BB_ALL << square1) ^ (BB_ALL << square2))) | BB_SQUARES[square2];
+}
+
+
+/**
+ * @param square1 
+ * @param square2 
+ * @return the bitboard of the rank, file, diagonal, or anti-diagonal between the two squares, if any.
+ */
+uint64_t get_full_ray_between(int square1, int square2) {
+    return BB_RAYS[square1][square2];
 }
 
 
