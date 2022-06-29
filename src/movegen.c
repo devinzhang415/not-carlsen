@@ -215,7 +215,7 @@ static uint64_t _get_reverse_bb(uint64_t bb) {
  * 
  * https://www.chessprogramming.org/Perft_Results
  * pos 1 accurate to depth 7
- * pos 2 accurate to depth 5
+ * pos 2 accurate to depth 6
  * pos 3 accurate to depth 8
  * pos 4 accurate to depth 6
  * pos 5 accurate to depth 6
@@ -310,11 +310,11 @@ int gen_legal_moves(Move* moves, bool color) {
 
     uint64_t attackmask = _get_attackmask(!color);
     uint64_t checkmask = _get_checkmask(color);
-    uint64_t pos_pinned = get_queen_moves(!color, king_square);
+    uint64_t pos_pinned = get_queen_moves(!color, king_square) & pieces;
 
     // King is in double check, only moves are to move king away
     if (!checkmask) {
-        uint64_t moves_bb = get_king_moves(color, king_square) & ~_get_attackmask(!color);
+        uint64_t moves_bb = get_king_moves(color, king_square) & ~attackmask;
         while (moves_bb) {
             int to = pull_lsb(&moves_bb);
             int flag = _get_flag(color, piece, king_square, to);
@@ -327,18 +327,18 @@ int gen_legal_moves(Move* moves, bool color) {
 
     while (pieces) {
         int from = pull_lsb(&pieces);
-        char piece = board.mailbox[from];
+        char piece = toupper(board.mailbox[from]);
 
         uint64_t pinmask;
         uint64_t pinned_bb = BB_SQUARES[from] & pos_pinned;
         if (pinned_bb) {
-            pinmask = _get_pinmask(color, from);
+            pinmask = _get_pinmask(color, king_square, from);
         } else {
             pinmask = BB_ALL;
         }
 
         uint64_t moves_bb;
-        switch (toupper(piece)) {
+        switch (piece) {
             case 'P':
                 uint64_t pawn_moves = get_pawn_moves(color, from);
                 moves_bb = pawn_moves & checkmask & pinmask;
@@ -375,7 +375,7 @@ int gen_legal_moves(Move* moves, bool color) {
         while (moves_bb) {
             int to = pull_lsb(&moves_bb);
 
-            if (toupper(piece) == 'P' && (rank_of(to) == 0 || rank_of(to) == 7)) { // Add all promotions
+            if (piece == 'P' && (rank_of(to) == 0 || rank_of(to) == 7)) { // Add all promotions
                 Move queen_promotion = {from, to, PROMOTION_QUEEN};
                 moves[i++] = queen_promotion;
                 Move rook_promotion = {from, to, PROMOTION_ROOK};
@@ -449,7 +449,7 @@ int gen_legal_moves(Move* moves, bool color) {
  * @return the appropriate flag for the move, excludes promotions
  */
 static int _get_flag(bool color, char piece, int from, int to) {
-    switch (toupper(piece)) {
+    switch (piece) {
         case 'P':
             if (to == board.en_passant_square) return EN_PASSANT;
         case 'K':
@@ -465,7 +465,7 @@ static int _get_flag(bool color, char piece, int from, int to) {
  * @return the bitboard of squares the king of the color can't go.
  * All squares the color is attacking.
  */
-uint64_t _get_attackmask(bool color) {
+static uint64_t _get_attackmask(bool color) {
     uint64_t occupied;
     uint64_t key;
 
@@ -473,11 +473,11 @@ uint64_t _get_attackmask(bool color) {
     uint64_t pieces;
     int king_square;
     if (color == WHITE) {
-        pieces = board.w_occupied ^ board.w_pawns;
+        pieces = board.w_occupied & ~board.w_pawns;
         king_square = get_lsb(board.b_king);
         moves_bb = (((board.w_pawns << 9) & ~BB_FILE_A) | ((board.w_pawns << 7) & ~BB_FILE_H));
     } else {
-        pieces = board.b_occupied ^ board.b_pawns;
+        pieces = board.b_occupied & ~board.b_pawns;
         king_square = get_lsb(board.w_king);
         moves_bb = (((board.b_pawns >> 9) & ~BB_FILE_H) | ((board.b_pawns >> 7) & ~BB_FILE_A));
     }
@@ -486,8 +486,8 @@ uint64_t _get_attackmask(bool color) {
 
     while (pieces) {
         int square = pull_lsb(&pieces);
-        char piece = board.mailbox[square];
-        switch (toupper(piece)) {
+        char piece = toupper(board.mailbox[square]);
+        switch (piece) {
             case 'N':
                 moves_bb |= BB_KNIGHT_ATTACKS[square];
                 break;
@@ -533,24 +533,21 @@ static uint64_t _get_checkmask(bool color) {
     uint64_t checkmask = 0;
 
     int king_square;
-    uint64_t enemy_queen_bb;
-    uint64_t enemy_rook_bb;
-    uint64_t enemy_bishop_bb;
+    uint64_t enemy_bq_bb;
+    uint64_t enemy_rq_bb;
     uint64_t enemy_knight_bb;
     uint64_t pawns;
     if (color == WHITE) {
         king_square = get_lsb(board.w_king);
-        enemy_queen_bb = board.b_queens;
-        enemy_rook_bb = board.b_rooks;
-        enemy_bishop_bb = board.b_bishops;
+        enemy_bq_bb = board.b_bishops | board.b_queens;
+        enemy_rq_bb = board.b_rooks | board.b_queens;
         enemy_knight_bb = board.b_knights;
         pawns = ((((board.w_king << 9) & ~BB_FILE_A) | ((board.w_king << 7) & ~BB_FILE_H))
                   & board.b_pawns);
     } else {
         king_square = get_lsb(board.b_king);
-        enemy_queen_bb = board.w_queens;
-        enemy_rook_bb = board.w_rooks;
-        enemy_bishop_bb = board.w_bishops;
+        enemy_bq_bb = board.w_bishops | board.w_queens;
+        enemy_rq_bb = board.w_rooks | board.w_queens;
         enemy_knight_bb = board.w_knights;
         pawns = ((((board.b_king >> 9) & ~BB_FILE_H) | ((board.b_king >> 7) & ~BB_FILE_A))
                   & board.w_pawns);
@@ -562,34 +559,24 @@ static uint64_t _get_checkmask(bool color) {
     }
     checkmask |= pawns;
 
-    uint64_t queens = get_queen_moves(color, king_square) & enemy_queen_bb;
-    num_attackers += pop_count(queens);
+    uint64_t rq = get_rook_moves(color, king_square) & enemy_rq_bb;
+    num_attackers += pop_count(rq);
     if (num_attackers >= 2) {
         return 0;
     }
-    while (queens) {
-        int queen_square = pull_lsb(&queens);
-        checkmask |= get_ray_between(king_square, queen_square);
+    while (rq) {
+        int rq_square = pull_lsb(&rq);
+        checkmask |= get_ray_between(king_square, rq_square);
     }
 
-    uint64_t rooks = get_rook_moves(color, king_square) & enemy_rook_bb;
-    num_attackers += pop_count(rooks);
+    uint64_t bq = get_bishop_moves(color, king_square) & enemy_bq_bb;
+    num_attackers += pop_count(bq);
     if (num_attackers >= 2) {
         return 0;
     }
-    while (rooks) {
-        int rook_square = pull_lsb(&rooks);
-        checkmask |= get_ray_between(king_square, rook_square);
-    }
-
-    uint64_t bishops = get_bishop_moves(color, king_square) & enemy_bishop_bb;
-    num_attackers += pop_count(bishops);
-    if (num_attackers >= 2) {
-        return 0;
-    }
-    while (bishops) {
-        int bishop_square = pull_lsb(&bishops);
-        checkmask |= get_ray_between(king_square, bishop_square);
+    while (bq) {
+        int bq_square = pull_lsb(&bq);
+        checkmask |= get_ray_between(king_square, bq_square);
     }
 
     uint64_t knights = get_knight_moves(color, king_square) & enemy_knight_bb;
@@ -606,10 +593,11 @@ static uint64_t _get_checkmask(bool color) {
 
 /**
  * @param color
+ * @param king_square
  * @param square the square the possibly pinned piece is on.
  * @return a possible pin ray for the piece.
  */
-static uint64_t _get_pinmask(bool color, int square) {
+static uint64_t _get_pinmask(bool color, int king_square, int square) {
     uint64_t pinmask = 0;
 
     uint64_t king_bb;
@@ -633,7 +621,7 @@ static uint64_t _get_pinmask(bool color, int square) {
     key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][key];
 
-    uint64_t direction = get_full_ray_between(get_lsb(king_bb), square);
+    uint64_t direction = get_full_ray_between(king_square, square);
     
     uint64_t pin = direction & rook_attacks;
     if (pin & enemy_rq_bb) {
@@ -644,8 +632,8 @@ static uint64_t _get_pinmask(bool color, int square) {
             pinmask |= pin;
         }
     }
-    if (!pinmask) return BB_ALL;
-    return pinmask;
+    if (pinmask) return pinmask;
+    return BB_ALL;
 }
 
 
@@ -699,7 +687,7 @@ uint64_t get_pawn_moves(bool color, int square) {
 uint64_t get_knight_moves(bool color, int square) {
     uint64_t moves = BB_KNIGHT_ATTACKS[square];
 
-    return (color == WHITE) ? moves & ~board.w_occupied : moves & ~board.b_occupied;
+    return moves & ~(board.w_occupied * color + board.b_occupied * !color);
 }
 
 
@@ -713,7 +701,7 @@ uint64_t get_bishop_moves(bool color, int square) {
     uint64_t key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t moves = BB_BISHOP_ATTACKS[square][key];
 
-    return (color == WHITE) ? moves & ~board.w_occupied : moves & ~board.b_occupied;
+    return moves & ~(board.w_occupied * color + board.b_occupied * !color);
 }
 
 
@@ -727,7 +715,7 @@ uint64_t get_rook_moves(bool color, int square) {
     uint64_t key = (occupied * ROOK_MAGICS[square]) >> ROOK_ATTACK_SHIFTS[square];
     uint64_t moves = BB_ROOK_ATTACKS[square][key];
 
-    return (color == WHITE) ? moves & ~board.w_occupied : moves & ~board.b_occupied;
+    return moves & ~(board.w_occupied * color + board.b_occupied * !color);
 }
 
 
@@ -747,7 +735,7 @@ uint64_t get_queen_moves(bool color, int square) {
 
     uint64_t moves = bishop_moves | rook_moves;
 
-    return (color == WHITE) ? moves & ~board.w_occupied : moves & ~board.b_occupied;
+    return moves & ~(board.w_occupied * color + board.b_occupied * !color);
 }
 
 
@@ -774,7 +762,7 @@ uint64_t get_king_moves(bool color, int square) {
  * @param knights 
  * @return the attack mask of all the knights.
  */
-uint64_t get_knight_moves_setwise(uint64_t knights) {
+uint64_t get_knight_mask_setwise(uint64_t knights) {
     uint64_t l1 = (knights >> 1) & 0x7f7f7f7f7f7f7f7f;
     uint64_t l2 = (knights >> 2) & 0x3f3f3f3f3f3f3f3f;
     uint64_t r1 = (knights << 1) & 0xfefefefefefefefe;
@@ -870,7 +858,7 @@ static uint64_t _get_ray_setwise_north(uint64_t pieces, uint64_t empty) {
  * @return a ray in the direction, stopping before it hits an occupied piece.
  */
 static uint64_t _get_ray_setwise_east(uint64_t pieces, uint64_t empty) {
-   empty &= BB_FILE_NOT_A;
+   empty &= ~BB_FILE_A;
    pieces |= empty & (pieces << 1);
    empty &= (empty << 1);
    pieces |= empty & (pieces << 2);
@@ -886,7 +874,7 @@ static uint64_t _get_ray_setwise_east(uint64_t pieces, uint64_t empty) {
  * @return a ray in the direction, stopping before it hits an occupied piece.
  */
 static uint64_t _get_ray_setwise_northeast(uint64_t pieces, uint64_t empty) {
-   empty &= BB_FILE_NOT_A;
+   empty &= ~BB_FILE_A;
    pieces |= empty & (pieces <<  9);
    empty &= (empty <<  9);
    pieces |= empty & (pieces << 18);
@@ -902,7 +890,7 @@ static uint64_t _get_ray_setwise_northeast(uint64_t pieces, uint64_t empty) {
  * @return a ray in the direction, stopping before it hits an occupied piece.
  */
 static uint64_t _get_ray_setwise_southeast(uint64_t pieces, uint64_t empty) {
-   empty &= BB_FILE_NOT_A;
+   empty &= ~BB_FILE_A;
    pieces |= empty & (pieces >>  7);
    empty &= (empty >>  7);
    pieces |= empty & (pieces >> 14);
@@ -918,7 +906,7 @@ static uint64_t _get_ray_setwise_southeast(uint64_t pieces, uint64_t empty) {
  * @return a ray in the direction, stopping before it hits an occupied piece.
  */
 static uint64_t _get_ray_setwise_west(uint64_t pieces, uint64_t empty) {
-   empty &= BB_FILE_NOT_H;
+   empty &= ~BB_FILE_H;
    pieces |= empty & (pieces >> 1);
    empty &= (empty >> 1);
    pieces |= empty & (pieces >> 2);
@@ -934,7 +922,7 @@ static uint64_t _get_ray_setwise_west(uint64_t pieces, uint64_t empty) {
  * @return a ray in the direction, stopping before it hits an occupied piece.
  */
 static uint64_t _get_ray_setwise_southwest(uint64_t pieces, uint64_t empty) {
-   empty &= BB_FILE_NOT_H;
+   empty &= ~BB_FILE_H;
    pieces |= empty & (pieces >>  9);
    empty &= (empty >>  9);
    pieces |= empty & (pieces >> 18);
@@ -950,7 +938,7 @@ static uint64_t _get_ray_setwise_southwest(uint64_t pieces, uint64_t empty) {
  * @return a ray in the direction, stopping before it hits an occupied piece.
  */
 static uint64_t _get_ray_setwise_northwest(uint64_t pieces, uint64_t empty) {
-   empty &= BB_FILE_NOT_H;
+   empty &= ~BB_FILE_H;
    pieces |= empty & (pieces <<  7);
    empty &= (empty <<  7);
    pieces |= empty & (pieces << 14);

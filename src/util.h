@@ -17,6 +17,7 @@ enum squares {
 };
 
 
+// Special characteristic of a move
 enum flags {
     NONE, // No special flag
     PASS, // Null move
@@ -145,9 +146,6 @@ extern const uint64_t BB_FILE_F;
 extern const uint64_t BB_FILE_G;
 extern const uint64_t BB_FILE_H;
 extern const uint64_t BB_FILES[8];
-
-extern const uint64_t BB_FILE_NOT_A;
-extern const uint64_t BB_FILE_NOT_H;
 
 extern const uint64_t BB_RANK_1;
 extern const uint64_t BB_RANK_2;

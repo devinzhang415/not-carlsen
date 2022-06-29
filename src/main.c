@@ -28,9 +28,7 @@ int main(void) {
      * - save king square?
     **/
 
-    print_divided_perft(4);
-    // uint64_t bb = _get_attackmask(WHITE);
-    // print_bb(bb);
+    print_divided_perft(5);
 
 
     

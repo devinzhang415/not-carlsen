@@ -10,13 +10,13 @@ extern uint64_t BB_BISHOP_ATTACKS[64][512];
 extern uint64_t BB_ROOK_ATTACKS[64][4096];
 extern const uint64_t BB_KING_ATTACKS[64];
 
-
 extern const uint64_t BISHOP_MAGICS[64];
 extern const uint64_t ROOK_MAGICS[64];
 extern uint64_t BB_BISHOP_ATTACK_MASKS[64];
 extern uint64_t BB_ROOK_ATTACK_MASKS[64];
 extern uint64_t ROOK_ATTACK_SHIFTS[64];
 extern uint64_t BISHOP_ATTACK_SHIFTS[64];
+
 
 void init_bishop_attacks(void);
 void init_rook_attacks(void);
@@ -30,9 +30,9 @@ static uint64_t _perft(int depth);
 int gen_legal_moves(Move* moves, bool color);
 
 static int _get_flag(bool color, char piece, int from, int to);
-uint64_t _get_attackmask(bool color);
+static uint64_t _get_attackmask(bool color);
 static uint64_t _get_checkmask(bool color);
-static uint64_t _get_pinmask(bool color, int square);
+static uint64_t _get_pinmask(bool color, int king_square, int square);
 
 uint64_t get_pawn_moves(bool color, int square);
 uint64_t get_knight_moves(bool color, int square);
@@ -41,9 +41,7 @@ uint64_t get_rook_moves(bool color, int square);
 uint64_t get_queen_moves(bool color, int square);
 uint64_t get_king_moves(bool color, int square);
 
-uint64_t get_knight_moves_setwise(uint64_t knights);
-
-uint64_t get_pawn_attacks_setwise(bool color);
+uint64_t get_knight_mask_setwise(uint64_t knights);
 
 uint64_t get_bishop_rays_setwise(uint64_t rooks, uint64_t empty);
 uint64_t get_rook_rays_setwise(uint64_t bishops, uint64_t empty);
