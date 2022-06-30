@@ -32,7 +32,7 @@ int gen_legal_moves(Move* moves, bool color);
 static int _get_flag(bool color, char piece, int from, int to);
 static uint64_t _get_attackmask(bool color);
 static uint64_t _get_checkmask(bool color);
-static uint64_t _get_pinmask(bool color, int king_square, int square);
+static uint64_t _get_pinmask(bool color, int square);
 
 uint64_t get_pawn_moves(bool color, int square);
 uint64_t get_knight_moves(bool color, int square);

@@ -285,6 +285,7 @@ int gen_legal_moves(Move* moves, bool color) {
 
     uint64_t pieces;
     uint64_t king_bb;
+    int king_square;
     char piece;
     uint64_t enemy_pawns_attacks;
     uint64_t enemy_rq_bb;
@@ -292,6 +293,7 @@ int gen_legal_moves(Move* moves, bool color) {
     if (color == WHITE) {
         pieces = board.w_occupied;
         king_bb = board.w_king;
+        king_square = board.w_king_square;
         piece = 'K';
         enemy_pawns_attacks = (((board.b_pawns >> 9) & ~BB_FILE_H) | ((board.b_pawns >> 7) & ~BB_FILE_A))
                                & board.w_occupied;
@@ -300,13 +302,13 @@ int gen_legal_moves(Move* moves, bool color) {
     } else {
         pieces = board.b_occupied;
         king_bb = board.b_king;
+        king_square = board.b_king_square;
         piece = 'k';
         enemy_pawns_attacks = (((board.w_pawns << 9) & ~BB_FILE_A) | ((board.w_pawns << 7) & ~BB_FILE_H))
                                & board.b_occupied;
         enemy_rq_bb = board.w_rooks | board.w_queens;
         enemy_bq_bb = board.w_bishops | board.w_queens;
     }
-    int king_square = get_lsb(king_bb);
 
     uint64_t attackmask = _get_attackmask(!color);
     uint64_t checkmask = _get_checkmask(color);
@@ -332,7 +334,7 @@ int gen_legal_moves(Move* moves, bool color) {
         uint64_t pinmask;
         uint64_t pinned_bb = BB_SQUARES[from] & pos_pinned;
         if (pinned_bb) {
-            pinmask = _get_pinmask(color, king_square, from);
+            pinmask = _get_pinmask(color, from);
         } else {
             pinmask = BB_ALL;
         }
@@ -474,11 +476,11 @@ static uint64_t _get_attackmask(bool color) {
     int king_square;
     if (color == WHITE) {
         pieces = board.w_occupied & ~board.w_pawns;
-        king_square = get_lsb(board.b_king);
+        king_square = board.b_king_square;
         moves_bb = (((board.w_pawns << 9) & ~BB_FILE_A) | ((board.w_pawns << 7) & ~BB_FILE_H));
     } else {
         pieces = board.b_occupied & ~board.b_pawns;
-        king_square = get_lsb(board.w_king);
+        king_square = board.w_king_square;
         moves_bb = (((board.b_pawns >> 9) & ~BB_FILE_H) | ((board.b_pawns >> 7) & ~BB_FILE_A));
     }
 
@@ -538,14 +540,14 @@ static uint64_t _get_checkmask(bool color) {
     uint64_t enemy_knight_bb;
     uint64_t pawns;
     if (color == WHITE) {
-        king_square = get_lsb(board.w_king);
+        king_square = board.w_king_square;
         enemy_bq_bb = board.b_bishops | board.b_queens;
         enemy_rq_bb = board.b_rooks | board.b_queens;
         enemy_knight_bb = board.b_knights;
         pawns = ((((board.w_king << 9) & ~BB_FILE_A) | ((board.w_king << 7) & ~BB_FILE_H))
                   & board.b_pawns);
     } else {
-        king_square = get_lsb(board.b_king);
+        king_square = board.b_king_square;
         enemy_bq_bb = board.w_bishops | board.w_queens;
         enemy_rq_bb = board.w_rooks | board.w_queens;
         enemy_knight_bb = board.w_knights;
@@ -597,18 +599,21 @@ static uint64_t _get_checkmask(bool color) {
  * @param square the square the possibly pinned piece is on.
  * @return a possible pin ray for the piece.
  */
-static uint64_t _get_pinmask(bool color, int king_square, int square) {
+static uint64_t _get_pinmask(bool color, int square) {
     uint64_t pinmask = 0;
 
     uint64_t king_bb;
+    int king_square;
     uint64_t enemy_rq_bb;
     uint64_t enemy_bq_bb;
     if (color == WHITE) {
         king_bb = board.w_king;
+        king_square = board.w_king_square;
         enemy_rq_bb = board.b_rooks | board.b_queens;
         enemy_bq_bb = board.b_bishops | board.b_queens;
     } else {
         king_bb = board.b_king;
+        king_square = board.b_king_square;
         enemy_rq_bb = board.w_rooks | board.w_queens;
         enemy_bq_bb = board.w_bishops | board.w_queens;
     }

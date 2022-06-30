@@ -49,6 +49,7 @@ typedef struct Move {
  * - mailbox representation for piece-at-square retrieval
  * - bitboards for every color and piece type
  * - bitboards of all occupied squares, and the occupied squares of just white/black
+ * - the square the king is on
  * - array of all bitboards
  * - flag denoting whose turn it is
  * - flags for white/black castling rights kingside/queenside
@@ -78,6 +79,9 @@ typedef struct Board {
     uint64_t b_occupied;
 
     uint64_t* bitboards[12];
+
+    int w_king_square;
+    int b_king_square;
 
     bool turn;
 

@@ -85,6 +85,10 @@ void init(char* fen) {
     board.b_occupied = board.b_pawns | board.b_knights | board.b_bishops | board.b_rooks | board.b_queens | board.b_king;
     board.occupied = board.w_occupied | board.b_occupied;
 
+    // Initalize king squares
+    board.w_king_square = get_lsb(board.w_king);
+    board.b_king_square = get_lsb(board.b_king);
+
     // Initalize turn
     token = strtok_r(rest, " ", &rest);
     board.turn = (*token == 'w') ? WHITE : BLACK;
@@ -247,6 +251,8 @@ void _make_move(Move move) {
             }
             break;
         case 'K':
+            board.w_king_square = to;
+
             if (flag == CASTLING) {
                 if (file_of(to) - file_of(from) > 0) { // Kingside
                     clear_bit(&board.w_rooks, H1);
@@ -327,6 +333,8 @@ void _make_move(Move move) {
             }
             break;
         case 'k':
+            board.b_king_square = to;
+
             if (flag == CASTLING) {
                 if (file_of(to) - file_of(from) > 0) { // Kingside
                     clear_bit(&board.b_rooks, H8);

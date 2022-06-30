@@ -16,6 +16,11 @@ Special thanks to:
 ------
 
 ## Devlog
+6/30/22 v0.4.3
+> Started saving the square the king is on rather than bit scanning it for every operation.
+>
+> Stopping move generation optimizations for now. Lower bound at ~22 million nps for positions like the starting one. Upper bound at ~40 million nps for positions like Kiwipete.
+
 6/27/22 v0.4.2
 > Minor pinmask generation optimizations.
 >
