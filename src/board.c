@@ -32,10 +32,10 @@ void init(char* fen) {
 
     char fen_copy[100];
     strcpy(fen_copy, fen);
-    char *rest = fen_copy;
+    char* rest = fen_copy;
 
     // Initalize bitboards and mailbox
-    char *token = strtok_r(rest, " ", &rest);
+    char* token = strtok_r(rest, " ", &rest);
     for (int i = A1; i <= H8; i++) {
         board.mailbox[i] = '-';
     }
@@ -64,7 +64,7 @@ void init(char* fen) {
     board.bitboards[10] = &board.b_queens;
     board.bitboards[11] = &board.b_king;
     for (int rank = 7; rank >= 0; rank--) {
-        char *fen_board = strtok_r(token, "/", &token);
+        char* fen_board = strtok_r(token, "/", &token);
         int file = 0;
         for (int j = 0; j < strlen(fen_board); j++) {
             if (file >= 8) break;
@@ -119,7 +119,7 @@ void init(char* fen) {
 
     // Initalize possible en passant square
     token = strtok_r(rest, " ", &rest);
-    board.en_passant_square = (*token == '-') ? NULL_SQUARE : parse_square(token);
+    board.en_passant_square = (*token == '-') ? INVALID : parse_square(token);
 
     // Initalize halfmove clock
     token = strtok_r(rest, " ", &rest);
@@ -152,7 +152,7 @@ void init(char* fen) {
     if (board.b_queenside_castling_rights) {
         board.zobrist ^= ZOBRIST_VALUES[772];
     }
-    if (board.en_passant_square != NULL_SQUARE) {
+    if (board.en_passant_square != INVALID) {
         board.zobrist ^= ZOBRIST_VALUES[773 + file_of(board.en_passant_square)];
     }
 
@@ -185,9 +185,9 @@ void _make_move(Move move) {
 
     bool reset_halfmove = false;
 
-    if (board.en_passant_square != NULL_SQUARE) {
+    if (board.en_passant_square != INVALID) {
         board.zobrist ^= ZOBRIST_VALUES[773 + file_of(board.en_passant_square)];
-        board.en_passant_square = NULL_SQUARE;
+        board.en_passant_square = INVALID;
     }
 
     uint64_t* attacker_bb = get_bitboard(attacker);

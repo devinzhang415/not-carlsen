@@ -345,7 +345,7 @@ int gen_legal_moves(Move* moves, bool color) {
                 uint64_t pawn_moves = get_pawn_moves(color, from);
                 moves_bb = pawn_moves & checkmask & pinmask;
 
-                if (board.en_passant_square != NULL_SQUARE) {
+                if (board.en_passant_square != INVALID) {
                     if (pawn_moves & pinmask & BB_SQUARES[board.en_passant_square]) {
                         // Add possible en passant capture to remove check
                         // For example en passant is legal here:
@@ -657,7 +657,7 @@ uint64_t get_pawn_moves(bool color, int square) {
         uint64_t captures = (((pawn << 9) & ~BB_FILE_A) | ((pawn << 7) & ~BB_FILE_H))
                             & board.b_occupied;
 
-        if (board.en_passant_square != NULL_SQUARE && rank_of(square) + 1 == 5) {
+        if (board.en_passant_square != INVALID && rank_of(square) + 1 == 5) {
             uint64_t ep_capture = (((pawn << 9) & ~BB_FILE_A) | ((pawn << 7) & ~BB_FILE_H))
                                    & BB_SQUARES[board.en_passant_square];
             captures |= ep_capture;
@@ -673,7 +673,7 @@ uint64_t get_pawn_moves(bool color, int square) {
         uint64_t captures = (((pawn >> 9) & ~BB_FILE_H) | ((pawn >> 7) & ~BB_FILE_A))
                             & board.w_occupied;
 
-        if (board.en_passant_square != NULL_SQUARE && rank_of(square) + 1 == 4) {
+        if (board.en_passant_square != INVALID && rank_of(square) + 1 == 4) {
             uint64_t ep_capture = (((pawn >> 9) & ~BB_FILE_H) | ((pawn >> 7) & ~BB_FILE_A))
                                    & BB_SQUARES[board.en_passant_square];
             captures |= ep_capture;

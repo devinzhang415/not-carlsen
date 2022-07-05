@@ -7,6 +7,11 @@ Special thanks to:
 
 ------
 
+# Use
+Files should be compiled with GCC.
+
+------
+
 ## Current Features
 - FEN board initialization
 - Legal move generator (20-40 million nps)

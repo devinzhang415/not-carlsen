@@ -45,21 +45,10 @@ typedef struct Move {
 
 
 /**
- * Representation of the board using:
- * - mailbox representation for piece-at-square retrieval
- * - bitboards for every color and piece type
- * - bitboards of all occupied squares, and the occupied squares of just white/black
- * - the square the king is on
- * - array of all bitboards
- * - flag denoting whose turn it is
- * - flags for white/black castling rights kingside/queenside
- * - en passant target square, if any
- * - halfmove counter, denoting the number of halfmoves since the last capture or pawn advance
- * - fullmove counter, denoting the number of cycles of a white move and a black move
- * - a zobrist hash value for the current position
+ * Representation of the board
  */
 typedef struct Board {
-    char mailbox[64];
+    char mailbox[64]; // piece-centric board representation
 
     uint64_t w_pawns;
     uint64_t w_knights;
@@ -78,7 +67,7 @@ typedef struct Board {
     uint64_t w_occupied;
     uint64_t b_occupied;
 
-    uint64_t* bitboards[12];
+    uint64_t* bitboards[12]; // all bitboards besides the occupancies
 
     int w_king_square;
     int b_king_square;
@@ -90,12 +79,12 @@ typedef struct Board {
     bool b_kingside_castling_rights;
     bool b_queenside_castling_rights;
 
-    int en_passant_square;
+    int en_passant_square; // en passant target square, if any
 
-    int halfmove_clock;
-    int fullmove_number;
+    int halfmove_clock; // number of halfmoves since the last capture or pawn advance
+    int fullmove_number; // number of cycles of a white move and a black move
 
-    uint64_t zobrist;
+    uint64_t zobrist; // zobrist hash value for the current position
 } Board;
 
 
@@ -117,7 +106,7 @@ typedef struct Stack {
 typedef struct RTable_Entry {
     uint64_t key;
     int num;
-    bool initalized;
+    bool initalized; // deleted or not
 } RTable_Entry;
 
 
@@ -200,7 +189,7 @@ extern uint64_t BB_RAYS[64][64];
 extern uint64_t ZOBRIST_VALUES[781];
 
 extern const Move NULL_MOVE;
-extern const int NULL_SQUARE;
+extern const int INVALID;
 extern const int MAX_MOVE_NUM;
 
 

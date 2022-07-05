@@ -101,7 +101,7 @@ uint64_t ZOBRIST_VALUES[781];
 
 // Misc
 const Move NULL_MOVE = {A1, A1, PASS};
-const int NULL_SQUARE = -1;
+const int INVALID = -1;
 const int MAX_MOVE_NUM = 219; // 218 + invalid move to signal end of list
 
 
@@ -235,7 +235,7 @@ int parse_piece(char piece) {
         case 'k':
             return 11;
         default:
-            return NULL_SQUARE;
+            return INVALID;
     }
 }
 
