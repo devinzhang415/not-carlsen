@@ -8,7 +8,9 @@ Special thanks to:
 ------
 
 # Use
-Files should be compiled with GCC.
+Compile with the makefile.
+
+> mingw32-make
 
 ------
 
