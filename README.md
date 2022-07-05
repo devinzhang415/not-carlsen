@@ -23,6 +23,11 @@ Compile with the makefile.
 ------
 
 ## Devlog
+7/5/22 v0.4.4
+> Added a makefile.
+>
+> Started adding in UCI commands.
+
 6/30/22 v0.4.3
 > Started saving the square the king is on rather than bit scanning it for every operation.
 >
