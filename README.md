@@ -8,7 +8,7 @@ Special thanks to:
 ------
 
 # Use
-Compile with the makefile.
+Compile with the makefile:
 
 > mingw32-make
 
