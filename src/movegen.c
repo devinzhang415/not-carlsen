@@ -213,13 +213,21 @@ static uint64_t _get_reverse_bb(uint64_t bb) {
  * @param depth what depth to perform moves to.
  * @return the number of legal moves at depth n.
  * 
- * https://www.chessprogramming.org/Perft_Results
+ * https://www.chessprogramming.org/Perft_Results:
  * pos 1 accurate to depth 7
  * pos 2 accurate to depth 6
  * pos 3 accurate to depth 8
  * pos 4 accurate to depth 6
  * pos 5 accurate to depth 6
  * pos 6 accurate to depth 5
+ * 
+ * Steven Edwards (Chess Programming Wiki) Challenge Positions:
+ * pos 1 accurate to depth 7
+ * pos 2 accurate to depth 7
+ * pos 3 accurate to depth 7
+ * pos 4 accurate to depth 7
+ * pos 5 accurate to depth 7
+ * pos 6 accurate to depth 7
  */
 uint64_t print_divided_perft(int depth) {
     clock_t start = clock();
@@ -233,7 +241,7 @@ uint64_t print_divided_perft(int depth) {
         push(moves[i]);
         if (is_game_over()) break;
 
-        printf_move_post(moves[i]);
+        print_move(moves[i]);
         uint64_t nodes = _perft(depth - 1);
         total_nodes += nodes;
         printf(": %llu\n", nodes);
@@ -286,7 +294,6 @@ int gen_legal_moves(Move* moves, bool color) {
     uint64_t pieces;
     uint64_t king_bb;
     int king_square;
-    char piece;
     uint64_t enemy_pawns_attacks;
     uint64_t enemy_rq_bb;
     uint64_t enemy_bq_bb;
@@ -294,7 +301,6 @@ int gen_legal_moves(Move* moves, bool color) {
         pieces = board.w_occupied;
         king_bb = board.w_king;
         king_square = board.w_king_square;
-        piece = 'K';
         enemy_pawns_attacks = (((board.b_pawns >> 9) & ~BB_FILE_H) | ((board.b_pawns >> 7) & ~BB_FILE_A))
                                & board.w_occupied;
         enemy_rq_bb = board.b_rooks | board.b_queens;
@@ -303,7 +309,6 @@ int gen_legal_moves(Move* moves, bool color) {
         pieces = board.b_occupied;
         king_bb = board.b_king;
         king_square = board.b_king_square;
-        piece = 'k';
         enemy_pawns_attacks = (((board.w_pawns << 9) & ~BB_FILE_A) | ((board.w_pawns << 7) & ~BB_FILE_H))
                                & board.b_occupied;
         enemy_rq_bb = board.w_rooks | board.w_queens;
@@ -319,7 +324,7 @@ int gen_legal_moves(Move* moves, bool color) {
         uint64_t moves_bb = get_king_moves(color, king_square) & ~attackmask;
         while (moves_bb) {
             int to = pull_lsb(&moves_bb);
-            int flag = _get_flag(color, piece, king_square, to);
+            int flag = _get_flag(color, 'K', king_square, to);
             if (flag == CASTLING) continue;
             Move move = {king_square, to, flag};
             moves[i++] = move;

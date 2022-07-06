@@ -25,6 +25,10 @@ Compile with the makefile.
 ## Devlog
 7/6/22 v0.4.5
 > Using compiler optimizations discovered in the makefile process, perft speeds was increased to 52 million nps for the starting position and 92 million nps for Kiwipete.
+>
+> Fixed bug where a black king in double check was incorrectly allowed to castle.
+>
+> Increased speed allows me to test higher depth perfts. Passed all of Steven Edwards's (Chess Programming Wiki) challenge positions.
 
 7/5/22 v0.4.4
 > Added a makefile.
