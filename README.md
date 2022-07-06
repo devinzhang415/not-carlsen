@@ -16,13 +16,16 @@ Compile with the makefile.
 
 ## Current Features
 - FEN board initialization
-- Legal move generator (20-40 million nps)
+- Legal move generator (92 million nps)
   - Magic bitboard sliding move generation
 - Threefold repetition hashtable
 
 ------
 
 ## Devlog
+7/6/22 v0.4.5
+> Using compiler optimizations discovered in the makefile process, perft speeds was increased to 52 million nps for the starting position and 92 million nps for Kiwipete.
+
 7/5/22 v0.4.4
 > Added a makefile.
 >
