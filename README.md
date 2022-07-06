@@ -16,8 +16,7 @@ Compile with the makefile.
 
 ## Current Features
 - FEN board initialization
-- Legal move generator (92 million nps)
-  - Magic bitboard sliding move generation
+- Magic bitboard legal move generator (92 million nps)
 - Threefold repetition hashtable
 
 ------
