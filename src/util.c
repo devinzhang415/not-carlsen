@@ -194,10 +194,11 @@ static uint64_t _rand_ull(void) {
 
 
 /**
- * @param square the string of the square name, ie "A1".
+ * @param square the string of the square name, ie "a1".
  * @return the square's integer value.
+ * https://www.chessprogramming.org/images/0/0d/BBUniverse.jpg
  */
-int parse_square(char* square) {
+int parse_square_char(char* square) {
     int file = square[0] - 'a';
     int rank = square[1] - '0';
     return 8 * (rank - 1) + file;
@@ -295,11 +296,38 @@ void print_bb(uint64_t bb) {
 
 
 /**
+ * Prints the move in from square - to square notation.
+ * @param move 
+ */
+void print_move(Move move) {
+    printf("%c", 'a' + file_of(move.from));
+    printf("%d", rank_of(move.from) + 1);
+    printf("%c", 'a' + file_of(move.to));
+    printf("%d", rank_of(move.to) + 1);
+    
+    switch (move.flag) {
+        case PROMOTION_QUEEN:
+            printf("Q");
+            break;
+        case PROMOTION_ROOK:
+            printf("R");
+            break;
+        case PROMOTION_KNIGHT:
+            printf("N");
+            break;
+        case PROMOTION_BISHOP:
+            printf("B");
+            break;
+    }
+}
+
+
+/**
  * Prints the move (before its been made) in algebraic notation.
- * Does not accurately print all moves. Primarily for debug purposes.
+ * Does not support disambiguating moves.
  * @param move the move to be made.
  */
-void print_move_pre(Move move) {
+void printf_move_pre(Move move) {
     char piece = toupper(board.mailbox[move.from]);
 
     if (piece == 'P') {
@@ -330,10 +358,10 @@ void print_move_pre(Move move) {
 
 /**
  * Prints the move (after its been made) in algebraic notation.
- * Does not accurately print all moves. Primarily for debug purposes.
+ * Does not support disambiguating moves.
  * @param move the move that has just been made.
  */
-void print_move_post(Move move) {
+void printf_move_post(Move move) {
     switch (move.flag) {
         case PROMOTION_QUEEN:
             printf("%c", 104 - (7 - file_of(move.to)));

@@ -233,7 +233,7 @@ uint64_t print_divided_perft(int depth) {
         push(moves[i]);
         if (is_game_over()) break;
 
-        print_move_post(moves[i]);
+        printf_move_post(moves[i]);
         uint64_t nodes = _perft(depth - 1);
         total_nodes += nodes;
         printf(": %llu\n", nodes);

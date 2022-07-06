@@ -201,9 +201,7 @@ static uint64_t _get_ray(int square1, int square2);
 void init_zobrist_table(void);
 static uint64_t _rand_ull(void);
 
-void init_lsb_indices(void);
-
-int parse_square(char* square);
+int parse_square_char(char* square);
 int parse_piece(char piece);
 
 bool get_bit(uint64_t bb, int square);
@@ -212,8 +210,10 @@ void clear_bit(uint64_t* bb, int square);
 int pop_count(uint64_t bb);
 
 void print_bb(uint64_t bb);
-void print_move_pre(Move move);
-void print_move_post(Move move);
+
+void print_move(Move move);
+void printf_move_pre(Move move);
+void printf_move_post(Move move);
 
 int rank_of(int square);
 int file_of(int file);

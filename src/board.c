@@ -119,7 +119,7 @@ void init(char* fen) {
 
     // Initalize possible en passant square
     token = strtok_r(rest, " ", &rest);
-    board.en_passant_square = (*token == '-') ? INVALID : parse_square(token);
+    board.en_passant_square = (*token == '-') ? INVALID : parse_square_char(token);
 
     // Initalize halfmove clock
     token = strtok_r(rest, " ", &rest);

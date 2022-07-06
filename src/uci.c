@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <omp.h>
 #include "uci.h"
 #include "util.h"
 #include "board.h"
@@ -30,6 +31,7 @@ static void _init_info(void) {
 
 
 int main(void) {
+    omp_set_num_threads(1);
     _init_info();
 
     char input[256];
@@ -68,9 +70,15 @@ int main(void) {
             if (token = strstr(input, "nodes")) info.nodes = atoi(token + 6);
             if (token = strstr(input, "movetime")) info.movetime = atoi(token + 9);
 
-            Move moves[MAX_MOVE_NUM];
-            gen_legal_moves(moves, board.turn);
-            push(moves[0]);
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    Move moves[MAX_MOVE_NUM];
+                    gen_legal_moves(moves, board.turn);
+                    push(moves[0]);
+                }
+            }
         }
 
         else if (!strncmp(input, "quit", 4)) {
