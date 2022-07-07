@@ -23,7 +23,7 @@ Info info;
  * @param fen the FEN of the position. Assumed valid.
  */
 static void _init_structs(char* fen) {
-    init_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    init_board(fen);
     init_stack();
     init_rtable();
     rtable_add(board.zobrist);
@@ -205,6 +205,13 @@ int main(void) {
         
         else if (!strncmp(input, "go", 2)) {
             char* token = NULL;
+
+            int depth = 0;
+            if (token = strstr(input, "perft")) {
+                depth = atoi(token + 6);
+                print_divided_perft(depth);
+                continue;
+            }
 
             if (token = strstr(input, "wtime")) info.wtime = atoi(token + 6);
             if (token = strstr(input, "btime")) info.btime = atoi(token + 6);
