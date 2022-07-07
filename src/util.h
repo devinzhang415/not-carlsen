@@ -120,6 +120,15 @@ typedef struct RTable {
 } RTable;
 
 
+/**
+ * Search true return type of (best move, best score) pair.
+ */
+typedef struct Result {
+    Move move;
+    int score;
+} Result;
+
+
 extern const bool WHITE;
 extern const bool BLACK;
 
@@ -191,6 +200,7 @@ extern uint64_t ZOBRIST_VALUES[781];
 extern const Move NULL_MOVE;
 extern const int INVALID;
 extern const int MAX_MOVE_NUM;
+extern const int MATE_SCORE;
 
 
 uint64_t get_ray_between(int square1, int square2);

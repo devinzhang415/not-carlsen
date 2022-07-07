@@ -10,12 +10,16 @@
 #include "movegen.h"
 #include "stack.h"
 #include "rtable.h"
+#include "search.h"
 
 
 Board board;
 Stack* stack;
 RTable rtable;
+
 Info info;
+
+int nodes;
 
 
 /**
@@ -228,18 +232,24 @@ int main(void) {
                 {
                     clock_t start = clock();
 
-                    Move moves[MAX_MOVE_NUM];
-                    uint64_t nodes = gen_legal_moves(moves, board.turn);
+                    int depth = 5;
+                    Move pv[depth];
+                    Result result = negamax(depth, -MATE_SCORE, MATE_SCORE, pv);
 
                     clock_t elapsed = clock() - start;
                     double time = (double) elapsed / CLOCKS_PER_SEC;
                     if (time == 0) time = .1;
 
-                    char* move = parse_move(moves[0]);
-                    printf("info depth %d score cp %d nodes %llu nps %d time %d pv %s\n",
-                           1, 0, nodes, (int) nodes/time, (int) time, move);
-                    printf("bestmove %s\n", move);
-                    free(move);
+                    printf("info depth %d score cp %d nodes %llu nps %d time %d pv ",
+                           depth, result.score, nodes, (int) nodes/time, (int) time);
+                    for (int i = depth - 1; i >= 0; i--) {
+                        print_move(pv[i]);
+                        printf(" ");
+                    }
+                    printf("\n");
+                    printf("bestmove ");
+                    print_move(pv[depth - 1]);
+                    printf("\n");
                 }
             }
         }

@@ -103,6 +103,7 @@ uint64_t ZOBRIST_VALUES[781];
 const Move NULL_MOVE = {A1, A1, PASS};
 const int INVALID = -1;
 const int MAX_MOVE_NUM = 218; // largest possible number of legal moves in a position
+const int MATE_SCORE = 99999;
 
 
 /**
@@ -176,6 +177,7 @@ int parse_piece(char piece) {
 /**
  * @param move 
  * @return the move in from square - to square notation.
+ * Return needs to be freed.
  */
 char* parse_move(Move move) {
     char* str = malloc(5);
