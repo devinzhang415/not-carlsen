@@ -2,15 +2,18 @@
 Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-Magnus's goal was to learn the popular algorithims and techniques in modern chess engines, this engine will efficently implement them. Thus, the goal of this engine is simply to be strong while providing me an opportunity to solidify my C programming skills.
 
 Special thanks to:
-- Github.com/nkarve for their magic bitboard generation.
+- github.com/nkarve for their magic bitboard generation.
 - Peter Jones for their guide on legal move generation.
 
 ------
 
-# Use
+## Use
 Compile with the makefile:
 
 > mingw32-make
+
+Not-Carlsen uses the [Universal Chess Interface (UCI) protocol](http://wbec-ridderkerk.nl/html/UCIProtocol.html). Alongside with the standard commands, the engine supports:
+- `go perft x`: prints out the divided perft results for the initialized position.
 
 ------
 
