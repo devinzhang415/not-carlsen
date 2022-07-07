@@ -122,12 +122,22 @@ int main(void) {
     _init_zobrist_table();
     _init_info();
 
-
-    char input[256];
+    int size = 256;
+    char* input = malloc(size);
 
     while (true) {
         fflush(stdout);
-        fgets(input, 256, stdin);
+
+        int c = EOF;
+        int i = 0;
+        while ((c = getchar()) != '\n' && c != EOF) {
+            input[i++] = (char) c;
+            if (i == size) {
+                size *= 2;
+                input = realloc(input, size);
+            }
+        }
+        input[i] = '\0';
 
         if (!strncmp(input, "ucinewgame", 10)) {
             _init_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
