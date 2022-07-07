@@ -13,7 +13,7 @@ Compile with the makefile:
 > mingw32-make
 
 Not-Carlsen uses the [Universal Chess Interface (UCI) protocol](http://wbec-ridderkerk.nl/html/UCIProtocol.html). Alongside with the standard commands, the engine supports:
-- go perft x
+* #### go perft x
   Prints out the divided perft results for the initialized position.
 
 ------
