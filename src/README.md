@@ -7,5 +7,5 @@
 | `movegen` | Tables and functions for all move generation and perft |
 | `rtable` | Repetition table procedures |
 | `stack` | Move stack procedures |
-| `uci` | Main loop and communication protocol with the GUI |
+| `uci` | Main loop, communication protocol with the GUI, and table initiations |
 | `util` | Structure, constant, table, and helper functions |
