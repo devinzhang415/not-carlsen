@@ -102,7 +102,7 @@ uint64_t ZOBRIST_VALUES[781];
 // Misc
 const Move NULL_MOVE = {A1, A1, PASS};
 const int INVALID = -1;
-const int MAX_MOVE_NUM = 219; // 218 + invalid move to signal end of list
+const int MAX_MOVE_NUM = 218; // largest possible number of legal moves in a position
 
 
 /**
