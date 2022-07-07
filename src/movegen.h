@@ -29,7 +29,8 @@ static uint64_t _perft(int depth);
 
 int gen_legal_moves(Move* moves, bool color);
 
-static int _get_flag(bool color, char piece, int from, int to);
+int get_flag(bool color, char piece, int from, int to);
+
 static uint64_t _get_attackmask(bool color);
 static uint64_t _get_checkmask(bool color);
 static uint64_t _get_pinmask(bool color, int square);

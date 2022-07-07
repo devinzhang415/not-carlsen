@@ -16,6 +16,9 @@ const double MAX_LOAD_FACTOR = .75;
  * Initalizes the threefold repetition hashtable.
  */
 void init_rtable(void) {
+    rtable.entries = NULL;
+    free(rtable.entries);
+    
     rtable.size = 0;
     rtable.capacity = RTABLE_INIT_CAPACITY;
     rtable.entries = malloc(RTABLE_INIT_CAPACITY * sizeof(RTable_Entry));

@@ -106,19 +106,6 @@ const int MAX_MOVE_NUM = 219; // 218 + invalid move to signal end of list
 
 
 /**
- * Initalizes BB_RAYS[64][64] with all rays that connect from one square to another
- * (see _get_ray())
- */
-void init_rays(void) {
-    for (int square1 = A1; square1 <= H8; square1++) {
-        for (int square2 = A1; square2 <= H8; square2++) {
-            BB_RAYS[square1][square2] = _get_ray(square1, square2);
-        }
-    }
-}
-
-
-/**
  * @param square1 
  * @param square2 
  * @return the bitboard of the ray between the two squares (including the squares), if any.
@@ -133,63 +120,8 @@ uint64_t get_ray_between(int square1, int square2) {
  * @param square2 
  * @return the bitboard of the rank, file, diagonal, or anti-diagonal between the two squares, if any.
  */
-uint64_t get_full_ray_between(int square1, int square2) {
+uint64_t get_ray_between_inclusive(int square1, int square2) {
     return BB_RAYS[square1][square2];
-}
-
-
-/**
- * @param square1 
- * @param square2 
- * @return the ray (rank, file, or diagonal) that connects the two squares, if any.
- *         for example, there is a ray between a1 and c3, but not betweem a1 and b3.
- *         returns empty bitboard if the two squares are equal
- */
-static uint64_t _get_ray(int square1, int square2) {
-    if (square1 == square2) return 0;
-
-    uint64_t square2_bb = BB_SQUARES[square2];
-
-    uint64_t rank = BB_RANKS[rank_of(square1)];
-    if (rank & square2_bb) return rank;
-
-    uint64_t file = BB_FILES[file_of(square1)];
-    if (file & square2_bb) return file;
-
-    uint64_t diagonal = BB_DIAGONALS[diagonal_of(square1)];
-    if (diagonal & square2_bb) return diagonal;
-
-    uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square1)];
-    if (anti_diagonal & square2_bb) return anti_diagonal;
-    
-    return 0;
-}
-
-
-/**
- * Initalizes ZOBRIST_VALUES[781] with random unsigned 64-bit integers.
- * - 768 numbers for each piece on each square
- * - 1 number to indicate side to move is black
- * - 4 numbers for castling rights
- * - 8 numbers to indicate en passant file
- */
-void init_zobrist_table(void) {
-    for (int i = 0; i < 781; i++) {
-        ZOBRIST_VALUES[i] = _rand_ull();
-    }
-}
-
-
-/**
- * @return a random unsigned 64-bit integer.
- * @author https://stackoverflow.com/a/28116032.
- */
-static uint64_t _rand_ull(void) {
-    uint64_t n = 0;
-    for (int i = 0; i < 5; i++) {
-        n = (n << 15) | (rand() & 0x7FFF);
-    }
-    return n & 0xFFFFFFFFFFFFFFFF;
 }
 
 
@@ -198,7 +130,7 @@ static uint64_t _rand_ull(void) {
  * @return the square's integer value.
  * https://www.chessprogramming.org/images/0/0d/BBUniverse.jpg
  */
-int parse_square_char(char* square) {
+int parse_square(char* square) {
     int file = square[0] - 'a';
     int rank = square[1] - '0';
     return 8 * (rank - 1) + file;
@@ -238,6 +170,42 @@ int parse_piece(char piece) {
         default:
             return INVALID;
     }
+}
+
+
+/**
+ * @param move 
+ * @return the move in from square - to square notation.
+ */
+char* parse_move(Move move) {
+    char* str = malloc(5);
+    str[0] = 'a' + file_of(move.from);
+    str[1] = '1' + rank_of(move.from);
+    str[2] = 'a' + file_of(move.to);
+    str[3] = '1' + rank_of(move.to);
+
+    switch (move.flag) {
+        case PROMOTION_QUEEN:
+            str[4] = 'q';
+            str[5] = '\0';
+            break;
+        case PROMOTION_ROOK:
+            str[4] = 'r';
+            str[5] = '\0';
+            break;
+        case PROMOTION_KNIGHT:
+            str[4] = 'n';
+            str[5] = '\0';
+            break;
+        case PROMOTION_BISHOP:
+            str[4] = 'b';
+            str[5] = '\0';
+            break;
+        default:
+            str[4] = '\0';
+    }
+
+    return str;
 }
 
 
@@ -307,16 +275,16 @@ void print_move(Move move) {
     
     switch (move.flag) {
         case PROMOTION_QUEEN:
-            printf("Q");
+            printf("q");
             break;
         case PROMOTION_ROOK:
-            printf("R");
-            break;
-        case PROMOTION_KNIGHT:
-            printf("N");
+            printf("r");
             break;
         case PROMOTION_BISHOP:
-            printf("B");
+            printf("b");
+            break;
+        case PROMOTION_KNIGHT:
+            printf("n");
             break;
     }
 }
@@ -336,16 +304,16 @@ void printf_move_pre(Move move) {
 
         switch (move.flag) {
             case PROMOTION_QUEEN:
-                printf("Q");
+                printf("q");
                 break;
             case PROMOTION_ROOK:
-                printf("R");
-                break;
-            case PROMOTION_KNIGHT:
-                printf("N");
+                printf("r");
                 break;
             case PROMOTION_BISHOP:
-                printf("B");
+                printf("b");
+                break;
+            case PROMOTION_KNIGHT:
+                printf("n");
                 break;
         }
     } else {
@@ -366,22 +334,22 @@ void printf_move_post(Move move) {
         case PROMOTION_QUEEN:
             printf("%c", 104 - (7 - file_of(move.to)));
             printf("%d", rank_of(move.to) + 1);
-            printf("Q");
+            printf("q");
             break;
         case PROMOTION_ROOK:
             printf("%c", 104 - (7 - file_of(move.to)));
             printf("%d", rank_of(move.to) + 1);
-            printf("R");
-            break;
-        case PROMOTION_KNIGHT:
-            printf("%c", 104 - (7 - file_of(move.to)));
-            printf("%d", rank_of(move.to) + 1);
-            printf("N");
+            printf("r");
             break;
         case PROMOTION_BISHOP:
             printf("%c", 104 - (7 - file_of(move.to)));
             printf("%d", rank_of(move.to) + 1);
-            printf("B");
+            printf("b");
+            break;
+        case PROMOTION_KNIGHT:
+            printf("%c", 104 - (7 - file_of(move.to)));
+            printf("%d", rank_of(move.to) + 1);
+            printf("n");
             break;
         default:
             char piece = toupper(board.mailbox[move.to]);

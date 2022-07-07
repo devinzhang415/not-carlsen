@@ -193,16 +193,12 @@ extern const int INVALID;
 extern const int MAX_MOVE_NUM;
 
 
-void init_rays(void);
 uint64_t get_ray_between(int square1, int square2);
-uint64_t get_full_ray_between(int square1, int square2);
-static uint64_t _get_ray(int square1, int square2);
+uint64_t get_ray_between_inclusive(int square1, int square2);
 
-void init_zobrist_table(void);
-static uint64_t _rand_ull(void);
-
-int parse_square_char(char* square);
+int parse_square(char* square);
 int parse_piece(char piece);
+char* parse_move(Move move);
 
 bool get_bit(uint64_t bb, int square);
 void set_bit(uint64_t* bb, int square);

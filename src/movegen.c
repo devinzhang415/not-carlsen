@@ -324,7 +324,7 @@ int gen_legal_moves(Move* moves, bool color) {
         uint64_t moves_bb = get_king_moves(color, king_square) & ~attackmask;
         while (moves_bb) {
             int to = pull_lsb(&moves_bb);
-            int flag = _get_flag(color, 'K', king_square, to);
+            int flag = get_flag(color, 'K', king_square, to);
             if (flag == CASTLING) continue;
             Move move = {king_square, to, flag};
             moves[i++] = move;
@@ -392,7 +392,7 @@ int gen_legal_moves(Move* moves, bool color) {
                 Move knight_promotion = {from, to, PROMOTION_KNIGHT};
                 moves[i++] = knight_promotion;
             } else {
-                int flag = _get_flag(color, piece, from, to);
+                int flag = get_flag(color, piece, from, to);
                 Move move = {from, to, flag};
 
                 // Determine if castling is legal
@@ -455,7 +455,7 @@ int gen_legal_moves(Move* moves, bool color) {
  * @param to the square the piece is moving to 
  * @return the appropriate flag for the move, excludes promotions
  */
-static int _get_flag(bool color, char piece, int from, int to) {
+int get_flag(bool color, char piece, int from, int to) {
     switch (piece) {
         case 'P':
             if (to == board.en_passant_square) return EN_PASSANT;
@@ -631,7 +631,7 @@ static uint64_t _get_pinmask(bool color, int square) {
     key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][key];
 
-    uint64_t direction = get_full_ray_between(king_square, square);
+    uint64_t direction = get_ray_between_inclusive(king_square, square);
     
     uint64_t pin = direction & rook_attacks;
     if (pin & enemy_rq_bb) {

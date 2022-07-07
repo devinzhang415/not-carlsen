@@ -15,6 +15,9 @@ extern RTable rtable;
  * Initalizes the stack.
  */
 void init_stack() {
+    stack = NULL;
+    free(stack);
+    
     stack = malloc(sizeof(Stack));
     Stack* node = malloc(sizeof(Stack));
     node->move = NULL_MOVE;
@@ -31,7 +34,7 @@ void init_stack() {
 void push(Move move) {
     // Update move stack
     Stack* node = malloc(sizeof(Stack));
-    _make_move(move);
+    make_move(move);
     node->board = board;
     node->move = move;
     node->next = stack;

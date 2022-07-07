@@ -5,9 +5,9 @@
 #include "util.h"
 
 
-void init(char* fen);
+void init_board(char* fen);
 
-void _make_move(Move move);
+void make_move(Move move);
 
 bool is_check(bool color);
 bool is_attacked(bool color, int square);
@@ -18,7 +18,7 @@ static bool _is_fifty_move_rule(void);
 
 uint64_t* get_bitboard(char piece);
 
-void print_mailbox(void);
+void print_board(void);
 
 
 #endif

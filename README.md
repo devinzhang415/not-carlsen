@@ -16,12 +16,18 @@ Compile with the makefile.
 
 ## Current Features
 - FEN board initialization
+- UCI communication protocol
 - Magic bitboard legal move generator (92 million nps)
 - Threefold repetition hashtable
 
 ------
 
 ## Devlog
+7/7/22 v1.0.0
+> Implemented the Universal Chess Interface (UCI) engine-to-GUI communication protocol.
+>
+> Engine officially able to play chess! (though currently only playing random moves.)
+
 7/6/22 v0.4.5
 > Using compiler optimizations discovered in the makefile process, perft speeds was increased to 52 million nps for the starting position and 92 million nps for Kiwipete.
 >

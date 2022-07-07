@@ -8,7 +8,6 @@
 #include "board.h"
 #include "util.h"
 #include "movegen.h"
-#include "stack.h"
 #include "rtable.h"
 
 
@@ -18,21 +17,11 @@ extern RTable rtable;
 
 
 /**
- * Initalizes the board and other values.
+ * Initalizes the board
  * @param fen the FEN string to initalize the board to. Assumed valid.
  */
-void init(char* fen) {
-    // Initalize misc
-    srand(time(NULL));
-    init_rtable();
-    init_rays();
-    init_zobrist_table();
-    init_bishop_attacks();
-    init_rook_attacks();
-
-    char fen_copy[100];
-    strcpy(fen_copy, fen);
-    char* rest = fen_copy;
+void init_board(char* fen) {
+    char* rest = strdup(fen);
 
     // Initalize bitboards and mailbox
     char* token = strtok_r(rest, " ", &rest);
@@ -119,7 +108,7 @@ void init(char* fen) {
 
     // Initalize possible en passant square
     token = strtok_r(rest, " ", &rest);
-    board.en_passant_square = (*token == '-') ? INVALID : parse_square_char(token);
+    board.en_passant_square = (*token == '-') ? INVALID : parse_square(token);
 
     // Initalize halfmove clock
     token = strtok_r(rest, " ", &rest);
@@ -156,11 +145,7 @@ void init(char* fen) {
         board.zobrist ^= ZOBRIST_VALUES[773 + file_of(board.en_passant_square)];
     }
 
-    // Initalize stack
-    init_stack();
-
-    // Add position to threefold history
-    rtable_add(board.zobrist);
+    free(rest);
 }
 
 
@@ -168,7 +153,7 @@ void init(char* fen) {
  * Updates the board with the move.
  * @param move 
  */
-void _make_move(Move move) {
+void make_move(Move move) {
     int from = move.from;
     int to = move.to;
     int flag = move.flag;
@@ -472,7 +457,7 @@ uint64_t* get_bitboard(char piece) {
 /**
  * Prints the labeled representation of the mailbox board.
  */
-void print_mailbox(void) {
+void print_board(void) {
     for (int rank = 7; rank >= 0; rank--) {
         for (int file = 0; file <= 7; file++) {
             printf("%c ", board.mailbox[8*rank + file]);
