@@ -7,8 +7,6 @@
 
 
 extern Board board;
-extern Stack* stack;
-extern RTable rtable;
 
 
 const bool WHITE = true;
@@ -102,8 +100,9 @@ uint64_t ZOBRIST_VALUES[781];
 // Misc
 const Move NULL_MOVE = {A1, A1, PASS};
 const int INVALID = -1;
-const int MAX_MOVE_NUM = 218; // largest possible number of legal moves in a position
 const int MATE_SCORE = 99999;
+const double MAX_LOAD_FACTOR = .75; // max load factor for hashtables
+const int MAX_DEPTH = 256;
 
 
 /**
@@ -358,6 +357,24 @@ void printf_move_post(Move move) {
             if (piece != 'P') printf("%c", piece);
             printf("%c", 104 - (7 - file_of(move.to)));
             printf("%d", rank_of(move.to) + 1);
+    }
+}
+
+
+/**
+ * Prints the search info to send to the GUI.
+ * @param depth search depth in plies.
+ * @param score the score from the engine's point of view in centipawns.
+ * @param nodes x nodes searched.
+ * @param time the time searched in ms.
+ * @param pv the best line of moves found, in reverse order.
+ */
+void print_info(int depth, int score, uint64_t nodes, double time, Move* pv) {
+    printf("info depth %d score cp %d nodes %llu nps %.0f time %d pv ",
+            depth, score, nodes, nodes / time, (int) time);
+    for (int i = depth - 1; i >= 0; i--) {
+        print_move(pv[i]);
+        printf(" ");
     }
 }
 

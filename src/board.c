@@ -12,7 +12,6 @@
 
 
 extern Board board;
-extern Stack* stack;
 extern RTable rtable;
 
 
@@ -433,7 +432,9 @@ bool is_game_over(void) {
  * @return true if the position has occured 3+ times.
  */
 static bool _is_threefold_rep(void) {
-    return (rtable_get(board.zobrist) >= 3);
+    RTable_Entry entry = rtable_get(board.zobrist);
+    if (!entry.initialized) return false;
+    return (entry.num >= 3);
 }
 
 

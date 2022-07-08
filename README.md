@@ -22,13 +22,21 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - FEN board initialization
 - UCI communication protocol
 - Magic bitboard legal move generator (92 million nps)
-- Threefold repetition hashtable
 - Fail soft alpha-beta negamax
+- Transposition table
+- Iterative deepening
+- Time manager
 - Material score evaluation
+- Threefold repetition hashtable
 
 ------
 
 ## Devlog
+7/8/22 v1.1.0
+> Adapted the repetition hashtable interface to a transposition table.
+>
+> This allowed me to add iterative deepening and a time manager as well.
+
 7/7/22 v1.0.0
 > Implemented the Universal Chess Interface (UCI) engine-to-GUI communication protocol.
 >
@@ -63,10 +71,10 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 >
 > Switching to perft bulk counting adjusts speed to 24 million nps.
 
-6/22/22 v0.4
+6/22/22 v0.4.0
 > Successfully implemented a legal move generator. Optimizations and bug fixes still need to be made, but I am extremely happy with the speed at which I was able to implement this considering my previous attempt failed after a few days worth of effort. The coming updates will focus on speeding up this generator and squashing perft mismatches.
 
-6/21/22 v0.3
+6/21/22 v0.3.0
 > Added threefold repetition and 50-move rule detection.
 
 6/15/22 v0.2.6
@@ -103,7 +111,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 6/5/22 v0.2.1
 > Changed make/unmake to make/copy for move pushing and popping.
 
-6/2/22 v0.2
+6/2/22 v0.2.0
 > Implemented a pseudolegal move generator and move stack.
 >
 > Changed pawn move generator from setwise to individual.
@@ -124,7 +132,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 >
 > Defined bit attack maps for knights, bishops, and rooks from all squares.
 
-3/26/22 v0.1
+3/26/22 v0.1.0
 > Implemented complete board initialization.
 
 3/22/22 v0.0.1

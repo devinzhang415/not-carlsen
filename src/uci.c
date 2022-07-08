@@ -11,15 +11,14 @@
 #include "stack.h"
 #include "rtable.h"
 #include "search.h"
+#include "ttable.h"
 
 
 Board board;
 Stack* stack;
 RTable rtable;
-
+TTable ttable;
 Info info;
-
-int nodes;
 
 
 /**
@@ -29,23 +28,9 @@ int nodes;
 static void _init_structs(char* fen) {
     init_board(fen);
     init_stack();
+    init_ttable();
     init_rtable();
     rtable_add(board.zobrist);
-}
-
-
-/**
- * Initializes the move search information.
- */
-static void _init_info(void) {
-    info.wtime = 0;
-    info.btime = 0;
-    info.winc = 0;
-    info.binc = 0;
-    info.movestogo = 0;
-    info.depth = INVALID;
-    info.nodes = INVALID;
-    info.movetime = INVALID;
 }
 
 
@@ -118,13 +103,20 @@ static uint64_t _rand_ull(void) {
 
 
 int main(void) {
+    /**
+     * Bugs:
+     * pv output is very wack
+     * cannot take in input while in function call (threading isnt working)
+     */
+
+
+    omp_set_dynamic(0);
     omp_set_num_threads(1);
     srand(time(NULL));
     init_bishop_attacks();
     init_rook_attacks();
     _init_rays();
     _init_zobrist_table();
-    _init_info();
 
     int size = 256;
     char* input = malloc(size);
@@ -210,46 +202,26 @@ int main(void) {
         else if (!strncmp(input, "go", 2)) {
             char* token = NULL;
 
-            int depth = 0;
             if (token = strstr(input, "perft")) {
-                depth = atoi(token + 6);
+                int depth = atoi(token + 6);
                 print_divided_perft(depth);
                 continue;
             }
 
-            if (token = strstr(input, "wtime")) info.wtime = atoi(token + 6);
-            if (token = strstr(input, "btime")) info.btime = atoi(token + 6);
-            if (token = strstr(input, "winc")) info.winc = atoi(token + 5);
-            if (token = strstr(input, "binc")) info.binc = atoi(token + 5);
-            if (token = strstr(input, "movestogo")) info.movestogo = atoi(token + 10);
-            if (token = strstr(input, "depth")) info.depth = atoi(token + 6);
-            if (token = strstr(input, "nodes")) info.nodes = atoi(token + 6);
-            if (token = strstr(input, "movetime")) info.movetime = atoi(token + 9);
+            info.wtime = (token = strstr(input, "wtime")) ? atoi(token + 6) : 0;
+            info.btime = (token = strstr(input, "btime")) ? atoi(token + 6) : 0;
+            info.winc = (token = strstr(input, "winc")) ? atoi(token + 5) : 0;
+            info.binc = (token = strstr(input, "binc")) ? atoi(token + 5) : 0;
+            info.movestogo = (token = strstr(input, "movestogo")) ? atoi(token + 10) : 0;
+            info.depth = (token = strstr(input, "depth")) ? atoi(token + 6) : MAX_DEPTH;
+            info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
+            info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;
 
             #pragma omp parallel
             {
                 #pragma omp single
                 {
-                    clock_t start = clock();
-
-                    int depth = 5;
-                    Move pv[depth];
-                    Result result = negamax(depth, -MATE_SCORE, MATE_SCORE, pv);
-
-                    clock_t elapsed = clock() - start;
-                    double time = (double) elapsed / CLOCKS_PER_SEC;
-                    if (time == 0) time = .1;
-
-                    printf("info depth %d score cp %d nodes %llu nps %d time %d pv ",
-                           depth, result.score, nodes, (int) nodes/time, (int) time);
-                    for (int i = depth - 1; i >= 0; i--) {
-                        print_move(pv[i]);
-                        printf(" ");
-                    }
-                    printf("\n");
-                    printf("bestmove ");
-                    print_move(pv[depth - 1]);
-                    printf("\n");
+                    iterative_deepening();
                 }
             }
         }

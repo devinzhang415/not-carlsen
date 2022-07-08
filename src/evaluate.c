@@ -4,8 +4,6 @@
 
 
 extern Board board;
-extern Stack* stack;
-extern RTable rtable;
 
 
 /**

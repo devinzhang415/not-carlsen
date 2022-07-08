@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 
 
 enum squares {
@@ -18,7 +19,7 @@ enum squares {
 
 
 // Special characteristic of a move
-enum flags {
+enum move_flags {
     NONE, // No special flag
     PASS, // Null move
     CAPTURE,
@@ -31,16 +32,21 @@ enum flags {
 };
 
 
+// Transposition score types
+enum tt_flags {
+    EXACT,
+    LOWERBOUND,
+    UPPERBOUND
+};
+
+
 /**
  * Representation of a move using:
- * - square piece is moving from
- * - square piece is moving to
- * - any special characteristic of the move
  */
 typedef struct Move {
-    int from;
-    int to;
-    int flag;
+    int from; // square piece is moving from
+    int to; // square piece is moving to
+    int flag; // any special characteristic of the move
 } Move;
 
 
@@ -100,13 +106,37 @@ typedef struct Stack {
 
 
 /**
+ * Hashtable entry to store transposition of a position
+ * (a previous stored result).
+ */
+typedef struct TTable_Entry {
+    uint64_t key;
+    int depth;
+    Move move;
+    int score;
+    int flag;
+    bool initialized; // deleted or not
+} TTable_Entry;
+
+
+/**
+ * Transposition hashtable structure.
+ */
+typedef struct TTable {
+    uint64_t size;
+    uint64_t capacity;
+    TTable_Entry* entries;
+} TTable;
+
+
+/**
  * Hashtable entry to store number of times position has occured for
  * threefold repetition purposes.
  */
 typedef struct RTable_Entry {
     uint64_t key;
     int num;
-    bool initalized; // deleted or not
+    bool initialized; // deleted or not
 } RTable_Entry;
 
 
@@ -118,6 +148,28 @@ typedef struct RTable {
     uint64_t capacity;
     RTable_Entry* entries;
 } RTable;
+
+
+/**
+ * Parameters to search with for UCI.
+ * Descriptions from http://wbec-ridderkerk.nl/html/UCIProtocol.html
+ * 
+ * TODO missing commands:
+ * - searchmoves
+ * - ponder
+ * - mate
+ * - infinite
+ */
+typedef struct Info {
+    clock_t wtime; // white has x msec left on the clock
+    clock_t btime; // black has x msec left on the clock
+    clock_t winc; // white increment per move in mseconds if x > 0
+    clock_t binc; // black increment per move in mseconds if x > 0
+    int movestogo; // there are x moves to the next time control
+    int depth; // search x plies only
+    int nodes; // search x nodes only 
+    clock_t movetime; // search exactly x mseconds
+} Info;
 
 
 /**
@@ -199,8 +251,9 @@ extern uint64_t ZOBRIST_VALUES[781];
 
 extern const Move NULL_MOVE;
 extern const int INVALID;
-extern const int MAX_MOVE_NUM;
 extern const int MATE_SCORE;
+extern const double MAX_LOAD_FACTOR;
+extern const int MAX_DEPTH;
 
 
 uint64_t get_ray_between(int square1, int square2);
@@ -220,6 +273,8 @@ void print_bb(uint64_t bb);
 void print_move(Move move);
 void printf_move_pre(Move move);
 void printf_move_post(Move move);
+
+void print_info(int depth, int score, uint64_t nodes, double time, Move* pv);
 
 int rank_of(int square);
 int file_of(int file);

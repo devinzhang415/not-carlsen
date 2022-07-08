@@ -8,5 +8,7 @@
 | `rtable` | Repetition table procedures |
 | `search` | Game tree search related functions |
 | `stack` | Move stack procedures |
+| `timeman` | Time management functions |
+| `ttable` | Transposition table procedures |
 | `uci` | Main loop, communication protocol with the GUI, and table initiations |
-| `util` | Structure, constant, table, and helper functions |
+| `util` | Structures, constants, tables, and helper functions |

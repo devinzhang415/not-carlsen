@@ -3,22 +3,28 @@
 #include "rtable.h"
 
 
-extern Board board;
-extern Stack* stack;
 extern RTable rtable;
+
+// typedef struct RTable_Entry {
+//     uint64_t key;
+//     int num;
+//     bool initialized;
+// } RTable_Entry;
+
+// typedef struct RTable {
+//     uint64_t size;
+//     uint64_t capacity;
+//     RTable_Entry* entries;
+// } RTable;
 
 
 const uint64_t RTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
-const double MAX_LOAD_FACTOR = .75;
 
 
 /**
  * Initalizes the threefold repetition hashtable.
  */
 void init_rtable(void) {
-    rtable.entries = NULL;
-    free(rtable.entries);
-    
     rtable.size = 0;
     rtable.capacity = RTABLE_INIT_CAPACITY;
     rtable.entries = malloc(RTABLE_INIT_CAPACITY * sizeof(RTable_Entry));
@@ -26,17 +32,15 @@ void init_rtable(void) {
 
 
 /**
- * @param key 
- * @return the amount of times the position has occured. 
+ * @param key the zobrist hash of the position. 
+ * @return the rtable entry for the key. If it does
+ * not exist, return an uninitialized entry.
  */
-int rtable_get(uint64_t key) {
+RTable_Entry rtable_get(uint64_t key) {
     for (int i = 0; i < rtable.capacity; i++) {
         int index = (key + i) % rtable.capacity;
-        if (!rtable.entries[index].initalized) {
-            return 0;
-        }
-        if (rtable.entries[index].key == key) {
-            return rtable.entries[index].num;
+        if (!rtable.entries[index].initialized || rtable.entries[index].key == key) {
+            return rtable.entries[index];
         }
     }
 }
@@ -50,12 +54,12 @@ void rtable_add(uint64_t key) {
     // Resize
     if (((double) rtable.size / rtable.capacity) > MAX_LOAD_FACTOR) {
         rtable.capacity *= 2;
-        rtable.entries = realloc(rtable.entries, rtable.capacity * sizeof(RTable_Entry));
+        rtable.entries = realloc(rtable.entries, sizeof(RTable_Entry) * rtable.capacity);
     }
 
     for (int i = 0; i < rtable.capacity; i++) {
         int index = (key + i) % rtable.capacity;
-        if (rtable.entries[index].initalized) {
+        if (rtable.entries[index].initialized) {
             if (rtable.entries[index].key == key) {
                 rtable.entries[index].num++;
                 break;
@@ -63,7 +67,7 @@ void rtable_add(uint64_t key) {
         } else {
             rtable.entries[index].key = key;
             rtable.entries[index].num = 1;
-            rtable.entries[index].initalized = true;
+            rtable.entries[index].initialized = true;
             rtable.size++;
             break;
         }
@@ -73,7 +77,7 @@ void rtable_add(uint64_t key) {
 
 /**
  * Decrements the number of times the position has occured in the table.
- * @param key 
+ * @param key the zobrist hash of the position. 
  */
 void rtable_remove(uint64_t key) {
     for (int i = 0; i < rtable.capacity; i++) {
@@ -81,12 +85,12 @@ void rtable_remove(uint64_t key) {
         if (rtable.entries[index].key == key) {
             rtable.entries[index].num--;
             if (rtable.entries[index].num <= 0) {
-                rtable.entries[index].initalized = false;
+                rtable.entries[index].initialized = false;
                 rtable.size--;
             }
             break;
         }
-        if (!rtable.entries[index].initalized) {
+        if (!rtable.entries[index].initialized) {
             break;
         }
     }
