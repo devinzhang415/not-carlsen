@@ -11,7 +11,6 @@ void init_ttable(void);
 
 TTable_Entry ttable_get(uint64_t key);
 void ttable_add(uint64_t key, int depth, Move move, int score, int flag);
-void ttable_remove(uint64_t key);
 
 
 #endif

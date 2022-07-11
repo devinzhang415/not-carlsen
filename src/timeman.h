@@ -5,7 +5,7 @@
 #include "stdbool.h"
 
 
-bool can_exit(bool color, clock_t cur_movetime, int cur_nodes);
+bool can_exit(bool color, clock_t start_time, int cur_nodes);
 
 
 #endif

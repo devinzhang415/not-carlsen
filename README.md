@@ -25,6 +25,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - Fail soft alpha-beta negamax
 - Transposition table
 - Iterative deepening
+- MVV-LVA move ordering
 - Time manager
 - Material score evaluation
 - Threefold repetition hashtable
@@ -36,6 +37,8 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 > Adapted the repetition hashtable interface to a transposition table.
 >
 > This allowed me to add iterative deepening and a time manager as well.
+>
+> Implemented a move ordering scheme.
 
 7/7/22 v1.0.0
 > Implemented the Universal Chess Interface (UCI) engine-to-GUI communication protocol.

@@ -201,22 +201,22 @@ void make_move(Move move) {
                 clear_bit(&board.w_pawns, to);
                 board.zobrist ^= ZOBRIST_VALUES[64*0 + to];
                 switch (flag) {
-                    case PROMOTION_QUEEN:
+                    case PR_QUEEN:
                         set_bit(&board.w_queens, to);
                         board.mailbox[to] = 'Q';
                         board.zobrist ^= ZOBRIST_VALUES[64*4 + to];
                         break;
-                    case PROMOTION_ROOK:
+                    case PR_ROOK:
                         set_bit(&board.w_rooks, to);
                         board.mailbox[to] = 'R';
                         board.zobrist ^= ZOBRIST_VALUES[64*3 + to];
                         break;
-                    case PROMOTION_BISHOP:
+                    case PR_BISHOP:
                         set_bit(&board.w_bishops, to);
                         board.mailbox[to] = 'B';
                         board.zobrist ^= ZOBRIST_VALUES[64*2 + to];
                         break;
-                    case PROMOTION_KNIGHT:
+                    case PR_KNIGHT:
                         set_bit(&board.w_knights, to);
                         board.mailbox[to] = 'N';
                         board.zobrist ^= ZOBRIST_VALUES[64*1 + to];
@@ -283,22 +283,22 @@ void make_move(Move move) {
                 clear_bit(&board.b_pawns, to);
                 board.zobrist ^= ZOBRIST_VALUES[64*6 + to];
                 switch (flag) {
-                    case PROMOTION_QUEEN:
+                    case PR_QUEEN:
                         set_bit(&board.b_queens, to);
                         board.mailbox[to] = 'q';
                         board.zobrist ^= ZOBRIST_VALUES[64*10 + to];
                         break;
-                    case PROMOTION_ROOK:
+                    case PR_ROOK:
                         set_bit(&board.b_rooks, to);
                         board.mailbox[to] = 'r';
                         board.zobrist ^= ZOBRIST_VALUES[64*9 + to];
                         break;
-                    case PROMOTION_BISHOP:
+                    case PR_BISHOP:
                         set_bit(&board.b_bishops, to);
                         board.mailbox[to] = 'b';
                         board.zobrist ^= ZOBRIST_VALUES[64*8 + to];
                         break;
-                    case PROMOTION_KNIGHT:
+                    case PR_KNIGHT:
                         set_bit(&board.b_knights, to);
                         board.mailbox[to] = 'n';
                         board.zobrist ^= ZOBRIST_VALUES[64*7 + to];

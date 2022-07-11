@@ -383,14 +383,26 @@ int gen_legal_moves(Move* moves, bool color) {
             int to = pull_lsb(&moves_bb);
 
             if (piece == 'P' && (rank_of(to) == 0 || rank_of(to) == 7)) { // Add all promotions
-                Move queen_promotion = {from, to, PROMOTION_QUEEN};
-                moves[i++] = queen_promotion;
-                Move rook_promotion = {from, to, PROMOTION_ROOK};
-                moves[i++] = rook_promotion;
-                Move bishop_promotion = {from, to, PROMOTION_BISHOP};
-                moves[i++] = bishop_promotion;
-                Move knight_promotion = {from, to, PROMOTION_KNIGHT};
-                moves[i++] = knight_promotion;
+                if (board.mailbox[to] == '-') {
+                    Move queen_promotion = {from, to, PR_QUEEN};
+                    moves[i++] = queen_promotion;
+                    Move rook_promotion = {from, to, PR_ROOK};
+                    moves[i++] = rook_promotion;
+                    Move bishop_promotion = {from, to, PR_BISHOP};
+                    moves[i++] = bishop_promotion;
+                    Move knight_promotion = {from, to, PR_KNIGHT};
+                    moves[i++] = knight_promotion;
+                } else {
+                    Move queen_promotion = {from, to, PC_QUEEN};
+                    moves[i++] = queen_promotion;
+                    Move rook_promotion = {from, to, PC_ROOK};
+                    moves[i++] = rook_promotion;
+                    Move bishop_promotion = {from, to, PC_BISHOP};
+                    moves[i++] = bishop_promotion;
+                    Move knight_promotion = {from, to, PC_KNIGHT};
+                    moves[i++] = knight_promotion;
+                }
+                
             } else {
                 int flag = get_flag(color, piece, from, to);
                 Move move = {from, to, flag};

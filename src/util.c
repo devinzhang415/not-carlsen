@@ -186,19 +186,19 @@ char* parse_move(Move move) {
     str[3] = '1' + rank_of(move.to);
 
     switch (move.flag) {
-        case PROMOTION_QUEEN:
+        case PR_QUEEN:
             str[4] = 'q';
             str[5] = '\0';
             break;
-        case PROMOTION_ROOK:
+        case PR_ROOK:
             str[4] = 'r';
             str[5] = '\0';
             break;
-        case PROMOTION_KNIGHT:
+        case PR_KNIGHT:
             str[4] = 'n';
             str[5] = '\0';
             break;
-        case PROMOTION_BISHOP:
+        case PR_BISHOP:
             str[4] = 'b';
             str[5] = '\0';
             break;
@@ -275,16 +275,16 @@ void print_move(Move move) {
     printf("%d", rank_of(move.to) + 1);
     
     switch (move.flag) {
-        case PROMOTION_QUEEN:
+        case PR_QUEEN:
             printf("q");
             break;
-        case PROMOTION_ROOK:
+        case PR_ROOK:
             printf("r");
             break;
-        case PROMOTION_BISHOP:
+        case PR_BISHOP:
             printf("b");
             break;
-        case PROMOTION_KNIGHT:
+        case PR_KNIGHT:
             printf("n");
             break;
     }
@@ -304,16 +304,16 @@ void printf_move_pre(Move move) {
         printf("%d", rank_of(move.to) + 1);
 
         switch (move.flag) {
-            case PROMOTION_QUEEN:
+            case PR_QUEEN:
                 printf("q");
                 break;
-            case PROMOTION_ROOK:
+            case PR_ROOK:
                 printf("r");
                 break;
-            case PROMOTION_BISHOP:
+            case PR_BISHOP:
                 printf("b");
                 break;
-            case PROMOTION_KNIGHT:
+            case PR_KNIGHT:
                 printf("n");
                 break;
         }
@@ -332,22 +332,22 @@ void printf_move_pre(Move move) {
  */
 void printf_move_post(Move move) {
     switch (move.flag) {
-        case PROMOTION_QUEEN:
+        case PR_QUEEN:
             printf("%c", 104 - (7 - file_of(move.to)));
             printf("%d", rank_of(move.to) + 1);
             printf("q");
             break;
-        case PROMOTION_ROOK:
+        case PR_ROOK:
             printf("%c", 104 - (7 - file_of(move.to)));
             printf("%d", rank_of(move.to) + 1);
             printf("r");
             break;
-        case PROMOTION_BISHOP:
+        case PR_BISHOP:
             printf("%c", 104 - (7 - file_of(move.to)));
             printf("%d", rank_of(move.to) + 1);
             printf("b");
             break;
-        case PROMOTION_KNIGHT:
+        case PR_KNIGHT:
             printf("%c", 104 - (7 - file_of(move.to)));
             printf("%d", rank_of(move.to) + 1);
             printf("n");

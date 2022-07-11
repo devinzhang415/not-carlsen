@@ -28,6 +28,7 @@ const uint64_t TTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficie
  * Initalizes the transposition table.
  */
 void init_ttable(void) {
+    free(ttable.entries);
     ttable.size = 0;
     ttable.capacity = TTABLE_INIT_CAPACITY;
     ttable.entries = malloc(TTABLE_INIT_CAPACITY * sizeof(TTable_Entry));
@@ -66,14 +67,12 @@ void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
 
     for (int i = 0; i < ttable.capacity; i++) {
         int index = (key + i) % ttable.capacity;
-        if (ttable.entries[index].initialized) {  
-            if (ttable.entries[index].key == key) { // Replace existing entry
-                ttable.entries[index].depth = depth;
-                ttable.entries[index].move = move;
-                ttable.entries[index].score = score;
-                ttable.entries[index].flag = flag;
-                break;
-            }
+        if (ttable.entries[index].initialized && ttable.entries[index].key == key) {  // Replace existing entry
+            ttable.entries[index].depth = depth;
+            ttable.entries[index].move = move;
+            ttable.entries[index].score = score;
+            ttable.entries[index].flag = flag;
+            break;
         } else {
             ttable.entries[index].key = key;
             ttable.entries[index].depth = depth;
@@ -82,24 +81,6 @@ void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
             ttable.entries[index].flag = flag;
             ttable.entries[index].initialized = true;
             ttable.size++;
-            break;
-        }
-    }
-}
-
-
-/**
- * Removes the entry from the table.
- * @param key the zobrist hash of the position. 
- */
-void ttable_remove(uint64_t key) {
-    for (int i = 0; i < ttable.capacity; i++) {
-        int index = (key + i) % ttable.capacity;
-        if (!ttable.entries[index].initialized) {
-            break;
-        }
-        if (ttable.entries[index].key == key) {
-            ttable.entries[index].initialized = false;
             break;
         }
     }

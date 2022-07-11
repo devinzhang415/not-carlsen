@@ -25,6 +25,7 @@ const uint64_t RTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficie
  * Initalizes the threefold repetition hashtable.
  */
 void init_rtable(void) {
+    free(rtable.entries);
     rtable.size = 0;
     rtable.capacity = RTABLE_INIT_CAPACITY;
     rtable.entries = malloc(RTABLE_INIT_CAPACITY * sizeof(RTable_Entry));

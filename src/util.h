@@ -25,10 +25,14 @@ enum move_flags {
     CAPTURE,
     EN_PASSANT,
     CASTLING,
-    PROMOTION_KNIGHT,
-    PROMOTION_BISHOP,
-    PROMOTION_ROOK,
-    PROMOTION_QUEEN
+    PR_KNIGHT,
+    PR_BISHOP,
+    PR_ROOK,
+    PR_QUEEN,
+    PC_KNIGHT, // Promotion that is also a capture
+    PC_BISHOP,
+    PC_ROOK,
+    PC_QUEEN
 };
 
 

@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include "time.h"
 #include "search.h"
 #include "util.h"
@@ -23,8 +25,8 @@ extern Info info;
  * - Transposition table
  * 
  * @param depth how many ply to search.
- * @param alpha lowerbound of the score. Initially -inf
- * @param beta upperbound of the score. Initially inf
+ * @param alpha lowerbound of the score. Initially -MATE_SCORE.
+ * @param beta upperbound of the score. Initially MATE_SCORE.
  * @param color the side to search for a move for.
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
@@ -51,8 +53,7 @@ Result negamax(int depth, int alpha, int beta, bool color, clock_t start, uint64
     }
     int old_alpha = alpha;
 
-    clock_t elapsed = clock() - start;
-    if (depth <= 0 || is_game_over() || can_exit(color, elapsed, *nodes)) {
+    if (depth <= 0 || is_game_over() || can_exit(color, start, *nodes)) {
         (*nodes)++;
         int score = eval(board.turn);
         Result result = {NULL_MOVE, score};
@@ -64,6 +65,7 @@ Result negamax(int depth, int alpha, int beta, bool color, clock_t start, uint64
 
         Move moves[MAX_MOVE_NUM];
         int n = gen_legal_moves(moves, board.turn);
+        qsort(moves, n, sizeof(Move), _cmp_moves);
 
         for (int i = 0; i < n; i++) {
             push(moves[i]);
@@ -96,6 +98,95 @@ Result negamax(int depth, int alpha, int beta, bool color, clock_t start, uint64
 
 
 /**
+ * Comparsion function for sorting purposes between two moves.
+ * @param elem1 
+ * @param elem2 
+ * @return int
+ */
+int _cmp_moves(const void* elem1, const void* elem2) {
+    Move move1 = *((Move*) elem1);
+    Move move2 = *((Move*) elem2);
+    int move1_score = _score_move(move1);
+    int move2_score = _score_move(move2);
+    return (move2_score - move1_score);
+}
+
+
+/**
+ * Rates a move for move ordering purposes.
+ * Uses the following move ordering:
+ * - Winning captures (low value piece captures high value piece) | 100 <= score <= 500
+ * - Promotions / Equal captures (piece captured and capturing have the same value) | score = 0
+ * - Losing captures (high value piece captures low value piece) | -500 <= score <= -100
+ * - All others | score = -1000
+ * 
+ * Pieces have the following values:
+ * - Pawn: 100
+ * - Knight: 200
+ * - Bishop: 300
+ * - Rook: 400
+ * - Queen: 500
+ * - King: 600
+ * 
+ * TODO
+ * hash move
+ *
+ * @param move 
+ * @return the value of the move. 
+ */
+static int _score_move(Move move) {
+    switch (move.flag) {
+        case NONE:
+            return -1000;
+        case CASTLING:
+            return -1000;
+        case PR_KNIGHT:
+            return 0;
+        case PR_BISHOP:
+            return 0;
+        case PR_ROOK:
+            return 0;
+        case PR_QUEEN:
+            return 0;
+        case EN_PASSANT:
+            return 0;
+        case CAPTURE:
+        case PC_KNIGHT:
+        case PC_BISHOP:
+        case PC_ROOK:
+        case PC_QUEEN:
+            char attacker = toupper(board.mailbox[move.from]);
+            char victim = toupper(board.mailbox[move.to]);
+            int attacker_score = _get_piece_score(attacker);
+            int victim_score = _get_piece_score(victim);;
+            return (victim_score - attacker_score);
+    }
+}
+
+
+/**
+ * @param piece 
+ * @return the _score_move value of the piece. 
+ */
+static int _get_piece_score(char piece) {
+    switch (piece) {
+        case 'P':
+            return 100;
+        case 'N':
+            return 200;
+        case 'B':
+            return 300;
+        case 'R':
+            return 400;
+        case 'Q':
+            return 500;
+        case 'K':
+            return 600;
+    }
+}
+
+
+/**
  * Searches the position with iterative depths.
  * @return the (best move, best score) pair.  
  */
@@ -110,8 +201,7 @@ Result iterative_deepening() {
 
     int d = 0;
     for (d = 1; d <= info.depth; d++) {
-        elapsed = clock() - start;
-        if (can_exit(board.turn, elapsed, nodes)) break;
+        if (can_exit(board.turn, start, nodes)) break;
 
         result = negamax(d, -MATE_SCORE, MATE_SCORE, board.turn, start, &nodes, pv);
 
@@ -119,7 +209,7 @@ Result iterative_deepening() {
         time = (double) elapsed / CLOCKS_PER_SEC;
         if (time == 0) time = .1;
 
-        print_info(d, result.score, nodes, time, pv);
+        print_info(d, result.score, nodes, time, pv); // TODO pv output is very wack
         printf("\n");
     }
     d--;
