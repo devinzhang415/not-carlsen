@@ -42,14 +42,14 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 >
 > Fixed bug involving bad moves being played due to an incomplete search from running out of time.
 
-7/8/22 v1.1.0
+7/8/22 v1.1
 > Adapted the repetition hashtable interface to a transposition table.
 >
 > This allowed me to add iterative deepening and a time manager as well.
 >
 > Implemented a move ordering scheme.
 
-7/7/22 v1.0.0
+7/7/22 v1.0
 > Implemented the Universal Chess Interface (UCI) engine-to-GUI communication protocol.
 >
 > Quickly put together a basic negamax and material evaluation function. Engine officially able to play chess!
@@ -83,10 +83,10 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 >
 > Switching to perft bulk counting adjusts speed to 24 million nps.
 
-6/22/22 v0.4.0
+6/22/22 v0.4
 > Successfully implemented a legal move generator. Optimizations and bug fixes still need to be made, but I am extremely happy with the speed at which I was able to implement this considering my previous attempt failed after a few days worth of effort. The coming updates will focus on speeding up this generator and squashing perft mismatches.
 
-6/21/22 v0.3.0
+6/21/22 v0.3
 > Added threefold repetition and 50-move rule detection.
 
 6/15/22 v0.2.6
@@ -123,7 +123,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 6/5/22 v0.2.1
 > Changed make/unmake to make/copy for move pushing and popping.
 
-6/2/22 v0.2.0
+6/2/22 v0.2
 > Implemented a pseudolegal move generator and move stack.
 >
 > Changed pawn move generator from setwise to individual.
@@ -144,7 +144,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 >
 > Defined bit attack maps for knights, bishops, and rooks from all squares.
 
-3/26/22 v0.1.0
+3/26/22 v0.1
 > Implemented complete board initialization.
 
 3/22/22 v0.0.1
