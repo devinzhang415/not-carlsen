@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <omp.h>
+#include <pthread.h>
 #include <time.h>
 #include <ctype.h>
 #include "uci.h"
@@ -22,8 +22,6 @@ Info info;
 
 
 int main(void) {
-    omp_set_dynamic(0);
-    omp_set_num_threads(1);
     srand(time(NULL));
     init_bishop_attacks();
     init_rook_attacks();
@@ -125,17 +123,14 @@ int main(void) {
             info.winc = (token = strstr(input, "winc")) ? atoi(token + 5) : 0;
             info.binc = (token = strstr(input, "binc")) ? atoi(token + 5) : 0;
             info.movestogo = (token = strstr(input, "movestogo")) ? atoi(token + 10) : 0;
-            info.depth = (token = strstr(input, "depth")) ? atoi(token + 6) : MAX_DEPTH;
+            // info.depth = (token = strstr(input, "depth")) ? atoi(token + 6) : MAX_DEPTH;
+            info.depth = (token = strstr(input, "depth")) ? atoi(token + 6) : 7;
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;
 
-            #pragma omp parallel // TODO isnt working, cant input while function is running
-            {
-                #pragma omp single
-                {
-                    iterative_deepening(); // does weird ass moves
-                }
-            }
+            pthread_t thread;
+            pthread_create(&thread, NULL, iterative_deepening, NULL);
+            pthread_join(thread, NULL);
         }
 
         else if (!strncmp(input, "quit", 4)) {

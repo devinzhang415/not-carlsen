@@ -39,18 +39,6 @@ void init_board(char* fen) {
     board.b_rooks = 0;
     board.b_queens = 0;
     board.b_king = 0;
-    board.bitboards[0] = &board.w_pawns;
-    board.bitboards[1] = &board.w_knights;
-    board.bitboards[2] = &board.w_bishops;
-    board.bitboards[3] = &board.w_rooks;
-    board.bitboards[4] = &board.w_queens;
-    board.bitboards[5] = &board.w_king;
-    board.bitboards[6] = &board.b_pawns;
-    board.bitboards[7] = &board.b_knights;
-    board.bitboards[8] = &board.b_bishops;
-    board.bitboards[9] = &board.b_rooks;
-    board.bitboards[10] = &board.b_queens;
-    board.bitboards[11] = &board.b_king;
     for (int rank = 7; rank >= 0; rank--) {
         char* fen_board = strtok_r(token, "/", &token);
         int file = 0;
@@ -451,7 +439,43 @@ static bool _is_fifty_move_rule(void) {
  * @return a pointer to the bitboard of the piece.
  */
 uint64_t* get_bitboard(char piece) {
-    return board.bitboards[parse_piece(piece)];
+    switch (piece) {
+        case 'P':
+            return &board.w_pawns;
+        case 'N':
+            return &board.w_knights;
+        case 'B':
+            return &board.w_bishops;
+        case 'R':
+            return &board.w_rooks;
+        case 'Q':
+            return &board.w_queens;
+        case 'K':
+            return &board.w_king;
+        case 'p':
+            return &board.b_pawns;
+        case 'n':
+            return &board.b_knights;
+        case 'b':
+            return &board.b_bishops;
+        case 'r':
+            return &board.b_rooks;
+        case 'q':
+            return &board.b_queens;
+        case 'k':
+            return &board.b_king;
+        default:
+            return NULL;
+    }
+}
+
+
+/**
+ * @param color 
+ * @return a copy of the occupied bitboard of the color.
+ */
+uint64_t get_occ_bitboard(bool color) {
+    return (color == WHITE) ? board.w_occupied : board.b_occupied;
 }
 
 

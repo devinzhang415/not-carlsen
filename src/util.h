@@ -45,12 +45,15 @@ enum tt_flags {
 
 
 /**
- * Representation of a move using:
+ * Representation of a move.
+ * 
+ * TODO
+ * Bitfields dont seem faster?
  */
 typedef struct Move {
-    int from; // square piece is moving from
-    int to; // square piece is moving to
-    int flag; // any special characteristic of the move
+    unsigned int from : 6; // square piece is moving from
+    unsigned int to : 6; // square piece is moving to
+    unsigned int flag : 4; // any special characteristic of the move
 } Move;
 
 
@@ -76,8 +79,6 @@ typedef struct Board {
     uint64_t occupied;
     uint64_t w_occupied;
     uint64_t b_occupied;
-
-    uint64_t* bitboards[12]; // all bitboards besides the occupancies
 
     int w_king_square;
     int b_king_square;

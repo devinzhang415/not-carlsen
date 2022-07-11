@@ -28,11 +28,18 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - MVV-LVA move ordering
 - Time manager
 - Material score evaluation
+- PSQT evaluation
+- Tapered evaluation
 - Threefold repetition hashtable
 
 ------
 
 ## Devlog
+7/11/22 v1.2
+> Switched multithreading frameworks from OpenMP to Pthreads to take in UCI input while a search is running.
+>
+> Added PSQT and tapered evaluation. For now, this will be all the evaluation features, focusing on a higher depth paradigm.
+
 7/8/22 v1.1.0
 > Adapted the repetition hashtable interface to a transposition table.
 >

@@ -3,7 +3,7 @@
 | File | Description |
 | --- | --- |
 | `board` | Functions associated with getting the board state |
-| `evaluate` | Numerical analysis of the board |
+| `evaluate` | Numerical analysis of the board and piece value constants |
 | `movegen` | Tables and functions for all move generation and perft |
 | `rtable` | Repetition table procedures |
 | `search` | Game tree search related functions |

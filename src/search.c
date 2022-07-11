@@ -19,21 +19,57 @@ extern Info info;
 
 
 /**
+ * Searches the position with iterative depths.
+ * Returns void* for multithreading.
+ */
+void* iterative_deepening() {
+    clock_t start = clock();
+    clock_t elapsed;
+    double time;
+
+    uint64_t nodes = 0;
+    Move pv[info.depth];
+    Result result;
+
+    int d = 0;
+    for (d = 1; d <= info.depth; d++) {
+        // if (can_exit(board.turn, start, nodes)) break; // TODO timeman causes funky moves and long search times on unused extra depth
+
+        result = negamax(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
+
+        elapsed = clock() - start;
+        time = (double) elapsed / CLOCKS_PER_SEC;
+        if (time == 0) time = .1;
+
+        print_info(d, result.score, nodes, time, pv); // TODO pv output is very wack
+        printf("\n");
+    }
+    d--;
+
+    printf("\nbestmove ");
+    print_move(pv[d - 1]);
+    printf("\n");
+}
+
+
+/**
  * Searches the possible moves using:
  * - Negamax
  * - Alpha-beta pruning (fail soft)
  * - Transposition table
+ * - Move ordering
  * 
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
+ * @param node_num which node this is at the same depth, in moves played order.
  * @param color the side to search for a move for.
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @param pv the best line of moves found, in reverse order.
  * @return the (best move, best score) pair. 
  */
-Result negamax(int depth, int alpha, int beta, bool color, clock_t start, uint64_t* nodes, Move* pv) {
+Result negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t start, uint64_t* nodes, Move* pv) {
     // Search for position in the transposition table
     TTable_Entry tt = ttable_get(board.zobrist);
     if (tt.initialized && tt.depth >= depth) {
@@ -41,7 +77,7 @@ Result negamax(int depth, int alpha, int beta, bool color, clock_t start, uint64
         Result result = {tt.move, tt.score};
         switch (tt.flag) {
             case EXACT:
-                return result;
+                if (node_num != 0) return result;
             case LOWERBOUND:
                 if (tt.score > alpha) alpha = tt.score;
                 break;
@@ -49,11 +85,12 @@ Result negamax(int depth, int alpha, int beta, bool color, clock_t start, uint64
                 if (tt.score < beta) beta = tt.score;
                 break;
         }
-        if (alpha >= beta) return result;
+        if (node_num != 0 && alpha >= beta) return result;
     }
     int old_alpha = alpha;
 
-    if (depth <= 0 || is_game_over() || can_exit(color, start, *nodes)) {
+    // if (depth <= 0 || is_game_over() || can_exit(color, start, *nodes)) { // TODO timeman causes funky moves
+    if (depth <= 0 || is_game_over()) {
         (*nodes)++;
         int score = eval(board.turn);
         Result result = {NULL_MOVE, score};
@@ -69,7 +106,7 @@ Result negamax(int depth, int alpha, int beta, bool color, clock_t start, uint64
 
         for (int i = 0; i < n; i++) {
             push(moves[i]);
-            score = -negamax(depth - 1, -beta, -alpha, color, start, nodes, pv).score;
+            score = -negamax(depth - 1, -beta, -alpha, i, color, start, nodes, pv).score;
             pop();
 
             if (score > best_score) {
@@ -183,40 +220,4 @@ static int _get_piece_score(char piece) {
         case 'K':
             return 600;
     }
-}
-
-
-/**
- * Searches the position with iterative depths.
- * @return the (best move, best score) pair.  
- */
-Result iterative_deepening() {
-    clock_t start = clock();
-    clock_t elapsed;
-    double time;
-
-    uint64_t nodes = 0;
-    Move pv[info.depth];
-    Result result;
-
-    int d = 0;
-    for (d = 1; d <= info.depth; d++) {
-        if (can_exit(board.turn, start, nodes)) break;
-
-        result = negamax(d, -MATE_SCORE, MATE_SCORE, board.turn, start, &nodes, pv);
-
-        elapsed = clock() - start;
-        time = (double) elapsed / CLOCKS_PER_SEC;
-        if (time == 0) time = .1;
-
-        print_info(d, result.score, nodes, time, pv); // TODO pv output is very wack
-        printf("\n");
-    }
-    d--;
-
-    printf("\nbestmove ");
-    print_move(pv[d - 1]);
-    printf("\n");
-
-    return result;
 }
