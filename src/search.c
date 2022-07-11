@@ -31,7 +31,7 @@ void* iterative_deepening() {
     double time;
 
     uint64_t nodes = 0;
-    Result result;
+    Result result = {NULL_MOVE, 0};
     Move main_pv[info.depth];
     Move pv[info.depth];
 
@@ -39,8 +39,6 @@ void* iterative_deepening() {
 
     int d = 0;
     for (d = 1; d <= info.depth; d++) {
-        if (can_exit(board.turn, start, nodes)) break;
-
         result = negamax(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
 
         if (pv[info.depth - 1].flag == PASS) break;
