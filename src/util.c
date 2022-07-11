@@ -100,7 +100,7 @@ uint64_t ZOBRIST_VALUES[781];
 // Misc
 const Move NULL_MOVE = {A1, A1, PASS};
 const int INVALID = -1;
-const int MATE_SCORE = 99999;
+const int MATE_SCORE = 20000;
 const double MAX_LOAD_FACTOR = .75; // max load factor for hashtables
 const int MAX_DEPTH = 256;
 
@@ -361,6 +361,7 @@ void printf_move_post(Move move) {
 }
 
 
+extern Info info;
 /**
  * Prints the search info to send to the GUI.
  * @param depth search depth in plies.
@@ -371,7 +372,7 @@ void printf_move_post(Move move) {
  */
 void print_info(int depth, int score, uint64_t nodes, double time, Move* pv) {
     printf("info depth %d score cp %d nodes %llu nps %.0f time %d pv ",
-            depth, score, nodes, nodes / time, (int) time);
+            depth, score, nodes, nodes / time, (int) time * 1000);
     for (int i = depth - 1; i >= 0; i--) {
         print_move(pv[i]);
         printf(" ");

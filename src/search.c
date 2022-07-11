@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 #include "time.h"
 #include "search.h"
 #include "util.h"
@@ -28,26 +29,32 @@ void* iterative_deepening() {
     double time;
 
     uint64_t nodes = 0;
-    Move pv[info.depth];
     Result result;
+    Move main_pv[info.depth];
+    Move pv[info.depth];
+
+    int weight = (board.turn == WHITE) ? 1 : -1;
 
     int d = 0;
     for (d = 1; d <= info.depth; d++) {
-        // if (can_exit(board.turn, start, nodes)) break; // TODO timeman causes funky moves and long search times on unused extra depth
+        if (can_exit(board.turn, start, nodes)) break;
 
         result = negamax(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
+
+        if (pv[info.depth - 1].flag == PASS) break;
+        memcpy(main_pv, pv, info.depth); // TODO can probbaly be optimized
 
         elapsed = clock() - start;
         time = (double) elapsed / CLOCKS_PER_SEC;
         if (time == 0) time = .1;
-
-        print_info(d, result.score, nodes, time, pv); // TODO pv output is very wack
+        
+        print_info(d, result.score * weight, nodes, time, pv); // TODO pv has duplicate entries
         printf("\n");
     }
     d--;
 
     printf("\nbestmove ");
-    print_move(pv[d - 1]);
+    print_move(main_pv[d - 1]);
     printf("\n");
 }
 
@@ -70,6 +77,12 @@ void* iterative_deepening() {
  * @return the (best move, best score) pair. 
  */
 Result negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t start, uint64_t* nodes, Move* pv) {
+    if (can_exit(color, start, *nodes)) { // TODO timeman
+        pv[info.depth - 1] = NULL_MOVE;
+        Result result = {NULL_MOVE, 0};
+        return result;
+    }
+
     // Search for position in the transposition table
     TTable_Entry tt = ttable_get(board.zobrist);
     if (tt.initialized && tt.depth >= depth) {
@@ -89,8 +102,13 @@ Result negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t
     }
     int old_alpha = alpha;
 
-    // if (depth <= 0 || is_game_over() || can_exit(color, start, *nodes)) { // TODO timeman causes funky moves
-    if (depth <= 0 || is_game_over()) {
+    if (is_draw()) {
+        (*nodes)++;
+        int score = 0;
+        Result result = {NULL_MOVE, score};
+        return result;
+    }
+    else if (depth <= 0) {
         (*nodes)++;
         int score = eval(board.turn);
         Result result = {NULL_MOVE, score};

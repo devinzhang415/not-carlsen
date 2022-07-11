@@ -239,7 +239,7 @@ uint64_t print_divided_perft(int depth) {
 
     for (int i = 0; i < n; i++) {
         push(moves[i]);
-        if (is_game_over()) break;
+        if (is_draw()) break;
 
         print_move(moves[i]);
         uint64_t nodes = _perft(depth - 1);
@@ -273,7 +273,7 @@ static uint64_t _perft(int depth) {
 
     for (int i = 0; i < n; i++) {
         push(moves[i]);
-        if (is_game_over()) break;
+        if (is_draw()) break;
 
         nodes += _perft(depth - 1);
         pop();

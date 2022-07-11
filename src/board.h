@@ -12,7 +12,7 @@ void make_move(Move move);
 bool is_check(bool color);
 bool is_attacked(bool color, int square);
 
-bool is_game_over(void);
+bool is_draw(void);
 static bool _is_threefold_rep(void);
 static bool _is_fifty_move_rule(void);
 
