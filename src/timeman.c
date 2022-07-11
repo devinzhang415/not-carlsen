@@ -24,7 +24,7 @@ bool can_exit(bool color, clock_t start_time, int cur_nodes) {
         return (elpased >= info.nodes);
     }
 
-    clock_t time_left = (color == WHITE) ? info.wtime : info.btime;
+    double time_left = (color == WHITE) ? info.wtime : info.btime;
     int moves_left = (info.movestogo > 0) ? info.movestogo : 40;
-    return (elpased >= (double) time_left / moves_left); // TODO better time manager
+    return (elpased >= time_left / moves_left); // TODO better time manager
 }

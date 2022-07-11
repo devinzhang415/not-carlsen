@@ -18,6 +18,8 @@ extern TTable ttable;
 
 extern Info info;
 
+Move tt_move; // Hash move from transposition table saved globally for move ordering
+
 
 /**
  * Searches the position with iterative depths.
@@ -88,6 +90,7 @@ Result negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t
     if (tt.initialized && tt.depth >= depth) {
         (*nodes)++;
         Result result = {tt.move, tt.score};
+        tt_move = tt.move;
         switch (tt.flag) {
             case EXACT:
                 if (node_num != 0) return result;
@@ -156,7 +159,9 @@ Result negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t
  * Comparsion function for sorting purposes between two moves.
  * @param elem1 
  * @param elem2 
- * @return int
+ * @return > 0 if move2 > move1 (has more potential)
+ *         = 0 if move2 = move1
+ *         < 0 if move2 < move1
  */
 int _cmp_moves(const void* elem1, const void* elem2) {
     Move move1 = *((Move*) elem1);
@@ -170,6 +175,7 @@ int _cmp_moves(const void* elem1, const void* elem2) {
 /**
  * Rates a move for move ordering purposes.
  * Uses the following move ordering:
+ * - Hash move } score = 1000
  * - Winning captures (low value piece captures high value piece) | 100 <= score <= 500
  * - Promotions / Equal captures (piece captured and capturing have the same value) | score = 0
  * - Losing captures (high value piece captures low value piece) | -500 <= score <= -100
@@ -182,14 +188,15 @@ int _cmp_moves(const void* elem1, const void* elem2) {
  * - Rook: 400
  * - Queen: 500
  * - King: 600
- * 
- * TODO
- * hash move
  *
  * @param move 
  * @return the value of the move. 
  */
 static int _score_move(Move move) {
+    if (move.to == tt_move.to && move.from == tt_move.from && move.flag == tt_move.flag) {
+        return 1000;
+    }
+    
     switch (move.flag) {
         case NONE:
             return -1000;
