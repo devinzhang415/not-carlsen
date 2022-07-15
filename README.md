@@ -39,6 +39,8 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 7/14/22 v1.3
 > Added quiescence search.
 >
+> Tests with MTD(f) have been unsuccessful. Compared with normal negamax, tournament results give an elo difference of 173.5 +/- 274.1, in favor of negamax.
+>
 > Added custom free() function for stacks to properly free every node instead of just the head.
 
 7/11/22 v1.2

@@ -276,8 +276,6 @@ int pop_count(uint64_t bb);
 void print_bb(uint64_t bb);
 
 void print_move(Move move);
-void printf_move_pre(Move move);
-void printf_move_post(Move move);
 
 void print_info(int depth, int score, uint64_t nodes, double time, Move* pv);
 

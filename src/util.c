@@ -287,76 +287,18 @@ void print_move(Move move) {
         case PR_KNIGHT:
             printf("n");
             break;
-    }
-}
-
-
-/**
- * Prints the move (before its been made) in algebraic notation.
- * Does not support disambiguating moves.
- * @param move the move to be made.
- */
-void printf_move_pre(Move move) {
-    char piece = toupper(board.mailbox[move.from]);
-
-    if (piece == 'P') {
-        printf("%c", 104 - (7 - file_of(move.to)));
-        printf("%d", rank_of(move.to) + 1);
-
-        switch (move.flag) {
-            case PR_QUEEN:
-                printf("q");
-                break;
-            case PR_ROOK:
-                printf("r");
-                break;
-            case PR_BISHOP:
-                printf("b");
-                break;
-            case PR_KNIGHT:
-                printf("n");
-                break;
-        }
-    } else {
-        printf("%c", piece);
-        printf("%c", 104 - (7 - file_of(move.to)));
-        printf("%d", rank_of(move.to) + 1);
-    }
-}
-
-
-/**
- * Prints the move (after its been made) in algebraic notation.
- * Does not support disambiguating moves.
- * @param move the move that has just been made.
- */
-void printf_move_post(Move move) {
-    switch (move.flag) {
-        case PR_QUEEN:
-            printf("%c", 104 - (7 - file_of(move.to)));
-            printf("%d", rank_of(move.to) + 1);
+        case PC_QUEEN:
             printf("q");
             break;
-        case PR_ROOK:
-            printf("%c", 104 - (7 - file_of(move.to)));
-            printf("%d", rank_of(move.to) + 1);
+        case PC_ROOK:
             printf("r");
             break;
-        case PR_BISHOP:
-            printf("%c", 104 - (7 - file_of(move.to)));
-            printf("%d", rank_of(move.to) + 1);
+        case PC_BISHOP:
             printf("b");
             break;
-        case PR_KNIGHT:
-            printf("%c", 104 - (7 - file_of(move.to)));
-            printf("%d", rank_of(move.to) + 1);
+        case PC_KNIGHT:
             printf("n");
             break;
-        default:
-            char piece = toupper(board.mailbox[move.to]);
-            if (piece != 'P') printf("%c", piece);
-            printf("%c", 104 - (7 - file_of(move.to)));
-            printf("%d", rank_of(move.to) + 1);
     }
 }
 

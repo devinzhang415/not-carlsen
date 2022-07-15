@@ -18,7 +18,6 @@ extern TTable ttable;
 
 extern Info info;
 
-const int MAX_Q_DEPTH = 5; // Maximum extra ply to search in quiescence to prevent stack overflow
 Move tt_move; // Hash move from transposition table saved globally for move ordering
 
 
@@ -40,7 +39,7 @@ void* iterative_deepening() {
 
     int d = 0;
     for (d = 1; d <= info.depth; d++) {
-        result = _negamax(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
+        result = _negamax(d, -MATE_SCORE, MATE_SCORE, board.turn, start, &nodes, pv);
 
         if (pv[info.depth - 1].flag == PASS) break; // On early exit, index info.depth - 1 is set to NULL_MOVE
         memcpy(main_pv, pv, info.depth); // TODO can probbaly be optimized
@@ -56,6 +55,8 @@ void* iterative_deepening() {
 
     printf("\nbestmove ");
     print_move(main_pv[d - 1]);
+    Move move = main_pv[d - 1];
+    printf("\nfrom %d to %d flag %d", move.from, move.to, move.flag);
     printf("\n");
 }
 
@@ -71,14 +72,13 @@ void* iterative_deepening() {
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
- * @param node_num which node this is at the same depth, in moves played order.
  * @param color the side to search for a move for.
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @param pv the best line of moves found, in reverse order.
  * @return the (best move, best score) pair. 
  */
-static Result _negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t start, uint64_t* nodes, Move* pv) {
+static Result _negamax(int depth, int alpha, int beta, bool color, clock_t start, uint64_t* nodes, Move* pv) {
     if (can_exit(color, start, *nodes)) {
         pv[info.depth - 1] = NULL_MOVE;
         Result result = {NULL_MOVE, 0};
@@ -93,7 +93,7 @@ static Result _negamax(int depth, int alpha, int beta, int node_num, bool color,
         tt_move = tt.move;
         switch (tt.flag) {
             case EXACT:
-                if (node_num != 0) return result;
+                return result;
             case LOWERBOUND:
                 if (tt.score > alpha) alpha = tt.score;
                 break;
@@ -101,7 +101,7 @@ static Result _negamax(int depth, int alpha, int beta, int node_num, bool color,
                 if (tt.score < beta) beta = tt.score;
                 break;
         }
-        if (node_num != 0 && alpha >= beta) return result;
+        if (alpha >= beta) return result;
     }
     int old_alpha = alpha;
 
@@ -112,8 +112,8 @@ static Result _negamax(int depth, int alpha, int beta, int node_num, bool color,
         return result;
     } else if (depth <= 0) {
         (*nodes)++;
-        // int score = eval(board.turn);
-        int score = _qsearch(MAX_Q_DEPTH, alpha, beta, color, start, nodes);
+        int score = eval(board.turn);
+        // int score = _qsearch(alpha, beta, color, start, nodes); // TODO causes overflow
         Result result = {NULL_MOVE, score};
         return result;
     } else {
@@ -127,7 +127,7 @@ static Result _negamax(int depth, int alpha, int beta, int node_num, bool color,
 
         for (int i = 0; i < n; i++) {
             push(moves[i]);
-            score = -_negamax(depth - 1, -beta, -alpha, i, color, start, nodes, pv).score;
+            score = -_negamax(depth - 1, -beta, -alpha, color, start, nodes, pv).score;
             pop();
 
             if (score > best_score) {
@@ -158,7 +158,6 @@ static Result _negamax(int depth, int alpha, int beta, int node_num, bool color,
 /**
  * Extends the search past depth 0 until there are no more captures.
  * 
- * @param depth max extra ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
  * @param color the side to search for a move for.
@@ -166,7 +165,7 @@ static Result _negamax(int depth, int alpha, int beta, int node_num, bool color,
  * @param nodes number of leaf nodes visited.
  * @return value of depth 0 node.
  */
-static int _qsearch(int depth, int alpha, int beta, bool color, clock_t start, uint64_t* nodes) {
+static int _qsearch(int alpha, int beta, bool color, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {
         return 0;
     }
@@ -174,32 +173,28 @@ static int _qsearch(int depth, int alpha, int beta, bool color, clock_t start, u
     int stand_pat = eval(board.turn);
     (*nodes)++;
 
-    if (depth <= 0) {
-        return stand_pat;
-    } else {
-        if (stand_pat >= beta) {
+    if (stand_pat >= beta) {
+        return beta;
+    }
+    if (alpha < stand_pat) {
+        alpha = stand_pat;
+    }
+
+    Move captures[MAX_MOVE_NUM];
+    int n = gen_legal_captures(captures, board.turn);
+    for (int i = 0; i < n; i++) {
+        push(captures[i]);
+        int score = -_qsearch(-beta, -alpha, color, start, nodes);
+        pop();
+
+        if (score >= beta) {
             return beta;
         }
-        if (alpha < stand_pat) {
-            alpha = stand_pat;
+        if (score > alpha) {
+            alpha = score;
         }
-
-        Move captures[MAX_MOVE_NUM];
-        int n = gen_legal_captures(captures, board.turn);
-        for (int i = 0; i < n; i++) {
-            push(captures[i]);
-            int score = -_qsearch(depth - 1, -beta, -alpha, color, start, nodes);
-            pop();
-
-            if (score >= beta) {
-                return beta;
-            }
-            if (score > alpha) {
-                alpha = score;
-            }
-        }
-        return alpha;
     }
+    return alpha;
 }
 
 
