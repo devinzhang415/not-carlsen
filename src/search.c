@@ -27,25 +27,21 @@ Move tt_move; // Hash move from transposition table saved globally for move orde
  */
 void* iterative_deepening() {
     clock_t start = clock();
-    clock_t elapsed;
-    double time;
 
     uint64_t nodes = 0;
     Result result = {NULL_MOVE, 0};
-    Move main_pv[info.depth];
-    Move pv[info.depth];
+    Move pv[info.depth]; // index info.depth - 1 reserved to denote search wasn't complete
 
     int weight = (board.turn == WHITE) ? 1 : -1;
 
     int d = 0;
-    for (d = 1; d <= info.depth; d++) {
+    for (d = 1; d < info.depth; d++) {
         result = _negamax(d, -MATE_SCORE, MATE_SCORE, board.turn, start, &nodes, pv);
 
         if (pv[info.depth - 1].flag == PASS) break; // On early exit, index info.depth - 1 is set to NULL_MOVE
-        memcpy(main_pv, pv, info.depth); // TODO can probbaly be optimized
 
-        elapsed = clock() - start;
-        time = (double) elapsed / CLOCKS_PER_SEC;
+        clock_t elapsed = clock() - start;
+        double time = (double) elapsed / CLOCKS_PER_SEC;
         if (time == 0) time = .1;
         
         print_info(d, result.score * weight, nodes, time, pv); // TODO pv has duplicate entries
@@ -54,9 +50,7 @@ void* iterative_deepening() {
     d--;
 
     printf("\nbestmove ");
-    print_move(main_pv[d - 1]);
-    Move move = main_pv[d - 1];
-    printf("\nfrom %d to %d flag %d", move.from, move.to, move.flag);
+    print_move(pv[d - 1]);
     printf("\n");
 }
 
