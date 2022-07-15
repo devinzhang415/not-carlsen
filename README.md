@@ -23,6 +23,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - UCI communication protocol
 - Magic bitboard legal move generator (92 million nps)
 - Fail soft alpha-beta negamax
+- Quiescence Search
 - Transposition table
 - Iterative deepening
 - MVV-LVA move ordering
@@ -35,6 +36,11 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+7/14/22 v1.3
+> Added quiescence search.
+>
+> Added custom free() function for stacks to properly free every node instead of just the head.
+
 7/11/22 v1.2
 > Added PSQT and tapered evaluation. For now, this will be all the evaluation features, focusing on a higher depth paradigm.
 >

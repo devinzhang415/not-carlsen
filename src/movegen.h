@@ -30,6 +30,7 @@ uint64_t print_divided_perft(int depth);
 static uint64_t _perft(int depth);
 
 int gen_legal_moves(Move* moves, bool color);
+int gen_legal_captures(Move* moves, bool color);
 
 int get_flag(bool color, char piece, int from, int to);
 
@@ -45,7 +46,6 @@ uint64_t get_queen_moves(bool color, int square);
 uint64_t get_king_moves(bool color, int square);
 
 uint64_t get_knight_mask_setwise(uint64_t knights);
-
 uint64_t get_bishop_rays_setwise(uint64_t rooks, uint64_t empty);
 uint64_t get_rook_rays_setwise(uint64_t bishops, uint64_t empty);
 uint64_t get_queen_rays_setwise(uint64_t queens, uint64_t empty);

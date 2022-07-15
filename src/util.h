@@ -48,12 +48,12 @@ enum tt_flags {
  * Representation of a move.
  * 
  * TODO
- * Bitfields dont seem to be faster
+ * Bitfields dont seem to be faster?
  */
 typedef struct Move {
-    unsigned int from : 6; // square piece is moving from
-    unsigned int to : 6; // square piece is moving to
-    unsigned int flag : 4; // any special characteristic of the move
+    int from; // square piece is moving from
+    int to; // square piece is moving to
+    int flag; // any special characteristic of the move
 } Move;
 
 

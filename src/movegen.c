@@ -295,24 +295,18 @@ int gen_legal_moves(Move* moves, bool color) {
     uint64_t king_bb;
     int king_square;
     uint64_t enemy_pawns_attacks;
-    uint64_t enemy_rq_bb;
-    uint64_t enemy_bq_bb;
     if (color == WHITE) {
         pieces = board.w_occupied;
         king_bb = board.w_king;
         king_square = board.w_king_square;
         enemy_pawns_attacks = (((board.b_pawns >> 9) & ~BB_FILE_H) | ((board.b_pawns >> 7) & ~BB_FILE_A))
                                & board.w_occupied;
-        enemy_rq_bb = board.b_rooks | board.b_queens;
-        enemy_bq_bb = board.b_bishops | board.b_queens;
     } else {
         pieces = board.b_occupied;
         king_bb = board.b_king;
         king_square = board.b_king_square;
         enemy_pawns_attacks = (((board.w_pawns << 9) & ~BB_FILE_A) | ((board.w_pawns << 7) & ~BB_FILE_H))
                                & board.b_occupied;
-        enemy_rq_bb = board.w_rooks | board.w_queens;
-        enemy_bq_bb = board.w_bishops | board.w_queens;
     }
 
     uint64_t attackmask = _get_attackmask(!color);
@@ -442,6 +436,136 @@ int gen_legal_moves(Move* moves, bool color) {
                         }
                     }
                 } else if (flag == EN_PASSANT) {
+                    // Remove possible en passant capture that leaves king in check
+                    // For example en passant is illegal here:
+                    // 8/8/8/8/k2Pp2Q/8/8/3K4 b - d3 0 1
+                    // k7/1q6/8/3pP3/8/5K2/8/8 w - d6 0 1
+                    push(move);
+                    bool invalid = is_check(color);
+                    pop();
+                    if (invalid) continue;
+                }
+
+                moves[i++] = move;
+            }
+        }
+    }
+    return i;
+}
+
+
+/**
+ * Takes in an empty array and generates the list of legal captures in it.
+ * @param moves the array to store the captures in.
+ * @param color the side to move.
+ * @param return the number of captures.
+ */
+int gen_legal_captures(Move* moves, bool color) {
+    int i = 0;
+
+    uint64_t pieces;
+    uint64_t king_bb;
+    int king_square;
+    uint64_t enemy_pawns_attacks;
+    uint64_t enemy_bb;
+    if (color == WHITE) {
+        pieces = board.w_occupied;
+        king_bb = board.w_king;
+        king_square = board.w_king_square;
+        enemy_pawns_attacks = (((board.b_pawns >> 9) & ~BB_FILE_H) | ((board.b_pawns >> 7) & ~BB_FILE_A))
+                               & board.w_occupied;
+        enemy_bb = board.b_occupied;
+    } else {
+        pieces = board.b_occupied;
+        king_bb = board.b_king;
+        king_square = board.b_king_square;
+        enemy_pawns_attacks = (((board.w_pawns << 9) & ~BB_FILE_A) | ((board.w_pawns << 7) & ~BB_FILE_H))
+                               & board.b_occupied;
+        enemy_bb = board.w_occupied;
+    }
+
+    uint64_t attackmask = _get_attackmask(!color);
+    uint64_t checkmask = _get_checkmask(color);
+    uint64_t pos_pinned = get_queen_moves(!color, king_square) & pieces;
+
+    // King is in double check, only moves are to king moves away that are captures
+    if (!checkmask) {
+        uint64_t moves_bb = get_king_moves(color, king_square) & ~attackmask & enemy_bb;
+        while (moves_bb) {
+            int to = pull_lsb(&moves_bb);
+            int flag = get_flag(color, 'K', king_square, to);
+            Move move = {king_square, to, flag};
+            moves[i++] = move;
+        }
+        return i;
+    }
+
+    while (pieces) {
+        int from = pull_lsb(&pieces);
+        char piece = toupper(board.mailbox[from]);
+
+        uint64_t pinmask;
+        uint64_t pinned_bb = BB_SQUARES[from] & pos_pinned;
+        if (pinned_bb) {
+            pinmask = _get_pinmask(color, from);
+        } else {
+            pinmask = BB_ALL;
+        }
+
+        uint64_t moves_bb;
+        switch (piece) {
+            case 'P':
+                uint64_t pawn_moves = get_pawn_moves(color, from);
+                moves_bb = pawn_moves & checkmask & pinmask & enemy_bb;
+
+                if (board.en_passant_square != INVALID) {
+                    if (pawn_moves & pinmask & BB_SQUARES[board.en_passant_square]) {
+                        // Add possible en passant capture to remove check
+                        // For example en passant is legal here:
+                        // 8/8/8/2k5/3Pp3/8/8/3K4 b - d3 0 1
+                        if (king_bb & enemy_pawns_attacks) {
+                            set_bit(&moves_bb, board.en_passant_square);
+                        }
+                    }
+                }
+
+                break;
+            case 'N':
+                moves_bb = get_knight_moves(color, from) & checkmask & pinmask & enemy_bb;
+                break;
+            case 'B':
+                moves_bb = get_bishop_moves(color, from) & checkmask & pinmask & enemy_bb;
+                break;
+            case 'R':
+                moves_bb = get_rook_moves(color, from) & checkmask & pinmask & enemy_bb;
+                break;
+            case 'Q':
+                moves_bb = get_queen_moves(color, from) & checkmask & pinmask & enemy_bb;
+                break;
+            case 'K':
+                moves_bb = get_king_moves(color, from) & ~attackmask & enemy_bb;
+                break;
+        }
+
+        while (moves_bb) {
+            int to = pull_lsb(&moves_bb);
+
+            if (piece == 'P' && (rank_of(to) == 0 || rank_of(to) == 7)) { // Add all promotion captures
+                if (board.mailbox[to] != '-') {
+                    Move queen_promotion = {from, to, PC_QUEEN};
+                    moves[i++] = queen_promotion;
+                    Move rook_promotion = {from, to, PC_ROOK};
+                    moves[i++] = rook_promotion;
+                    Move bishop_promotion = {from, to, PC_BISHOP};
+                    moves[i++] = bishop_promotion;
+                    Move knight_promotion = {from, to, PC_KNIGHT};
+                    moves[i++] = knight_promotion;
+                }
+            } else {
+                int flag = get_flag(color, piece, from, to);
+                Move move = {from, to, flag};
+
+                if (flag == EN_PASSANT) {
                     // Remove possible en passant capture that leaves king in check
                     // For example en passant is illegal here:
                     // 8/8/8/8/k2Pp2Q/8/8/3K4 b - d3 0 1

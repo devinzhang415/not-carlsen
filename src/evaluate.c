@@ -12,8 +12,8 @@ const double PSQT_WEIGHT = .1;
 
 // Tapered evaluation phase values
 // Values in order for pawn, knight, bishop, rook, queen, king
-// Total phase = 0*16 + 4*1 + 4*1 + 4*2 + 2*4 + 2*0 = 24
 const int PHASE_VALUES[6] = {0, 1, 1, 2, 4, 0};
+const int TOTAL_PHASE = 0*16 + 4*1 + 4*1 + 4*2 + 2*4 + 2*0;
 
 // Piece values
 // Values in order for pawn, knight, bishop, rook, queen, king
@@ -69,8 +69,7 @@ extern Board board;
  */
 int eval(bool color) {
     // Tapered evaluation
-    int total_phase = 24;
-    int phase = total_phase;
+    int phase = TOTAL_PHASE;
 
     int material_score = 0;
 
@@ -102,7 +101,7 @@ int eval(bool color) {
     }
 
     // Tapered evaluation
-    phase = (256*phase + total_phase/2) / total_phase;
+    phase = (256 * phase + TOTAL_PHASE / 2) / TOTAL_PHASE;
 
     // PSQT evaluation part 2
     psqt_score = ((psqt_mg_score * (256 - phase)) + (psqt_eg_score * phase)) / 256;

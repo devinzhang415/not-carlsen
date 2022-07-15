@@ -13,6 +13,9 @@
 #include "timeman.h"
 
 
+const int MAX_Q_DEPTH = 5; // Maximum extra ply to search in quiescence to prevent stack overflow
+
+
 extern Board board;
 extern TTable ttable;
 
@@ -39,9 +42,9 @@ void* iterative_deepening() {
 
     int d = 0;
     for (d = 1; d <= info.depth; d++) {
-        result = negamax(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
+        result = _negamax(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
 
-        if (pv[info.depth - 1].flag == PASS) break;
+        if (pv[info.depth - 1].flag == PASS) break; // On early exit, index info.depth - 1 is set to NULL_MOVE
         memcpy(main_pv, pv, info.depth); // TODO can probbaly be optimized
 
         elapsed = clock() - start;
@@ -63,6 +66,7 @@ void* iterative_deepening() {
  * Searches the possible moves using:
  * - Negamax
  * - Alpha-beta pruning (fail soft)
+ * - Quiescence search
  * - Transposition table
  * - Move ordering
  * 
@@ -76,8 +80,8 @@ void* iterative_deepening() {
  * @param pv the best line of moves found, in reverse order.
  * @return the (best move, best score) pair. 
  */
-Result negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t start, uint64_t* nodes, Move* pv) {
-    if (can_exit(color, start, *nodes)) { // TODO timeman
+static Result _negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t start, uint64_t* nodes, Move* pv) {
+    if (can_exit(color, start, *nodes)) {
         pv[info.depth - 1] = NULL_MOVE;
         Result result = {NULL_MOVE, 0};
         return result;
@@ -108,10 +112,10 @@ Result negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t
         int score = 0;
         Result result = {NULL_MOVE, score};
         return result;
-    }
-    else if (depth <= 0) {
-        (*nodes)++;
-        int score = eval(board.turn);
+    } else if (depth <= 0) {
+        // (*nodes)++;
+        // int score = eval(board.turn);
+        int score = _qsearch(MAX_Q_DEPTH, alpha, beta, color, start, nodes);
         Result result = {NULL_MOVE, score};
         return result;
     } else {
@@ -125,7 +129,7 @@ Result negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t
 
         for (int i = 0; i < n; i++) {
             push(moves[i]);
-            score = -negamax(depth - 1, -beta, -alpha, i, color, start, nodes, pv).score;
+            score = -_negamax(depth - 1, -beta, -alpha, i, color, start, nodes, pv).score;
             pop();
 
             if (score > best_score) {
@@ -154,6 +158,54 @@ Result negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t
 
 
 /**
+ * Extends the search past depth 0 until there are no more captures.
+ * 
+ * @param depth max extra ply to search.
+ * @param alpha lowerbound of the score. Initially -MATE_SCORE.
+ * @param beta upperbound of the score. Initially MATE_SCORE.
+ * @param color the side to search for a move for.
+ * @param start the time the iterative deepening function started running, in ms.
+ * @param nodes number of leaf nodes visited.
+ * @return value of depth 0 node.
+ */
+static int _qsearch(int depth, int alpha, int beta, bool color, clock_t start, uint64_t* nodes) {
+    if (can_exit(color, start, *nodes)) {
+        return 0;
+    }
+
+    int stand_pat = eval(board.turn);
+    (*nodes)++;
+
+    if (depth <= 0) {
+        return stand_pat;
+    } else {
+        if (stand_pat >= beta) {
+            return beta;
+        }
+        if (alpha < stand_pat) {
+            alpha = stand_pat;
+        }
+
+        Move captures[MAX_MOVE_NUM];
+        int n = gen_legal_captures(captures, board.turn);
+        for (int i = 0; i < n; i++) {
+            push(captures[i]);
+            int score = -_qsearch(depth - 1, -beta, -alpha, color, start, nodes);
+            pop();
+
+            if (score >= beta) {
+                return beta;
+            }
+            if (score > alpha) {
+                alpha = score;
+            }
+        }
+        return alpha;
+    }
+}
+
+
+/**
  * Comparsion function for sorting purposes between two moves.
  * @param elem1 
  * @param elem2 
@@ -161,7 +213,7 @@ Result negamax(int depth, int alpha, int beta, int node_num, bool color, clock_t
  *         = 0 if move2 = move1
  *         < 0 if move2 < move1
  */
-int _cmp_moves(const void* elem1, const void* elem2) {
+static int _cmp_moves(const void* elem1, const void* elem2) {
     Move move1 = *((Move*) elem1);
     Move move2 = *((Move*) elem2);
     int move1_score = _score_move(move1);

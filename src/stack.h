@@ -10,4 +10,6 @@ void init_stack(void);
 void push(Move move);
 void pop(void);
 
+void free_stack();
+
 #endif
