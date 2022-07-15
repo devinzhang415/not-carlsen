@@ -27,6 +27,8 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - Transposition table
 - Iterative deepening
 - MVV-LVA move ordering
+- Null move pruning
+- Late move reduction
 - Time manager
 - Material score evaluation
 - PSQT evaluation
@@ -36,6 +38,9 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+7/15/22 v1.4
+> Added null move pruning and late move reduction.
+
 7/14/22 v1.3
 > Added quiescence search.
 >

@@ -18,6 +18,10 @@ extern TTable ttable;
 
 extern Info info;
 
+const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning
+const int LRM_R = 1; // Depth to reduce by in late move reduction
+const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction
+const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction
 Move tt_move; // Hash move from transposition table saved globally for move ordering
 
 
@@ -31,14 +35,16 @@ void* iterative_deepening() {
     uint64_t nodes = 0;
     Result result = {NULL_MOVE, 0};
     Move pv[info.depth]; // index info.depth - 1 reserved to denote search wasn't complete
+    Move best_move;
 
     int weight = (board.turn == WHITE) ? 1 : -1;
 
     int d = 0;
     for (d = 1; d < info.depth; d++) {
-        result = _negamax(d, -MATE_SCORE, MATE_SCORE, board.turn, start, &nodes, pv);
+        result = _negamax(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
 
         if (pv[info.depth - 1].flag == PASS) break; // On early exit, index info.depth - 1 is set to NULL_MOVE
+        best_move = pv[d - 1];
 
         clock_t elapsed = clock() - start;
         double time = (double) elapsed / CLOCKS_PER_SEC;
@@ -50,7 +56,7 @@ void* iterative_deepening() {
     d--;
 
     printf("\nbestmove ");
-    print_move(pv[d - 1]);
+    print_move(best_move);
     printf("\n");
 }
 
@@ -66,13 +72,14 @@ void* iterative_deepening() {
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
+ * @param moves_searched the number of nodes searched this depth.
  * @param color the side to search for a move for.
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @param pv the best line of moves found, in reverse order.
  * @return the (best move, best score) pair. 
  */
-static Result _negamax(int depth, int alpha, int beta, bool color, clock_t start, uint64_t* nodes, Move* pv) {
+static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool color, clock_t start, uint64_t* nodes, Move* pv) {
     if (can_exit(color, start, *nodes)) {
         pv[info.depth - 1] = NULL_MOVE;
         Result result = {NULL_MOVE, 0};
@@ -87,7 +94,7 @@ static Result _negamax(int depth, int alpha, int beta, bool color, clock_t start
         tt_move = tt.move;
         switch (tt.flag) {
             case EXACT:
-                return result;
+                if (moves_searched > 0) return result;
             case LOWERBOUND:
                 if (tt.score > alpha) alpha = tt.score;
                 break;
@@ -95,14 +102,14 @@ static Result _negamax(int depth, int alpha, int beta, bool color, clock_t start
                 if (tt.score < beta) beta = tt.score;
                 break;
         }
-        if (alpha >= beta) return result;
+        if (alpha >= beta && moves_searched > 0) return result;
     }
     int old_alpha = alpha;
 
+    // Base case
     if (is_draw()) {
         (*nodes)++;
-        int score = 0;
-        Result result = {NULL_MOVE, score};
+        Result result = {NULL_MOVE, 0};
         return result;
     } else if (depth <= 0) {
         (*nodes)++;
@@ -110,18 +117,38 @@ static Result _negamax(int depth, int alpha, int beta, bool color, clock_t start
         // int score = _qsearch(alpha, beta, color, start, nodes); // TODO causes overflow
         Result result = {NULL_MOVE, score};
         return result;
-    } else {
-        int score = -MATE_SCORE;
+    }
+    
+    // Recursive case
+    else {
+        int score;
+
+        // Null move pruning
+        if (_is_null_move_ok()) {
+            push(NULL_MOVE);
+            score = -_negamax(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, 0, color, start, nodes, pv).score;
+            pop();
+            if (score >= beta) {
+                Result result = {NULL_MOVE, score};
+                return result;
+            }
+        }
+
+        score = -MATE_SCORE;
         Move best_move = NULL_MOVE;
         int best_score = score;
+        bool has_failed_high = false;
 
         Move moves[MAX_MOVE_NUM];
         int n = gen_legal_moves(moves, board.turn);
         qsort(moves, n, sizeof(Move), _cmp_moves);
 
         for (int i = 0; i < n; i++) {
+            // Late move reduction
+            int r = (_is_reduction_ok(moves[i], depth, i, has_failed_high)) ? LRM_R : 0;
+
             push(moves[i]);
-            score = -_negamax(depth - 1, -beta, -alpha, color, start, nodes, pv).score;
+            score = -_negamax(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv).score;
             pop();
 
             if (score > best_score) {
@@ -130,7 +157,10 @@ static Result _negamax(int depth, int alpha, int beta, bool color, clock_t start
             }
 
             if (best_score > alpha) alpha = best_score;
-            if (alpha >= beta) break;
+            if (alpha >= beta) {
+                has_failed_high = true;
+                break;
+            }
         }
 
         // Add position to the transposition table
@@ -282,4 +312,64 @@ static int _get_piece_score(char piece) {
         case 'K':
             return 600;
     }
+}
+
+
+/**
+ * @return true if conditions are ok for null move pruning:
+ * - side to move is not in check
+ */
+static bool _is_null_move_ok(void) {
+    return (!(is_check(board.turn))); // TODO more conditions
+}
+
+
+/**
+ * @param move the move to possibly reduce.
+ * @param depth the current depth.
+ * @param moves_searched the number of moves searched so far this depth.
+ * @param has_failed_high if a previous search at this depth has caused a fail high cutoff.
+ * @return true if:
+ * - move is not a capture
+ * - move is not a promotion
+ * - move does not deliver check
+ * - move is not made while in check
+ * - depth exceeds the threshold
+ * - moves searched exceeds the threshold
+ * - previous search at same depth has not failed high
+ */
+static bool _is_reduction_ok(Move move, int depth, int moves_searched, bool has_failed_high) {
+    if (has_failed_high) return false;
+
+    switch (move.flag) {
+        case PR_QUEEN:
+            return false;
+        case PR_ROOK:
+            return false;
+        case PR_BISHOP:
+            return false;
+        case PR_KNIGHT:
+            return false;
+        case PC_QUEEN:
+            return false;
+        case PC_ROOK:
+            return false;
+        case PC_BISHOP:
+            return false;
+        case PC_KNIGHT:
+            return false;
+        case CAPTURE:
+            return false;
+        case EN_PASSANT:
+            return false;
+    }
+
+    if (is_check(board.turn)) return false;
+
+    push(move);
+    bool gives_check = is_check(board.turn); // TODO can probbaly be optimized
+    pop();
+    if (gives_check) return false;
+
+    return (depth > DEPTH_THRESHOLD && moves_searched > FULL_MOVE_THRESHOLD);
 }
