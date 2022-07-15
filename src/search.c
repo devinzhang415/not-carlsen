@@ -13,14 +13,12 @@
 #include "timeman.h"
 
 
-const int MAX_Q_DEPTH = 5; // Maximum extra ply to search in quiescence to prevent stack overflow
-
-
 extern Board board;
 extern TTable ttable;
 
 extern Info info;
 
+const int MAX_Q_DEPTH = 5; // Maximum extra ply to search in quiescence to prevent stack overflow
 Move tt_move; // Hash move from transposition table saved globally for move ordering
 
 
@@ -113,7 +111,7 @@ static Result _negamax(int depth, int alpha, int beta, int node_num, bool color,
         Result result = {NULL_MOVE, score};
         return result;
     } else if (depth <= 0) {
-        // (*nodes)++;
+        (*nodes)++;
         // int score = eval(board.turn);
         int score = _qsearch(MAX_Q_DEPTH, alpha, beta, color, start, nodes);
         Result result = {NULL_MOVE, score};

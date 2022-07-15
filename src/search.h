@@ -5,6 +5,7 @@
 
 
 extern const int MAX_Q_DEPTH;
+extern Move tt_move;
 
 
 void* iterative_deepening();

@@ -3,8 +3,6 @@
 #include "util.h"
 
 
-extern TTable ttable;
-
 // typedef struct TTable_Entry {
 //     uint64_t key;
 //     int depth;
@@ -20,6 +18,8 @@ extern TTable ttable;
 //     TTable_Entry* entries;
 // } TTable;
 
+
+extern TTable ttable;
 
 const uint64_t TTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
 

@@ -6,6 +6,13 @@
 #include "rtable.h"
 
 
+// typedef struct Stack {
+//     Board board;
+//     Move move;
+//     struct Stack *next;
+// } Stack;
+
+
 extern Board board;
 extern Stack* stack;
 extern RTable rtable;
@@ -15,13 +22,11 @@ extern RTable rtable;
  * Initalizes the stack.
  */
 void init_stack() {
-    free_stack();
+    _free_stack();
     stack = malloc(sizeof(Stack));
-    Stack* node = malloc(sizeof(Stack));
-    node->move = NULL_MOVE;
-    node->board = board;
-    node->next = stack;
-    stack = node;
+    stack->move = NULL_MOVE;
+    stack->board = board;
+    stack->next = NULL;
 }
 
 
@@ -61,11 +66,10 @@ void pop(void) {
 /**
  * Free every element in the stack.
  */
-void free_stack() {
-    Stack* tmp;
+static void _free_stack() {
     while (stack != NULL) {
-        tmp = stack;
+        Stack* temp = stack;
         stack = stack->next;
-        free(tmp);
+        free(temp);
     }
 }

@@ -3,8 +3,6 @@
 #include "rtable.h"
 
 
-extern RTable rtable;
-
 // typedef struct RTable_Entry {
 //     uint64_t key;
 //     int num;
@@ -17,6 +15,8 @@ extern RTable rtable;
 //     RTable_Entry* entries;
 // } RTable;
 
+
+extern RTable rtable;
 
 const uint64_t RTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
 

@@ -15,7 +15,7 @@
 
 
 Board board;
-Stack* stack;
+Stack stack;
 RTable rtable;
 TTable ttable;
 Info info;
