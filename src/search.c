@@ -22,6 +22,7 @@ const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning
 const int LRM_R = 1; // Depth to reduce by in late move reduction
 const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction
 const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction
+const int QSEARCH_DEPTH = 2; // Max extra ply to search in quiescence search
 Move tt_move; // Hash move from transposition table saved globally for move ordering
 
 
@@ -113,8 +114,7 @@ static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool 
         return result;
     } else if (depth <= 0) {
         (*nodes)++;
-        int score = eval(board.turn);
-        // int score = _qsearch(alpha, beta, color, start, nodes); // TODO causes overflow
+        int score = _qsearch(QSEARCH_DEPTH, alpha, beta, color, start, nodes); // TODO causes overflow
         Result result = {NULL_MOVE, score};
         return result;
     }
@@ -144,8 +144,7 @@ static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool 
         qsort(moves, n, sizeof(Move), _cmp_moves);
 
         for (int i = 0; i < n; i++) {
-            // Late move reduction
-            int r = (_is_reduction_ok(moves[i], depth, i, has_failed_high)) ? LRM_R : 0;
+            int r = (_is_reduction_ok(moves[i], depth, i, has_failed_high)) ? LRM_R : 0; // Late move reduction
 
             push(moves[i]);
             score = -_negamax(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv).score;
@@ -182,6 +181,7 @@ static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool 
 /**
  * Extends the search past depth 0 until there are no more captures.
  * 
+ * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
  * @param color the side to search for a move for.
@@ -189,7 +189,7 @@ static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool 
  * @param nodes number of leaf nodes visited.
  * @return value of depth 0 node.
  */
-static int _qsearch(int alpha, int beta, bool color, clock_t start, uint64_t* nodes) {
+static int _qsearch(int depth, int alpha, int beta, bool color, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {
         return 0;
     }
@@ -197,6 +197,9 @@ static int _qsearch(int alpha, int beta, bool color, clock_t start, uint64_t* no
     int stand_pat = eval(board.turn);
     (*nodes)++;
 
+    if (depth <= 0) {
+        return stand_pat;
+    }
     if (stand_pat >= beta) {
         return beta;
     }
@@ -206,9 +209,11 @@ static int _qsearch(int alpha, int beta, bool color, clock_t start, uint64_t* no
 
     Move captures[MAX_MOVE_NUM];
     int n = gen_legal_captures(captures, board.turn);
+    qsort(captures, n, sizeof(Move), _cmp_moves);
+
     for (int i = 0; i < n; i++) {
         push(captures[i]);
-        int score = -_qsearch(-beta, -alpha, color, start, nodes);
+        int score = -_qsearch(depth - 1, -beta, -alpha, color, start, nodes);
         pop();
 
         if (score >= beta) {

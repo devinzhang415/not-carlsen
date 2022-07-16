@@ -12,13 +12,14 @@
 #include "rtable.h"
 #include "search.h"
 #include "ttable.h"
+#include "evaluate.h"
 
 
-Board board;
-Stack stack;
-RTable rtable;
-TTable ttable;
-Info info;
+Board board; // Board structure
+Stack stack; // Move and board history structure
+RTable rtable; // Threefold-repetition hashtable
+TTable ttable; // Transposition table
+Info info; // Move generation parameter information
 
 
 int main(void) {

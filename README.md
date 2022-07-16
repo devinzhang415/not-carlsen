@@ -23,7 +23,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - UCI communication protocol
 - Magic bitboard legal move generator (92 million nps)
 - Fail soft alpha-beta negamax
-- Quiescence Search
+- Quiescence search
 - Transposition table
 - Iterative deepening
 - MVV-LVA move ordering
@@ -38,6 +38,9 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+7/16/22 v1.4.1
+> Added move ordering and depth limiting factor to quiescence search to prevent stack overflow.
+
 7/15/22 v1.4
 > Added null move pruning and late move reduction.
 

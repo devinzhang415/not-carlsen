@@ -12,7 +12,7 @@ extern Info info;
  * @param start_time time the search started in ms.
  * @param cur_nodes nodes searched since search started.
  * @return true if a search can be exited due to too much x having passed.
- * Search precedence movetime > nodes > time manager
+ * Search precedence: movetime > nodes > time manager
  */
 bool can_exit(bool color, clock_t start_time, int cur_nodes) {
     clock_t elpased = clock() - start_time;
