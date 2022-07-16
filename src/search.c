@@ -143,6 +143,12 @@ static Result _pvs(int depth, int alpha, int beta, int moves_searched, bool colo
         int n = gen_legal_moves(moves, board.turn);
         qsort(moves, n, sizeof(Move), _cmp_moves);
 
+        // Stalemate
+        if (n == 0) {
+            Result result = {NULL_MOVE, 0};
+            return result;
+        }
+
         for (int i = 0; i < n; i++) {
             int r = (_is_reduction_ok(moves[i], depth, i, has_failed_high)) ? LRM_R : 0; // Late move reduction
 

@@ -2,6 +2,7 @@
 #define BOARD_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "util.h"
 
 
@@ -12,7 +13,7 @@ void make_move(Move move);
 bool is_check(bool color);
 bool is_attacked(bool color, int square);
 
-bool is_draw(void);
+bool is_draw();
 static bool _is_threefold_rep(void);
 static bool _is_fifty_move_rule(void);
 

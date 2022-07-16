@@ -406,10 +406,10 @@ bool is_attacked(bool color, int square) {
 
 /**
  * @return true if the game is ended by:
- * - threefold rep
- * - or 50-move rule
+ * - threefold rep.
+ * - or 50-move rule.
  */
-bool is_draw(void) {
+bool is_draw() {
     return (_is_threefold_rep() || _is_fifty_move_rule());
 }
 

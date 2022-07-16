@@ -43,6 +43,8 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 > Switched negamax to principal variation search. Tournament results give an elo difference of 108.4 +/- 658.1, in favor of PVS.
 >
 > Added move ordering and depth limiting factor to try to limit quiescence search to prevent stack overflow. More testing required.
+>
+> Added stalemate detection.
 
 7/15/22 v1.4
 > Added null move pruning and late move reduction.
