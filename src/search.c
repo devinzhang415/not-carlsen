@@ -22,7 +22,7 @@ const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning
 const int LRM_R = 1; // Depth to reduce by in late move reduction
 const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction
 const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction
-const int QSEARCH_DEPTH = 2; // Max extra ply to search in quiescence search
+const int QSEARCH_DEPTH = 1; // Max extra ply to search in quiescence search
 Move tt_move; // Hash move from transposition table saved globally for move ordering
 
 
@@ -42,7 +42,7 @@ void* iterative_deepening() {
 
     int d = 0;
     for (d = 1; d < info.depth; d++) {
-        result = _negamax(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
+        result = _pvs(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
 
         if (pv[info.depth - 1].flag == PASS) break; // On early exit, index info.depth - 1 is set to NULL_MOVE
         best_move = pv[d - 1];
@@ -80,7 +80,7 @@ void* iterative_deepening() {
  * @param pv the best line of moves found, in reverse order.
  * @return the (best move, best score) pair. 
  */
-static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool color, clock_t start, uint64_t* nodes, Move* pv) {
+static Result _pvs(int depth, int alpha, int beta, int moves_searched, bool color, clock_t start, uint64_t* nodes, Move* pv) {
     if (can_exit(color, start, *nodes)) {
         pv[info.depth - 1] = NULL_MOVE;
         Result result = {NULL_MOVE, 0};
@@ -114,7 +114,8 @@ static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool 
         return result;
     } else if (depth <= 0) {
         (*nodes)++;
-        int score = _qsearch(QSEARCH_DEPTH, alpha, beta, color, start, nodes); // TODO causes overflow
+        // int score = _qsearch(QSEARCH_DEPTH, alpha, beta, color, start, nodes);
+        int score = eval(board.turn);
         Result result = {NULL_MOVE, score};
         return result;
     }
@@ -126,7 +127,7 @@ static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool 
         // Null move pruning
         if (_is_null_move_ok()) {
             push(NULL_MOVE);
-            score = -_negamax(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, 0, color, start, nodes, pv).score;
+            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, 0, color, start, nodes, pv).score;
             pop();
             if (score >= beta) {
                 Result result = {NULL_MOVE, score};
@@ -136,7 +137,6 @@ static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool 
 
         score = -MATE_SCORE;
         Move best_move = NULL_MOVE;
-        int best_score = score;
         bool has_failed_high = false;
 
         Move moves[MAX_MOVE_NUM];
@@ -146,16 +146,22 @@ static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool 
         for (int i = 0; i < n; i++) {
             int r = (_is_reduction_ok(moves[i], depth, i, has_failed_high)) ? LRM_R : 0; // Late move reduction
 
+            // PVS
             push(moves[i]);
-            score = -_negamax(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv).score;
+            if (i == 0) {
+                score = -_pvs(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv).score;
+            } else {
+                score = -_pvs(depth - 1 - r, -alpha - 1, -alpha, i, color, start, nodes, pv).score;
+                if (score > alpha && score < beta) {
+                    score = -_pvs(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv).score;
+                }
+            }
             pop();
 
-            if (score > best_score) {
+            if (score > alpha) {
                 best_move = moves[i];
-                best_score = score;
+                alpha = score;
             }
-
-            if (best_score > alpha) alpha = best_score;
             if (alpha >= beta) {
                 has_failed_high = true;
                 break;
@@ -164,15 +170,15 @@ static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool 
 
         // Add position to the transposition table
         int flag = EXACT;
-        if (best_score <= old_alpha) {
+        if (alpha <= old_alpha) {
             flag = UPPERBOUND;
-        } else if (best_score >= beta) {
+        } else if (alpha >= beta) {
             flag = LOWERBOUND;
         }
-        ttable_add(board.zobrist, depth, best_move, best_score, flag);
+        ttable_add(board.zobrist, depth, best_move, alpha, flag);
 
         pv[depth - 1] = best_move;
-        Result result = {best_move, best_score};
+        Result result = {best_move, alpha};
         return result;
     }
 }
@@ -188,6 +194,9 @@ static Result _negamax(int depth, int alpha, int beta, int moves_searched, bool 
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @return value of depth 0 node.
+ * 
+ * TODO
+ * stack overflow
  */
 static int _qsearch(int depth, int alpha, int beta, bool color, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {

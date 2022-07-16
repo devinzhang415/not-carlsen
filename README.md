@@ -22,6 +22,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - FEN board initialization
 - UCI communication protocol
 - Magic bitboard legal move generator (92 million nps)
+- Principal variation search
 - Fail soft alpha-beta negamax
 - Quiescence search
 - Transposition table
@@ -38,8 +39,10 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
-7/16/22 v1.4.1
-> Added move ordering and depth limiting factor to quiescence search to prevent stack overflow.
+7/16/22 v1.5
+> Switched negamax to principal variation search. Tournament results give an elo difference of 108.4 +/- 658.1, in favor of PVS.
+>
+> Added move ordering and depth limiting factor to try to limit quiescence search to prevent stack overflow. More testing required.
 
 7/15/22 v1.4
 > Added null move pruning and late move reduction.
