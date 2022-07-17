@@ -15,7 +15,6 @@
 
 extern Board board;
 extern TTable ttable;
-
 extern Info info;
 
 const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning

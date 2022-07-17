@@ -17,8 +17,8 @@
 
 Board board; // Board structure
 Stack stack; // Move and board history structure
-RTable rtable; // Threefold-repetition hashtable
 TTable ttable; // Transposition table
+RTable rtable; // Threefold-repetition hashtable
 Info info; // Move generation parameter information
 
 
