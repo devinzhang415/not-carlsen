@@ -5,8 +5,6 @@
 #include "util.h"
 
 
-extern const int MAX_MOVE_NUM;
-
 extern const uint64_t BB_KNIGHT_ATTACKS[64];
 extern uint64_t BB_BISHOP_ATTACKS[64][512];
 extern uint64_t BB_ROOK_ATTACKS[64][4096];

@@ -44,7 +44,7 @@ void push(Move move) {
     stack = node;
 
     // Update threefold rep table
-    rtable_add(board.zobrist); // TODO rep table causes seg fault at high node counts
+    rtable_add(board.zobrist);
 }
 
 

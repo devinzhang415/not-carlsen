@@ -90,10 +90,10 @@ const uint64_t BB_ANTI_DIAGONALS[15] = {BB_ANTI_DIAGONAL_1, BB_ANTI_DIAGONAL_2, 
 uint64_t BB_RAYS[64][64];
 
 /**
- * - 000-767: numbers for each piece on each square
- * -     768: number to indicate side to move is black
- * - 769-772: numbers for castling rights
- * - 773-780: numbers to indicate en passant file
+ * - 000-767: numbers for each piece on each square.
+ * -     768: number to indicate side to move is black.
+ * - 769-772: numbers for castling rights.
+ * - 773-780: numbers to indicate en passant file.
  */
 uint64_t ZOBRIST_VALUES[781];
 
@@ -101,8 +101,10 @@ uint64_t ZOBRIST_VALUES[781];
 const Move NULL_MOVE = {A1, A1, PASS};
 const int INVALID = -1;
 const int MATE_SCORE = 20000;
-const double MAX_LOAD_FACTOR = .75; // max load factor for hashtables
+const double MAX_LOAD_FACTOR = .75; // max load factor for hashtables.
 const int MAX_DEPTH = 256;
+const int MAX_MOVE_NUM = 218; // largest number of legal moves in a position.
+const int MAX_CAPTURE_NUM = 74; // largest number of legal captures in a position.
 
 
 /**

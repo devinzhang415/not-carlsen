@@ -22,7 +22,6 @@ const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning
 const int LRM_R = 1; // Depth to reduce by in late move reduction
 const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction
 const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction
-const int QSEARCH_DEPTH = 1; // Max extra ply to search in quiescence search
 Move tt_move; // Hash move from transposition table saved globally for move ordering
 
 
@@ -34,7 +33,7 @@ void* iterative_deepening() {
     clock_t start = clock();
 
     uint64_t nodes = 0;
-    Result result = {NULL_MOVE, 0};
+    int score;
     Move pv[info.depth]; // index info.depth - 1 reserved to denote search wasn't complete
     Move best_move;
 
@@ -42,7 +41,7 @@ void* iterative_deepening() {
 
     int d = 0;
     for (d = 1; d < info.depth; d++) {
-        result = _pvs(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
+        score = _pvs(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
 
         if (pv[info.depth - 1].flag == PASS) break; // On early exit, index info.depth - 1 is set to NULL_MOVE
         best_move = pv[d - 1];
@@ -51,7 +50,7 @@ void* iterative_deepening() {
         double time = (double) elapsed / CLOCKS_PER_SEC;
         if (time == 0) time = .1;
         
-        print_info(d, result.score * weight, nodes, time, pv); // TODO pv has duplicate entries
+        print_info(d, score * weight, nodes, time, pv); // TODO pv has weird entries
         printf("\n");
     }
     d--;
@@ -78,24 +77,22 @@ void* iterative_deepening() {
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @param pv the best line of moves found, in reverse order.
- * @return the (best move, best score) pair. 
+ * @return the best score.
  */
-static Result _pvs(int depth, int alpha, int beta, int moves_searched, bool color, clock_t start, uint64_t* nodes, Move* pv) {
+static int _pvs(int depth, int alpha, int beta, int moves_searched, bool color, clock_t start, uint64_t* nodes, Move* pv) {
     if (can_exit(color, start, *nodes)) {
         pv[info.depth - 1] = NULL_MOVE;
-        Result result = {NULL_MOVE, 0};
-        return result;
+        return 0;
     }
 
     // Search for position in the transposition table
     TTable_Entry tt = ttable_get(board.zobrist);
     if (tt.initialized && tt.depth >= depth) {
         (*nodes)++;
-        Result result = {tt.move, tt.score};
         tt_move = tt.move;
         switch (tt.flag) {
             case EXACT:
-                if (moves_searched > 0) return result;
+                if (moves_searched > 0) return tt.score;
             case LOWERBOUND:
                 if (tt.score > alpha) alpha = tt.score;
                 break;
@@ -103,21 +100,19 @@ static Result _pvs(int depth, int alpha, int beta, int moves_searched, bool colo
                 if (tt.score < beta) beta = tt.score;
                 break;
         }
-        if (alpha >= beta && moves_searched > 0) return result;
+        if (alpha >= beta && moves_searched > 0) return tt.score;
     }
     int old_alpha = alpha;
 
     // Base case
     if (is_draw()) {
         (*nodes)++;
-        Result result = {NULL_MOVE, 0};
-        return result;
-    } else if (depth <= 0) {
+        return 0;
+    }
+    if (depth <= 0) {
         (*nodes)++;
-        // int score = _qsearch(QSEARCH_DEPTH, alpha, beta, color, start, nodes);
-        int score = eval(board.turn);
-        Result result = {NULL_MOVE, score};
-        return result;
+        // return _qsearch(alpha, beta, color, start, nodes);
+        return eval(board.turn);
     }
     
     // Recursive case
@@ -127,12 +122,9 @@ static Result _pvs(int depth, int alpha, int beta, int moves_searched, bool colo
         // Null move pruning
         if (_is_null_move_ok()) {
             push(NULL_MOVE);
-            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, 0, color, start, nodes, pv).score;
+            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, 0, color, start, nodes, pv);
             pop();
-            if (score >= beta) {
-                Result result = {NULL_MOVE, score};
-                return result;
-            }
+            if (score >= beta) return score;
         }
 
         score = -MATE_SCORE;
@@ -145,8 +137,7 @@ static Result _pvs(int depth, int alpha, int beta, int moves_searched, bool colo
 
         // Stalemate
         if (n == 0) {
-            Result result = {NULL_MOVE, 0};
-            return result;
+            return 0;
         }
 
         for (int i = 0; i < n; i++) {
@@ -155,11 +146,11 @@ static Result _pvs(int depth, int alpha, int beta, int moves_searched, bool colo
             // PVS
             push(moves[i]);
             if (i == 0) {
-                score = -_pvs(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv).score;
+                score = -_pvs(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv);
             } else {
-                score = -_pvs(depth - 1 - r, -alpha - 1, -alpha, i, color, start, nodes, pv).score;
+                score = -_pvs(depth - 1 - r, -alpha - 1, -alpha, i, color, start, nodes, pv);
                 if (score > alpha && score < beta) {
-                    score = -_pvs(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv).score;
+                    score = -_pvs(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv);
                 }
             }
             pop();
@@ -184,8 +175,7 @@ static Result _pvs(int depth, int alpha, int beta, int moves_searched, bool colo
         ttable_add(board.zobrist, depth, best_move, alpha, flag);
 
         pv[depth - 1] = best_move;
-        Result result = {best_move, alpha};
-        return result;
+        return alpha;
     }
 }
 
@@ -193,7 +183,6 @@ static Result _pvs(int depth, int alpha, int beta, int moves_searched, bool colo
 /**
  * Extends the search past depth 0 until there are no more captures.
  * 
- * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
  * @param color the side to search for a move for.
@@ -204,17 +193,18 @@ static Result _pvs(int depth, int alpha, int beta, int moves_searched, bool colo
  * TODO
  * stack overflow
  */
-static int _qsearch(int depth, int alpha, int beta, bool color, clock_t start, uint64_t* nodes) {
+static int _qsearch(int alpha, int beta, bool color, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {
         return 0;
     }
 
-    int stand_pat = eval(board.turn);
     (*nodes)++;
 
-    if (depth <= 0) {
-        return stand_pat;
+    if (is_draw()) {
+        return 0;
     }
+
+    int stand_pat = eval(board.turn);
     if (stand_pat >= beta) {
         return beta;
     }
@@ -222,13 +212,13 @@ static int _qsearch(int depth, int alpha, int beta, bool color, clock_t start, u
         alpha = stand_pat;
     }
 
-    Move captures[MAX_MOVE_NUM];
+    Move captures[MAX_CAPTURE_NUM];
     int n = gen_legal_captures(captures, board.turn);
     qsort(captures, n, sizeof(Move), _cmp_moves);
 
     for (int i = 0; i < n; i++) {
         push(captures[i]);
-        int score = -_qsearch(depth - 1, -beta, -alpha, color, start, nodes);
+        int score = -_qsearch(-beta, -alpha, color, start, nodes);
         pop();
 
         if (score >= beta) {
@@ -340,7 +330,7 @@ static int _get_piece_score(char piece) {
  * - side to move is not in check
  */
 static bool _is_null_move_ok(void) {
-    return (!(is_check(board.turn))); // TODO more conditions
+    return (!(is_check(board.turn))); // TODO return false in endgame, when zugwang is more likely
 }
 
 
@@ -387,7 +377,7 @@ static bool _is_reduction_ok(Move move, int depth, int moves_searched, bool has_
     if (is_check(board.turn)) return false;
 
     push(move);
-    bool gives_check = is_check(board.turn); // TODO can probbaly be optimized
+    bool gives_check = is_check(board.turn);
     pop();
     if (gives_check) return false;
 

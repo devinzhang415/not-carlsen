@@ -12,8 +12,6 @@
 extern Board board;
 
 
-const int MAX_MOVE_NUM = 218; // largest possible number of legal moves in a position
-
 // Pseudo-legal bitboards indexed by square to determine where that piece can attack
 const uint64_t BB_KNIGHT_ATTACKS[64] = {
     0x20400, 0x50800, 0xa1100, 0x142200, 0x284400,

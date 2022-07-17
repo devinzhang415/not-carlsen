@@ -51,9 +51,9 @@ enum tt_flags {
  * Bitfields dont seem to be faster?
  */
 typedef struct Move {
-    int from; // square piece is moving from
-    int to; // square piece is moving to
-    int flag; // any special characteristic of the move
+    unsigned int from : 6; // square piece is moving from
+    unsigned int to : 6; // square piece is moving to
+    unsigned int flag : 4; // any special characteristic of the move
 } Move;
 
 
@@ -80,8 +80,8 @@ typedef struct Board {
     uint64_t w_occupied;
     uint64_t b_occupied;
 
-    int w_king_square;
-    int b_king_square;
+    unsigned int w_king_square;
+    unsigned int b_king_square;
 
     bool turn;
 
@@ -116,10 +116,10 @@ typedef struct Stack {
  */
 typedef struct TTable_Entry {
     uint64_t key;
-    int depth;
+    unsigned int depth;
     Move move;
     int score;
-    int flag;
+    unsigned int flag;
     bool initialized; // deleted or not
 } TTable_Entry;
 
@@ -140,7 +140,7 @@ typedef struct TTable {
  */
 typedef struct RTable_Entry {
     uint64_t key;
-    int num;
+    unsigned int num;
     bool initialized; // deleted or not
 } RTable_Entry;
 
@@ -170,20 +170,11 @@ typedef struct Info {
     clock_t btime; // black has x msec left on the clock
     clock_t winc; // white increment per move in mseconds if x > 0
     clock_t binc; // black increment per move in mseconds if x > 0
-    int movestogo; // there are x moves to the next time control
-    int depth; // search x plies only
-    int nodes; // search x nodes only 
+    unsigned int movestogo; // there are x moves to the next time control
+    unsigned int depth; // search x plies only
+    unsigned int nodes; // search x nodes only 
     clock_t movetime; // search exactly x mseconds
 } Info;
-
-
-/**
- * Search true return type of (best move, best score) pair.
- */
-typedef struct Result {
-    Move move;
-    int score;
-} Result;
 
 
 extern const bool WHITE;
@@ -259,6 +250,8 @@ extern const int INVALID;
 extern const int MATE_SCORE;
 extern const double MAX_LOAD_FACTOR;
 extern const int MAX_DEPTH;
+extern const int MAX_MOVE_NUM;
+extern const int MAX_CAPTURE_NUM;
 
 
 uint64_t get_ray_between(int square1, int square2);
