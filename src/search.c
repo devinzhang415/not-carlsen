@@ -157,8 +157,9 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
                 best_move = moves[i];
                 alpha = score;
 
-                pv[0] = moves[i];
-                memcpy(pv + 1, sub_pv, depth * sizeof(Move));
+                // Write to pv line
+                pv[0] = moves[i]; // TODO still spits out nonsense sometimes
+                memcpy(pv + 1, sub_pv, (depth - 1) * sizeof(Move));
             }
             if (alpha >= beta) {
                 has_failed_high = true;

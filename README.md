@@ -43,7 +43,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 7/18/22 v1.5.1
 > Attempting several things to prevent overflow in quiescence search: added delta pruning.
 >
-> Fixed PV results to properly display the line without weird moves or duplicates.
+> Updated the PV line to spit out less nonsense. Move sequences of actual moves are longer, but still some issues that need to be ironed out.
 
 7/16/22 v1.5
 > Switched negamax to principal variation search. Tournament results give an elo difference of 108.4 +/- 658.1, in favor of PVS.
