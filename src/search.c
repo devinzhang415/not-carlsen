@@ -38,21 +38,19 @@ void* iterative_deepening() {
 
     int weight = (board.turn == WHITE) ? 1 : -1;
 
-    int d = 0;
-    for (d = 1; d < info.depth; d++) {
-        score = _pvs(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, start, &nodes, pv);
+    for (int d = 1; d < info.depth; d++) {
+        score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, start, &nodes, pv);
 
         if (pv[info.depth - 1].flag == PASS) break; // On early exit, index info.depth - 1 is set to NULL_MOVE
-        best_move = pv[d - 1];
+        best_move = pv[0];
 
         clock_t elapsed = clock() - start;
         double time = (double) elapsed / CLOCKS_PER_SEC;
         if (time == 0) time = .1;
         
-        print_info(d, score * weight, nodes, time, pv); // TODO pv has weird entries
+        print_info(d, score * weight, nodes, time, pv);
         printf("\n");
     }
-    d--;
 
     printf("\nbestmove ");
     print_move(best_move);
@@ -71,14 +69,14 @@ void* iterative_deepening() {
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
- * @param moves_searched the number of nodes searched this depth.
+ * @param pv_node whether the node is the first node at the depth.
  * @param color the side to search for a move for.
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
- * @param pv the best line of moves found, in reverse order.
+ * @param pv the best line of moves found.
  * @return the best score.
  */
-static int _pvs(int depth, int alpha, int beta, int moves_searched, bool color, clock_t start, uint64_t* nodes, Move* pv) {
+static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes, Move* pv) {
     if (can_exit(color, start, *nodes)) {
         pv[info.depth - 1] = NULL_MOVE;
         return 0;
@@ -91,7 +89,7 @@ static int _pvs(int depth, int alpha, int beta, int moves_searched, bool color, 
         tt_move = tt.move;
         switch (tt.flag) {
             case EXACT:
-                if (moves_searched > 0) return tt.score;
+                if (pv_node) return tt.score;
             case LOWERBOUND:
                 if (tt.score > alpha) alpha = tt.score;
                 break;
@@ -99,7 +97,7 @@ static int _pvs(int depth, int alpha, int beta, int moves_searched, bool color, 
                 if (tt.score < beta) beta = tt.score;
                 break;
         }
-        if (alpha >= beta && moves_searched > 0) return tt.score;
+        if (alpha >= beta && pv_node) return tt.score;
     }
     int old_alpha = alpha;
 
@@ -117,11 +115,12 @@ static int _pvs(int depth, int alpha, int beta, int moves_searched, bool color, 
     // Recursive case
     else {
         int score;
+        Move sub_pv[depth];
 
         // Null move pruning
         if (_is_null_move_ok()) {
             push(NULL_MOVE);
-            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, 0, color, start, nodes, pv);
+            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, start, nodes, sub_pv);
             pop();
             if (score >= beta) return score;
         }
@@ -145,11 +144,11 @@ static int _pvs(int depth, int alpha, int beta, int moves_searched, bool color, 
             // PVS
             push(moves[i]);
             if (i == 0) {
-                score = -_pvs(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv);
+                score = -_pvs(depth - 1 - r, -beta, -alpha, true, color, start, nodes, sub_pv);
             } else {
-                score = -_pvs(depth - 1 - r, -alpha - 1, -alpha, i, color, start, nodes, pv);
+                score = -_pvs(depth - 1 - r, -alpha - 1, -alpha, false, color, start, nodes, sub_pv);
                 if (score > alpha && score < beta) {
-                    score = -_pvs(depth - 1 - r, -beta, -alpha, i, color, start, nodes, pv);
+                    score = -_pvs(depth - 1 - r, -beta, -alpha, false, color, start, nodes, sub_pv);
                 }
             }
             pop();
@@ -157,6 +156,9 @@ static int _pvs(int depth, int alpha, int beta, int moves_searched, bool color, 
             if (score > alpha) {
                 best_move = moves[i];
                 alpha = score;
+
+                pv[0] = moves[i];
+                memcpy(pv + 1, sub_pv, depth * sizeof(Move));
             }
             if (alpha >= beta) {
                 has_failed_high = true;
@@ -173,7 +175,6 @@ static int _pvs(int depth, int alpha, int beta, int moves_searched, bool color, 
         }
         ttable_add(board.zobrist, depth, best_move, alpha, flag);
 
-        pv[depth - 1] = best_move;
         return alpha;
     }
 }
@@ -181,6 +182,8 @@ static int _pvs(int depth, int alpha, int beta, int moves_searched, bool color, 
 
 /**
  * Extends the search past depth 0 until there are no more captures.
+ * Uses:
+ * - Delta pruning
  * 
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
@@ -207,16 +210,19 @@ static int _qsearch(int alpha, int beta, bool color, clock_t start, uint64_t* no
     if (stand_pat >= beta) {
         return beta;
     }
+    if (stand_pat + 900 < alpha) { // Delta pruning // TODO do not use in late endgame
+        return alpha;
+    }
     if (alpha < stand_pat) {
         alpha = stand_pat;
     }
 
-    Move captures[MAX_CAPTURE_NUM];
-    int n = gen_legal_captures(captures, board.turn);
-    qsort(captures, n, sizeof(Move), _cmp_moves);
+    Move moves[MAX_CAPTURE_NUM];
+    int n = gen_legal_captures(moves, board.turn);
+    qsort(moves, n, sizeof(Move), _cmp_moves);
 
     for (int i = 0; i < n; i++) {
-        push(captures[i]);
+        push(moves[i]);
         int score = -_qsearch(-beta, -alpha, color, start, nodes);
         pop();
 

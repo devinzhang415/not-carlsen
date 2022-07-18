@@ -102,7 +102,7 @@ const Move NULL_MOVE = {A1, A1, PASS};
 const int INVALID = -1;
 const int MATE_SCORE = 20000;
 const double MAX_LOAD_FACTOR = .75; // max load factor for hashtables.
-const int MAX_DEPTH = 256;
+const int MAX_DEPTH = 100;
 const int MAX_MOVE_NUM = 218; // largest number of legal moves in a position.
 const int MAX_CAPTURE_NUM = 74; // largest number of legal captures in a position.
 
@@ -312,12 +312,12 @@ extern Info info;
  * @param score the score from the engine's point of view in centipawns.
  * @param nodes x nodes searched.
  * @param time the time searched in ms.
- * @param pv the best line of moves found, in reverse order.
+ * @param pv the best line of moves found.
  */
 void print_info(int depth, int score, uint64_t nodes, double time, Move* pv) {
     printf("info depth %d score cp %d nodes %llu nps %.0f time %d pv ",
             depth, score, nodes, nodes / time, (int) time * 1000);
-    for (int i = depth - 1; i >= 0; i--) {
+    for (int i = 0; i < depth; i++) {
         print_move(pv[i]);
         printf(" ");
     }
