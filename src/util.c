@@ -170,7 +170,7 @@ int parse_piece(char piece) {
         case 'k':
             return 11;
         default:
-            return INVALID;
+            return 0; // en passant, index neutral
     }
 }
 
@@ -379,4 +379,24 @@ int pull_lsb(uint64_t* bb) {
     int square = get_lsb(*bb);
     *bb &= *bb - 1;
     return square;
+}
+
+
+/**
+ * @param x 
+ * @param y 
+ * @return the larger of x, y 
+ */
+int max(int x, int y) {
+    return (x >= y) ? x : y;
+}
+
+
+/**
+ * @param x 
+ * @param y 
+ * @return the smaller of x, y 
+ */
+int min(int x, int y) {
+    return (x <= y) ? x : y;
 }

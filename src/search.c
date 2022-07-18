@@ -21,6 +21,7 @@ const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning
 const int LRM_R = 1; // Depth to reduce by in late move reduction
 const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction
 const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction
+const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch
 Move tt_move; // Hash move from transposition table saved globally for move ordering
 
 
@@ -60,11 +61,13 @@ void* iterative_deepening() {
 
 /**
  * Searches the possible moves using:
- * - Negamax
- * - Alpha-beta pruning (fail soft)
+ * - Principal variation search
+ * - Negamax (fail soft)
  * - Quiescence search
  * - Transposition table
- * - Move ordering
+ * - MVV-LVA move ordering
+ * - Null move pruning
+ * - Late move reduction
  * 
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
@@ -91,10 +94,10 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
             case EXACT:
                 if (pv_node) return tt.score;
             case LOWERBOUND:
-                if (tt.score > alpha) alpha = tt.score;
+                alpha = max(alpha, tt.score);
                 break;
             case UPPERBOUND:
-                if (tt.score < beta) beta = tt.score;
+                beta = min(beta, tt.score);
                 break;
         }
         if (alpha >= beta && pv_node) return tt.score;
@@ -107,9 +110,9 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         return 0;
     }
     if (depth <= 0) {
-        (*nodes)++;
-        // return _qsearch(alpha, beta, color, start, nodes);
-        return eval(board.turn);
+        return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        // (*nodes)++;
+        // return eval(board.turn);
     }
     
     // Recursive case
@@ -185,9 +188,13 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
  * Extends the search past depth 0 until there are no more captures.
  * Uses:
  * - Delta pruning
+ * - Transposition table
+ * - MVV-LVA move ordering
  * 
+ * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
+ * @param pv_node whether the node is the first node at the depth.
  * @param color the side to search for a move for.
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
@@ -196,44 +203,74 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
  * TODO
  * stack overflow
  */
-static int _qsearch(int alpha, int beta, bool color, clock_t start, uint64_t* nodes) {
+static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {
         return 0;
     }
 
     (*nodes)++;
 
+    // Search for position in the transposition table
+    TTable_Entry tt = ttable_get(board.zobrist);
+    if (tt.initialized && tt.depth >= depth) {
+        tt_move = tt.move;
+        switch (tt.flag) {
+            case EXACT:
+                if (pv_node) return tt.score;
+            case LOWERBOUND:
+                alpha = max(alpha, tt.score);
+                break;
+            case UPPERBOUND:
+                beta = min(beta, tt.score);
+                break;
+        }
+        if (alpha >= beta && pv_node) return tt.score;
+    }
+    int old_alpha = alpha;
+
     if (is_draw()) {
         return 0;
     }
 
     int stand_pat = eval(board.turn);
-    if (stand_pat >= beta) {
-        return beta;
-    }
-    if (stand_pat + 900 < alpha) { // Delta pruning // TODO do not use in late endgame
-        return alpha;
-    }
-    if (alpha < stand_pat) {
-        alpha = stand_pat;
-    }
+    if (stand_pat >= beta) return beta;
+    if (alpha < stand_pat) alpha = stand_pat;
+    if (depth <= Q_MAX_DEPTH) return alpha;
+
+    Move best_move = NULL_MOVE;
 
     Move moves[MAX_CAPTURE_NUM];
     int n = gen_legal_captures(moves, board.turn);
     qsort(moves, n, sizeof(Move), _cmp_moves);
 
     for (int i = 0; i < n; i++) {
+        // Delta pruning // TODO do not use in late endgame
+        char piece = board.mailbox[moves[i].to];
+        int delta = MATERIAL_VALUES[parse_piece(piece)];
+        if (stand_pat + delta + 200 < alpha) continue;
+
         push(moves[i]);
-        int score = -_qsearch(-beta, -alpha, color, start, nodes);
+        int score = -_qsearch(depth - 1, -beta, -alpha, (i == 0), color, start, nodes);
         pop();
 
         if (score >= beta) {
             return beta;
         }
         if (score > alpha) {
+            best_move = moves[i];
             alpha = score;
         }
     }
+
+    // Add position to the transposition table
+    int flag = EXACT;
+    if (alpha <= old_alpha) {
+        flag = UPPERBOUND;
+    } else if (alpha >= beta) {
+        flag = LOWERBOUND;
+    }
+    ttable_add(board.zobrist, 0, best_move, alpha, flag);
+
     return alpha;
 }
 
@@ -311,7 +348,7 @@ static int _score_move(Move move) {
 
 /**
  * @param piece 
- * @return the _score_move value of the piece. 
+ * @return the arbitrary _score_move of the piece for move ordering purposes.
  */
 static int _get_piece_score(char piece) {
     switch (piece) {

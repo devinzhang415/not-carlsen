@@ -116,10 +116,10 @@ typedef struct Stack {
  */
 typedef struct TTable_Entry {
     uint64_t key;
-    unsigned int depth;
+    int depth;
     Move move;
     int score;
-    unsigned int flag;
+    int flag;
     bool initialized; // deleted or not
 } TTable_Entry;
 
@@ -140,7 +140,7 @@ typedef struct TTable {
  */
 typedef struct RTable_Entry {
     uint64_t key;
-    unsigned int num;
+    int num;
     bool initialized; // deleted or not
 } RTable_Entry;
 
@@ -170,9 +170,9 @@ typedef struct Info {
     clock_t btime; // black has x msec left on the clock
     clock_t winc; // white increment per move in mseconds if x > 0
     clock_t binc; // black increment per move in mseconds if x > 0
-    unsigned int movestogo; // there are x moves to the next time control
-    unsigned int depth; // search x plies only
-    unsigned int nodes; // search x nodes only 
+    int movestogo; // there are x moves to the next time control
+    int depth; // search x plies only
+    int nodes; // search x nodes only 
     clock_t movetime; // search exactly x mseconds
 } Info;
 
@@ -279,6 +279,9 @@ int anti_diagonal_of(int square);
 
 int get_lsb(uint64_t bb);
 int pull_lsb(uint64_t* bb);
+
+int max(int x, int y);
+int min(int x, int y);
 
 
 #endif
