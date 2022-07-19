@@ -112,7 +112,8 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         return 0;
     }
     if (depth <= 0) {
-        return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        // return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        return eval(board.turn);
     }
     
     // Recursive case
@@ -200,6 +201,9 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @return value of depth 0 node.
+ * 
+ * TODO
+ * stack overflow
  */
 static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {
@@ -451,23 +455,14 @@ static bool _is_reduction_ok(Move move, int depth, int moves_searched, bool has_
 
     switch (move.flag) {
         case PR_QUEEN:
-            return false;
         case PR_ROOK:
-            return false;
         case PR_BISHOP:
-            return false;
         case PR_KNIGHT:
-            return false;
         case PC_QUEEN:
-            return false;
         case PC_ROOK:
-            return false;
         case PC_BISHOP:
-            return false;
         case PC_KNIGHT:
-            return false;
         case CAPTURE:
-            return false;
         case EN_PASSANT:
             return false;
     }
@@ -479,5 +474,5 @@ static bool _is_reduction_ok(Move move, int depth, int moves_searched, bool has_
     pop();
     if (gives_check) return false;
 
-    return (depth > DEPTH_THRESHOLD && moves_searched > FULL_MOVE_THRESHOLD);
+    return (depth >= DEPTH_THRESHOLD && moves_searched >= FULL_MOVE_THRESHOLD);
 }

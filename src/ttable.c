@@ -43,7 +43,8 @@ void init_ttable(void) {
 TTable_Entry ttable_get(uint64_t key) {
     for (int i = 0; i < ttable.capacity; i++) {
         int index = (key + i) % ttable.capacity;
-        if (!ttable.entries[index].initialized || ttable.entries[index].key == key) {
+        TTable_Entry entry = ttable.entries[index];
+        if (!entry.initialized || entry.key ^ entry.score == key) {
             return ttable.entries[index];
         }
     }
@@ -67,14 +68,16 @@ void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
 
     for (int i = 0; i < ttable.capacity; i++) {
         int index = (key + i) % ttable.capacity;
-        if (ttable.entries[index].initialized && ttable.entries[index].key == key) {  // Replace existing entry
-            ttable.entries[index].depth = depth;
-            ttable.entries[index].move = move;
-            ttable.entries[index].score = score;
-            ttable.entries[index].flag = flag;
-            break;
+        if (ttable.entries[index].initialized) {
+            if (ttable.entries[index].key ^ score == key) { // Replace existing entry
+                ttable.entries[index].depth = depth;
+                ttable.entries[index].move = move;
+                ttable.entries[index].score = score;
+                ttable.entries[index].flag = flag;
+                break;
+            }
         } else {
-            ttable.entries[index].key = key;
+            ttable.entries[index].key = key ^ score;
             ttable.entries[index].depth = depth;
             ttable.entries[index].move = move;
             ttable.entries[index].score = score;

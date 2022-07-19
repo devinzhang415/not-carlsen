@@ -115,7 +115,7 @@ typedef struct Stack {
  * (a previous stored result).
  */
 typedef struct TTable_Entry {
-    uint64_t key;
+    uint64_t key; // key = zobrist ^ score for lockless access
     int depth;
     Move move;
     int score;
@@ -125,7 +125,7 @@ typedef struct TTable_Entry {
 
 
 /**
- * Transposition hashtable structure.
+ * Lockless transposition hashtable structure.
  */
 typedef struct TTable {
     uint64_t size;

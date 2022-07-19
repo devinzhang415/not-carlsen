@@ -25,7 +25,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - Principal variation search (PVS)
 - Fail soft alpha-beta negamax
 - Quiescence search
-- Transposition table
+- Lockless transposition table
 - Iterative deepening
 - MVV-LVA move ordering
 - Null move pruning
@@ -41,6 +41,11 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+7/19/22 v1.6.1
+> Modified the transposition table for lockless multithreaded access.
+>
+> Fixed bugs involving time searched being rounded to the nearest second and transposition entries incorrectly being overridden.
+
 7/18/22 v1.6
 > Attempted several things to prevent overflow in quiescence search: delta pruning, transposition table access, and static exchange evaluation (SEE). With SEE, overflow seems to have been greatly minimized.
 >
