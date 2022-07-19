@@ -31,7 +31,7 @@ Move tt_move; // Hash move from transposition table saved globally for move orde
  * Searches the position with iterative depths.
  * Returns void* for multithreading.
  */
-void* iterative_deepening() {
+void iterative_deepening(void) {
     clock_t start = clock();
 
     uint64_t nodes = 0;
