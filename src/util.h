@@ -247,8 +247,8 @@ extern uint64_t ZOBRIST_VALUES[781];
 
 extern const Move NULL_MOVE;
 extern const int INVALID;
-extern const int MATE_SCORE;
 extern const double MAX_LOAD_FACTOR;
+extern const int MATE_SCORE;
 extern const int MAX_DEPTH;
 extern const int MAX_MOVE_NUM;
 extern const int MAX_CAPTURE_NUM;

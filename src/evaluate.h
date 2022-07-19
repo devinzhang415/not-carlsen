@@ -44,5 +44,7 @@ extern const int* EG_PSQTS[12];
 
 int eval(bool color);
 
+int get_material_value(char piece);
+
 
 #endif

@@ -17,12 +17,14 @@ extern Board board;
 extern TTable ttable;
 extern Info info;
 
-const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning
-const int LRM_R = 1; // Depth to reduce by in late move reduction
-const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction
-const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction
-const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch
-Move tt_move; // Hash move from transposition table saved globally for move ordering
+const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
+const int LRM_R = 1; // Depth to reduce by in late move reduction.
+const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction.
+const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction.
+const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
+const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
+const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
+Move tt_move; // Hash move from transposition table saved globally for move ordering.
 
 
 /**
@@ -61,7 +63,7 @@ void* iterative_deepening() {
 
 /**
  * Searches the possible moves using:
- * - Principal variation search
+ * - PVS
  * - Negamax (fail soft)
  * - Quiescence search
  * - Transposition table
@@ -111,8 +113,6 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
     }
     if (depth <= 0) {
         return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
-        // (*nodes)++;
-        // return eval(board.turn);
     }
     
     // Recursive case
@@ -190,6 +190,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
  * - Delta pruning
  * - Transposition table
  * - MVV-LVA move ordering
+ * - SEE
  * 
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
@@ -199,9 +200,6 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @return value of depth 0 node.
- * 
- * TODO
- * stack overflow
  */
 static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {
@@ -245,9 +243,14 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
 
     for (int i = 0; i < n; i++) {
         // Delta pruning // TODO do not use in late endgame
-        char piece = board.mailbox[moves[i].to];
-        int delta = MATERIAL_VALUES[parse_piece(piece)];
-        if (stand_pat + delta + 200 < alpha) continue;
+        int to = moves[i].to;
+
+        char piece = board.mailbox[to];
+        int delta = get_material_value(piece);
+        if (stand_pat + delta + DELTA_MARGIN < alpha) continue;
+
+        // SEE
+        if (_see(board.turn, to) < SEE_THRESHOLD) continue;
 
         push(moves[i]);
         int score = -_qsearch(depth - 1, -beta, -alpha, (i == 0), color, start, nodes);
@@ -272,6 +275,58 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
     ttable_add(board.zobrist, 0, best_move, alpha, flag);
 
     return alpha;
+}
+
+
+/**
+ * @param color the color of the attackers.
+ * @param square the square being attacked.
+ * @param victim the piece being attacked.
+ * @return the expected material difference after a series of exchanges on a single square.
+ */
+int _see(bool color, int square) {
+    int score = 0;
+    char victim = board.mailbox[square];
+    int enemy_square = _get_smallest_attacker_square(color, square);
+    if (enemy_square != INVALID) {
+        Move capture = {enemy_square, square, CAPTURE}; // TODO promotion captures
+        push(capture);
+        score = max(0, get_material_value(victim) - _see(!color, square));
+        pop();
+    }
+    return score;
+}
+
+
+/**
+ * @param color the color of the attackers.
+ * @param square the square being attacked.
+ * @return the square of the least valuable attacker on the given square.
+ * Returns invalid if no piece is attacking the square.
+ */
+static int _get_smallest_attacker_square(bool color, int square) {
+    uint64_t pot_attackers;
+    if (color == BLACK) {
+        uint64_t square_bb = BB_SQUARES[square];
+
+        if (pot_attackers = ((((square_bb << 9) & ~BB_FILE_A) | ((square_bb << 7) & ~BB_FILE_H)) & board.b_pawns)) return get_lsb(pot_attackers);
+        if (pot_attackers = (get_knight_moves(WHITE, square) & board.b_knights)) return get_lsb(pot_attackers);
+        if (pot_attackers = (get_bishop_moves(WHITE, square) & board.b_bishops)) return get_lsb(pot_attackers);
+        if (pot_attackers = (get_rook_moves(WHITE, square) & board.b_rooks)) return get_lsb(pot_attackers);
+        if (pot_attackers = (get_queen_moves(WHITE, square) & board.b_queens)) return get_lsb(pot_attackers);
+        
+        return INVALID;
+    } else {
+        uint64_t square_bb = BB_SQUARES[square];
+        
+        if (pot_attackers = (((square_bb >> 9) & ~BB_FILE_H) | ((square_bb >> 7) & ~BB_FILE_A)) & board.w_pawns) return get_lsb(pot_attackers);
+        if (pot_attackers = (get_knight_moves(BLACK, square) & board.w_knights)) return get_lsb(pot_attackers);
+        if (pot_attackers = (get_bishop_moves(BLACK, square) & board.w_bishops)) return get_lsb(pot_attackers);
+        if (pot_attackers = (get_rook_moves(BLACK, square) & board.w_rooks)) return get_lsb(pot_attackers);
+        if (pot_attackers = (get_queen_moves(BLACK, square) & board.w_queens)) return get_lsb(pot_attackers);
+        
+        return INVALID;
+    }
 }
 
 
@@ -373,7 +428,7 @@ static int _get_piece_score(char piece) {
  * - side to move is not in check
  */
 static bool _is_null_move_ok(void) {
-    return (!(is_check(board.turn))); // TODO return false in endgame, when zugwang is more likely
+    return (!(is_check(board.turn))); // TODO do not use in endgame
 }
 
 

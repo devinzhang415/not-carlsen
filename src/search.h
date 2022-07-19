@@ -9,12 +9,17 @@ extern const int LRM_R;
 extern const int DEPTH_THRESHOLD;
 extern const int FULL_MOVE_THRESHOLD;
 extern const int Q_MAX_DEPTH;
+extern const int DELTA_MARGIN;
+extern const int SEE_THRESHOLD;
 extern Move tt_move;
 
 
 void* iterative_deepening();
 static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes, Move* pv);
 static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes);
+
+int _see(bool color, int square);
+static int _get_smallest_attacker_square(bool color, int square);
 
 static int _cmp_moves(const void* elem1, const void* elem2);
 static int _score_move(Move move);

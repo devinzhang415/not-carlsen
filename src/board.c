@@ -376,7 +376,7 @@ bool is_check(bool color) {
 
 /**
  * @param color the color of the attackers.
- * @param square 
+ * @param square the square potentially being attacked.
  * @return true if the square is being attacked by the given side
  */
 bool is_attacked(bool color, int square) {

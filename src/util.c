@@ -100,8 +100,8 @@ uint64_t ZOBRIST_VALUES[781];
 // Misc
 const Move NULL_MOVE = {A1, A1, PASS};
 const int INVALID = -1;
-const int MATE_SCORE = 20000;
 const double MAX_LOAD_FACTOR = .75; // max load factor for hashtables.
+const int MATE_SCORE = 20000;
 const int MAX_DEPTH = 100;
 const int MAX_MOVE_NUM = 218; // largest number of legal moves in a position.
 const int MAX_CAPTURE_NUM = 74; // largest number of legal captures in a position.

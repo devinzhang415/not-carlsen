@@ -111,3 +111,13 @@ int eval(bool color) {
 
     return score;
 }
+
+
+/**
+ * @param piece 'Q', 'r', 'p', etc
+ * @return the material value of the given piece.
+ */
+int get_material_value(char piece) {
+    piece = toupper(piece);
+    return MATERIAL_VALUES[parse_piece(piece)];
+}

@@ -22,7 +22,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - FEN board initialization
 - UCI communication protocol
 - Magic bitboard legal move generator (92 million nps)
-- Principal variation search
+- Principal variation search (PVS)
 - Fail soft alpha-beta negamax
 - Quiescence search
 - Transposition table
@@ -31,6 +31,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - Null move pruning
 - Late move reduction
 - Delta pruning
+- Static exchange evaluation (SEE)
 - Time manager
 - Material score evaluation
 - PSQT evaluation
@@ -41,7 +42,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 
 ## Devlog
 7/18/22 v1.5.1
-> Attempting several things to prevent overflow in quiescence search: added delta pruning and transposition table access.
+> Attempted several things to prevent overflow in quiescence search: delta pruning, transposition table access, and static exchange evaluation (SEE). With SEE, overflow seems to have been greatly minimized.
 >
 > Updated the PV line to spit out less nonsense. Move sequences of actual moves are longer, but still some issues that need to be ironed out.
 
