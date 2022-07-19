@@ -41,7 +41,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
-7/18/22 v1.5.1
+7/18/22 v1.6
 > Attempted several things to prevent overflow in quiescence search: delta pruning, transposition table access, and static exchange evaluation (SEE). With SEE, overflow seems to have been greatly minimized.
 >
 > Updated the PV line to spit out less nonsense. Move sequences of actual moves are longer, but still some issues that need to be ironed out.
