@@ -317,7 +317,7 @@ extern Info info;
 void print_info(int depth, int score, uint64_t nodes, double time, Move* pv) {
     printf("info depth %d score cp %d nodes %llu nps %.0f time %d pv ",
             depth, score, nodes, nodes / time, (int) (time * 1000));
-    for (int i = 0; i < depth; i++) {
+    for (int i = depth - 1; i >= 0; i--) {
         print_move(pv[i]);
         printf(" ");
     }

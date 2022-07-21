@@ -45,7 +45,7 @@ TTable_Entry ttable_get(uint64_t key) {
         int index = (key + i) % ttable.capacity;
         TTable_Entry entry = ttable.entries[index];
         if (!entry.initialized || entry.key ^ entry.score == key) {
-            return ttable.entries[index];
+            return entry;
         }
     }
 }

@@ -38,7 +38,7 @@ void iterative_deepening(void) {
 
     uint64_t nodes = 0;
     Move pv[info.depth]; // last index reserved to denote search wasn't complete
-    // Move best_move;
+    Move best_move;
 
     int weight = (board.turn == WHITE) ? 1 : -1;
     
@@ -47,16 +47,16 @@ void iterative_deepening(void) {
     // Private variables with uninitialized values: pv
     // Shared variables: board, ttable, info, start, nodes
     // omp_set_num_threads(2);
-    #pragma omp parallel for schedule(dynamic) firstprivate(rtable) private(pv) shared(start, nodes)
-    // for (int d = 1; d <= info.depth; d++) {
-    for (int d = 1; d <= 2; d++) {
-        if (pv[info.depth - 1].flag == PASS) continue; // On early exit, index info.depth - 1 is set to NULL_MOVE
+    // #pragma omp parallel for schedule(dynamic) firstprivate(rtable) private(pv) shared(start, nodes)
+    for (int d = 1; d <= info.depth; d++) {
+    // for (int d = 1; d <= 2; d++) {
+        // if (pv[info.depth - 1].flag == PASS) continue; // On early exit, index info.depth - 1 is set to NULL_MOVE
 
         int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, start, &nodes, pv);
 
-        if (pv[info.depth - 1].flag == PASS) continue;
-        // if (pv[info.depth - 1].flag == PASS) break;
-        // best_move = pv[0];
+        // if (pv[info.depth - 1].flag == PASS) continue;
+        if (pv[info.depth - 1].flag == PASS) break;
+        best_move = pv[d - 1];
 
         clock_t elapsed = clock() - start;
         double time = (double) elapsed / CLOCKS_PER_SEC;
@@ -66,10 +66,10 @@ void iterative_deepening(void) {
         printf("\n");
     }
 
-    printf("Done\n");
-    // printf("\nbestmove ");
-    // print_move(best_move);
-    // printf("\n");
+    // printf("Done\n");
+    printf("\nbestmove ");
+    print_move(best_move);
+    printf("\n");
 }
 
 
@@ -131,12 +131,13 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
     // Recursive case
     else {
         int score;
-        Move sub_pv[depth];
+
+        bool in_check = is_check(board.turn);
 
         // Null move pruning
-        if (_is_null_move_ok()) {
+        if (_is_null_move_ok(in_check)) {
             push(NULL_MOVE);
-            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, start, nodes, sub_pv);
+            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, start, nodes, pv);
             pop();
             if (score >= beta) return score;
         }
@@ -155,16 +156,16 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         }
 
         for (int i = 0; i < n; i++) {
-            int r = (_is_reduction_ok(moves[i], depth, i, has_failed_high)) ? LRM_R : 0; // Late move reduction
+            int r = (_is_reduction_ok(moves[i], depth, i, has_failed_high, in_check)) ? LRM_R : 0; // Late move reduction
 
             // PVS
             push(moves[i]);
             if (i == 0) {
-                score = -_pvs(depth - 1 - r, -beta, -alpha, true, color, start, nodes, sub_pv);
+                score = -_pvs(depth - 1 - r, -beta, -alpha, true, color, start, nodes, pv);
             } else {
-                score = -_pvs(depth - 1 - r, -alpha - 1, -alpha, false, color, start, nodes, sub_pv);
+                score = -_pvs(depth - 1 - r, -alpha - 1, -alpha, false, color, start, nodes, pv);
                 if (score > alpha && score < beta) {
-                    score = -_pvs(depth - 1 - r, -beta, -alpha, false, color, start, nodes, sub_pv);
+                    score = -_pvs(depth - 1 - r, -beta, -alpha, false, color, start, nodes, pv);
                 }
             }
             pop();
@@ -172,10 +173,6 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
             if (score > alpha) {
                 best_move = moves[i];
                 alpha = score;
-
-                // Write to pv line
-                pv[0] = moves[i]; // TODO still spits out nonsense sometimes
-                memcpy(pv + 1, sub_pv, (depth - 1) * sizeof(Move));
             }
             if (alpha >= beta) {
                 has_failed_high = true;
@@ -192,6 +189,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         }
         ttable_add(board.zobrist, depth, best_move, alpha, flag);
 
+        pv[depth - 1] = best_move;
         return alpha;
     }
 }
@@ -300,7 +298,7 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
  * @param victim the piece being attacked.
  * @return the expected material difference after a series of exchanges on a single square.
  */
-int _see(bool color, int square) {
+static int _see(bool color, int square) {
     int score = 0;
     char victim = board.mailbox[square];
     int enemy_square = _get_smallest_attacker_square(color, square);
@@ -442,9 +440,11 @@ static int _get_piece_score(char piece) {
 /**
  * @return true if conditions are ok for null move pruning:
  * - side to move is not in check
+ * 
+ * @param in_check whether the side to move is in check.
  */
-static bool _is_null_move_ok(void) {
-    return (!(is_check(board.turn))); // TODO do not use in endgame
+static bool _is_null_move_ok(bool in_check) {
+    return !in_check; // TODO do not use in endgame
 }
 
 
@@ -453,6 +453,7 @@ static bool _is_null_move_ok(void) {
  * @param depth the current depth.
  * @param moves_searched the number of moves searched so far this depth.
  * @param has_failed_high if a previous search at this depth has caused a fail high cutoff.
+ * @param in_check whether the side to move is in check.
  * @return true if:
  * - move is not a capture
  * - move is not a promotion
@@ -462,7 +463,7 @@ static bool _is_null_move_ok(void) {
  * - moves searched exceeds the threshold
  * - previous search at same depth has not failed high
  */
-static bool _is_reduction_ok(Move move, int depth, int moves_searched, bool has_failed_high) {
+static bool _is_reduction_ok(Move move, int depth, int moves_searched, bool has_failed_high, bool in_check) {
     if (has_failed_high) return false;
 
     switch (move.flag) {
@@ -479,7 +480,7 @@ static bool _is_reduction_ok(Move move, int depth, int moves_searched, bool has_
             return false;
     }
 
-    if (is_check(board.turn)) return false;
+    if (in_check) return false;
 
     push(move);
     bool gives_check = is_check(board.turn);

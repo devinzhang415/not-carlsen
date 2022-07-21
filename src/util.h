@@ -80,8 +80,8 @@ typedef struct Board {
     uint64_t w_occupied;
     uint64_t b_occupied;
 
-    unsigned int w_king_square;
-    unsigned int b_king_square;
+    int w_king_square;
+    int b_king_square;
 
     bool turn;
 

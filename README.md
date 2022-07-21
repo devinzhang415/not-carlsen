@@ -41,6 +41,9 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+7/21/22 v1.6.2
+> Rolled back PV changes as it was causing weird evaluation history issues.
+
 7/19/22 v1.6.1
 > Modified the transposition table for lockless multithreaded access.
 >

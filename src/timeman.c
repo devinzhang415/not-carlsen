@@ -3,7 +3,6 @@
 #include "util.h"
 
 
-extern Board board;
 extern Info info;
 
 
