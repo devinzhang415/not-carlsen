@@ -67,7 +67,7 @@ void iterative_deepening(void) {
     }
 
     // printf("Done\n");
-    printf("\nbestmove ");
+    printf("bestmove ");
     print_move(best_move);
     printf("\n");
 }
@@ -124,8 +124,8 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         return 0;
     }
     if (depth <= 0) {
-        // return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
-        return eval(board.turn);
+        return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        // return eval(board.turn);
     }
     
     // Recursive case
@@ -270,9 +270,7 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
         int score = -_qsearch(depth - 1, -beta, -alpha, (i == 0), color, start, nodes);
         pop();
 
-        if (score >= beta) {
-            return beta;
-        }
+        if (score >= beta) return beta;
         if (score > alpha) {
             best_move = moves[i];
             alpha = score;
