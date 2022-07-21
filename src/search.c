@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
 #include "time.h"
 #include "search.h"
 #include "util.h"
@@ -15,6 +16,7 @@
 
 extern Board board;
 extern TTable ttable;
+extern RTable rtable;
 extern Info info;
 
 const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
@@ -35,17 +37,26 @@ void iterative_deepening(void) {
     clock_t start = clock();
 
     uint64_t nodes = 0;
-    int score;
-    Move pv[info.depth]; // index info.depth - 1 reserved to denote search wasn't complete
-    Move best_move;
+    Move pv[info.depth]; // last index reserved to denote search wasn't complete
+    // Move best_move;
 
     int weight = (board.turn == WHITE) ? 1 : -1;
+    
+    // Dynamic scheduling assigns one iteration to each thread. On completion grab another thread
+    // Private variables with original values copied: rtable
+    // Private variables with uninitialized values: pv
+    // Shared variables: board, ttable, info, start, nodes
+    // omp_set_num_threads(2);
+    #pragma omp parallel for schedule(dynamic) firstprivate(rtable) private(pv) shared(start, nodes)
+    // for (int d = 1; d <= info.depth; d++) {
+    for (int d = 1; d <= 2; d++) {
+        if (pv[info.depth - 1].flag == PASS) continue; // On early exit, index info.depth - 1 is set to NULL_MOVE
 
-    for (int d = 1; d < info.depth; d++) {
-        score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, start, &nodes, pv);
+        int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, start, &nodes, pv);
 
-        if (pv[info.depth - 1].flag == PASS) break; // On early exit, index info.depth - 1 is set to NULL_MOVE
-        best_move = pv[0];
+        if (pv[info.depth - 1].flag == PASS) continue;
+        // if (pv[info.depth - 1].flag == PASS) break;
+        // best_move = pv[0];
 
         clock_t elapsed = clock() - start;
         double time = (double) elapsed / CLOCKS_PER_SEC;
@@ -55,9 +66,10 @@ void iterative_deepening(void) {
         printf("\n");
     }
 
-    printf("\nbestmove ");
-    print_move(best_move);
-    printf("\n");
+    printf("Done\n");
+    // printf("\nbestmove ");
+    // print_move(best_move);
+    // printf("\n");
 }
 
 

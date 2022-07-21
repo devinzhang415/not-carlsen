@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <omp.h>
 #include <time.h>
 #include <ctype.h>
 #include "uci.h"
@@ -128,13 +127,7 @@ int main(void) {
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;
 
-            #pragma omp parallel
-            {
-                #pragma omp single
-                {
-                    iterative_deepening();
-                }
-            }
+            iterative_deepening();
         }
 
         else if (!strncmp(input, "quit", 4)) {
