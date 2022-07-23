@@ -112,8 +112,8 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         return 0;
     }
     if (depth <= 0) {
-        // return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
-        return eval(board.turn);
+        return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        // return eval(board.turn);
     }
     
     // Recursive case
