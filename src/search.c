@@ -124,8 +124,8 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         return 0;
     }
     if (depth <= 0) {
-        return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
-        // return eval(board.turn);
+        // return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        return eval(board.turn);
     }
     
     // Recursive case
@@ -173,6 +173,8 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
             if (score > alpha) {
                 best_move = moves[i];
                 alpha = score;
+
+                pv[depth - 1] = best_move; // Save move to PV // TODO duplicate entries
             }
             if (alpha >= beta) {
                 has_failed_high = true;
@@ -189,7 +191,6 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         }
         ttable_add(board.zobrist, depth, best_move, alpha, flag);
 
-        pv[depth - 1] = best_move;
         return alpha;
     }
 }
