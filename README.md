@@ -47,6 +47,8 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 7/19/22 v1.6.1
 > Modified the transposition table for lockless multithreaded access.
 >
+> Switched to OpenMP from Pthreads for multithreading as Pthreads seems to struggle with the search functions.
+>
 > Fixed bugs involving time searched being rounded to the nearest second and transposition entries incorrectly being overridden.
 
 7/18/22 v1.6

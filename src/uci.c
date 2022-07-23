@@ -127,7 +127,7 @@ int main(void) {
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;
 
-            iterative_deepening(); // TODO listen for commands while seareching using multithreading
+            iterative_deepening();
         }
 
         else if (!strncmp(input, "quit", 4)) {
