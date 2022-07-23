@@ -1,5 +1,5 @@
 TARGET = not-carlsen
-LIBS = -lm -fopenmp
+LIBS = -lm
 CC = gcc
 CFLAGS = -s -O3
 
