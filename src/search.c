@@ -113,6 +113,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
     }
     if (depth <= 0) {
         // return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        (*nodes)++;
         return eval(board.turn);
     }
     
@@ -245,9 +246,9 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
     qsort(moves, n, sizeof(Move), _cmp_moves);
 
     for (int i = 0; i < n; i++) {
-        // Delta pruning // TODO do not use in late endgame
         int to = moves[i].to;
 
+        // Delta pruning // TODO do not use in late endgame
         char piece = board.mailbox[to];
         int delta = get_material_value(piece);
         if (stand_pat + delta + DELTA_MARGIN < alpha) continue;
