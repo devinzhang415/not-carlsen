@@ -39,7 +39,7 @@ void iterative_deepening(void) {
     Move pv[info.depth]; // last index reserved to denote search wasn't complete
     Move best_move;
 
-    int weight = (board.turn == WHITE) ? 1 : -1;
+    int weight = (board.turn == WHITE) ? 1 : -1;  // Score from white or black perspective
     
     for (int d = 1; d <= info.depth; d++) {
         int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, start, &nodes, pv);
