@@ -77,7 +77,7 @@ void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
                 break;
             }
         } else {
-            ttable.entries[index].key = key ^ score;
+            ttable.entries[index].key = key ^ score; // Lockless transposition table hack
             ttable.entries[index].depth = depth;
             ttable.entries[index].move = move;
             ttable.entries[index].score = score;

@@ -15,6 +15,7 @@ extern Move tt_move;
 
 
 void iterative_deepening(void);
+static void* search(void* args);
 static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes, Move* pv);
 static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes);
 

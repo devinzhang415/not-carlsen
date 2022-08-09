@@ -40,7 +40,7 @@ void iterative_deepening(void) {
     Move pv[info.depth]; // last index reserved to denote search wasn't complete
     Move best_move;
 
-    int weight = (board.turn == WHITE) ? 1 : -1;
+    int weight = (board.turn == WHITE) ? 1 : -1; // Score from white or black perspective
     
     for (int d = 1; d <= info.depth; d++) {
         int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, start, &nodes, pv);
@@ -59,6 +59,18 @@ void iterative_deepening(void) {
     printf("bestmove ");
     print_move(best_move);
     printf("\n");
+}
+
+
+/**
+ * @brief 
+ * 
+ * @param args 
+ * @return void* 
+ */
+static void* search(void* args) {
+    Param* a = (Param*) args;
+    _pvs(a->depth, a->alpha, a->beta, a->pv_node, a->color, a->start, a->nodes, a->pv);  
 }
 
 
@@ -113,8 +125,8 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         return 0;
     }
     if (depth <= 0) {
-        return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
-        // return eval(board.turn);
+        // return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        return eval(board.turn);
     }
     
     // Recursive case

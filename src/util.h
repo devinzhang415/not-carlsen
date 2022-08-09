@@ -177,6 +177,21 @@ typedef struct Info {
 } Info;
 
 
+/**
+ * 
+ */
+typedef struct Param {
+    int depth;
+    int alpha;
+    int beta;
+    bool pv_node;
+    bool color;
+    clock_t start;
+    uint64_t* nodes;
+    Move* pv;
+} Param;
+
+
 extern const bool WHITE;
 extern const bool BLACK;
 
