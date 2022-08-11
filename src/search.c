@@ -16,6 +16,7 @@
 
 extern Board board;
 extern TTable ttable;
+extern Stack* stack;
 extern RTable rtable;
 extern Info info;
 
@@ -26,12 +27,12 @@ const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before l
 const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
 const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
+const int NUM_THREADS = 2; // Number of threads to be used.
 Move tt_move; // Hash move from transposition table saved globally for move ordering.
 
 
 /**
  * Searches the position with iterative depths.
- * Returns void* for multithreading.
  */
 void iterative_deepening(void) {
     clock_t start = clock();
@@ -40,20 +41,26 @@ void iterative_deepening(void) {
     Move pv[info.depth]; // last index reserved to denote search wasn't complete
     Move best_move;
 
-    int weight = (board.turn == WHITE) ? 1 : -1; // Score from white or black perspective
+    pthread_t threads[NUM_THREADS];
     
-    for (int d = 1; d <= info.depth; d++) {
-        int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, start, &nodes, pv);
+    for (int d = 1; d <= NUM_THREADS; d++) {
+        Param* args = malloc(sizeof(Param));
+        args->depth = d;
+        args->alpha = -MATE_SCORE;
+        args->beta = MATE_SCORE;
+        args->pv_node = true;
+        args->color = board.turn;
+        args->start = start;
+        args->nodes = &nodes;
+        args->pv = pv;
 
-        if (pv[info.depth - 1].flag == PASS) break;
-        best_move = pv[d - 1];
+        pthread_create(&threads[d], NULL, _search, (void*) args);
 
-        clock_t elapsed = clock() - start;
-        double time = (double) elapsed / CLOCKS_PER_SEC;
-        if (time == 0) time = .1;
-        
-        print_info(d, score * weight, nodes, time, pv);
-        printf("\n");
+        free(args);
+    }
+
+    for (int i = 1; i <= NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
     }
 
     printf("bestmove ");
@@ -63,14 +70,24 @@ void iterative_deepening(void) {
 
 
 /**
- * @brief 
+ * Multithreaded wrapper for _pvs().
+ * Prints move info.
  * 
- * @param args 
- * @return void* 
+ * TODO
+ * thread specific stack, rtable
  */
-static void* search(void* args) {
+static void* _search(void* args) {
     Param* a = (Param*) args;
-    _pvs(a->depth, a->alpha, a->beta, a->pv_node, a->color, a->start, a->nodes, a->pv);  
+    int score = _pvs(a->depth, a->alpha, a->beta, a->pv_node, a->color, a->start, a->nodes, a->pv);
+
+    clock_t elapsed = clock() - a->start;
+    double time = (double) elapsed / CLOCKS_PER_SEC;
+    if (time == 0) time = .1;
+    
+    int weight = (a->color == WHITE) ? 1 : -1; // Score from white or black perspective
+
+    print_info(a->depth, score * weight, *a->nodes, time, a->pv);
+    printf("\n");
 }
 
 
@@ -126,6 +143,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
     }
     if (depth <= 0) {
         // return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        (*nodes)++;
         return eval(board.turn);
     }
     
@@ -258,9 +276,9 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
     qsort(moves, n, sizeof(Move), _cmp_moves);
 
     for (int i = 0; i < n; i++) {
-        // Delta pruning // TODO do not use in late endgame
         int to = moves[i].to;
 
+        // Delta pruning // TODO do not use in late endgame
         char piece = board.mailbox[to];
         int delta = get_material_value(piece);
         if (stand_pat + delta + DELTA_MARGIN < alpha) continue;
