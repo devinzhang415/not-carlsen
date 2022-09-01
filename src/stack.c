@@ -13,9 +13,9 @@
 // } Stack;
 
 
-extern Board board;
-extern Stack* stack;
-extern RTable rtable;
+extern __thread Board board;
+extern __thread Stack* stack;
+extern __thread RTable rtable;
 
 
 /**

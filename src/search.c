@@ -14,10 +14,10 @@
 #include "timeman.h"
 
 
-extern Board board;
+extern __thread Board board;
 extern TTable ttable;
-extern Stack* stack;
-extern RTable rtable;
+extern __thread Stack* stack;
+extern __thread RTable rtable;
 extern Info info;
 
 const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
@@ -27,8 +27,8 @@ const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before l
 const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
 const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
-const int NUM_THREADS = 2; // Number of threads to be used.
-Move tt_move; // Hash move from transposition table saved globally for move ordering.
+const int NUM_THREADS = 1; // Number of threads to be used.
+__thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
 
 
 /**
@@ -38,33 +38,34 @@ void iterative_deepening(void) {
     clock_t start = clock();
 
     uint64_t nodes = 0;
-    Move pv[info.depth]; // last index reserved to denote search wasn't complete
     Move best_move;
 
     pthread_t threads[NUM_THREADS];
     
-    for (int d = 1; d <= NUM_THREADS; d++) {
+    for (int i = 0; i < NUM_THREADS; i++) {
         Param* args = malloc(sizeof(Param));
-        args->depth = d;
+        args->depth = i + 1;
         args->alpha = -MATE_SCORE;
         args->beta = MATE_SCORE;
         args->pv_node = true;
         args->color = board.turn;
         args->start = start;
         args->nodes = &nodes;
-        args->pv = pv;
+        args->pv = malloc(info.depth * sizeof(Move));
 
-        pthread_create(&threads[d], NULL, _search, (void*) args);
+        pthread_create(&threads[i], NULL, _search, (void*) args);
+        // _search((void*) args);
 
+        free(args->pv);
         free(args);
     }
 
-    for (int i = 1; i <= NUM_THREADS; i++) {
+    for (int i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
 
     printf("bestmove ");
-    print_move(best_move);
+    print_move(best_move); // TODO
     printf("\n");
 }
 

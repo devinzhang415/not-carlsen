@@ -12,7 +12,7 @@ extern const int Q_MAX_DEPTH;
 extern const int DELTA_MARGIN;
 extern const int SEE_THRESHOLD;
 extern const int NUM_THREADS;
-extern Move tt_move;
+extern __thread Move tt_move;
 
 
 void iterative_deepening(void);

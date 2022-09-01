@@ -53,7 +53,7 @@ const int* EG_PSQTS[12] = {W_EG_PAWN_TABLE, W_EG_KNIGHT_TABLE, W_EG_BISHOP_TABLE
                            B_EG_PAWN_TABLE, B_EG_KNIGHT_TABLE, B_EG_BISHOP_TABLE, B_EG_ROOK_TABLE, B_EG_QUEEN_TABLE, B_EG_KING_TABLE};
 
 
-extern Board board;
+extern __thread Board board;
 
 
 /**

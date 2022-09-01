@@ -16,7 +16,7 @@
 // } RTable;
 
 
-extern RTable rtable;
+extern __thread RTable rtable;
 
 const uint64_t RTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
 

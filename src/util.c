@@ -6,7 +6,7 @@
 #include "util.h"
 
 
-extern Board board;
+extern __thread Board board;
 
 
 const bool WHITE = true;
