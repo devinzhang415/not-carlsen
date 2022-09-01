@@ -41,6 +41,9 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+9/1/22 v1.6.3
+> Updated global variables like Board, Stack, and Rtable to use thread-local storage (TLS) macros to support multithreading.
+
 7/21/22 v1.6.2
 > Rolled back PV changes as it was causing weird evaluation history issues.
 
