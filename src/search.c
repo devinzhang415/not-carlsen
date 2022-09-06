@@ -27,7 +27,7 @@ const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before l
 const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
 const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
-const int NUM_THREADS = 1; // Number of threads to be used.
+const int NUM_THREADS = 6; // Number of threads to be used.
 __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
 
 
@@ -43,6 +43,8 @@ void iterative_deepening(void) {
     pthread_t threads[NUM_THREADS];
     
     for (int i = 0; i < NUM_THREADS; i++) {
+        uint64_t foo_nodes = 0;
+
         Param* args = malloc(sizeof(Param));
         args->depth = i + 1;
         args->alpha = -MATE_SCORE;
@@ -50,14 +52,12 @@ void iterative_deepening(void) {
         args->pv_node = true;
         args->color = board.turn;
         args->start = start;
-        args->nodes = &nodes;
+        // args->nodes = &nodes;
+        args->nodes = &foo_nodes;
         args->pv = malloc(info.depth * sizeof(Move));
 
         pthread_create(&threads[i], NULL, _search, (void*) args);
         // _search((void*) args);
-
-        free(args->pv);
-        free(args);
     }
 
     for (int i = 0; i < NUM_THREADS; i++) {
@@ -74,8 +74,7 @@ void iterative_deepening(void) {
  * Multithreaded wrapper for _pvs().
  * Prints move info.
  * 
- * TODO
- * thread specific stack, rtable
+ * @param args arguments for _pvs wrapped in Param struct.
  */
 static void* _search(void* args) {
     Param* a = (Param*) args;
@@ -88,7 +87,9 @@ static void* _search(void* args) {
     int weight = (a->color == WHITE) ? 1 : -1; // Score from white or black perspective
 
     print_info(a->depth, score * weight, *a->nodes, time, a->pv);
-    printf("\n");
+
+    free(a->pv);
+    free(a);
 }
 
 
@@ -155,12 +156,12 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         bool in_check = is_check(board.turn);
 
         // Null move pruning
-        if (_is_null_move_ok(in_check)) {
-            push(NULL_MOVE);
-            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, start, nodes, pv);
-            pop();
-            if (score >= beta) return score;
-        }
+        // if (_is_null_move_ok(in_check)) {
+        //     push(NULL_MOVE);
+        //     score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, start, nodes, pv);
+        //     pop();
+        //     if (score >= beta) return score;
+        // }
 
         score = -MATE_SCORE;
         Move best_move = NULL_MOVE;
@@ -168,14 +169,13 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
 
         Move moves[MAX_MOVE_NUM];
         int n = gen_legal_moves(moves, board.turn);
-        qsort(moves, n, sizeof(Move), _cmp_moves);
 
         // Stalemate
-        if (n == 0) {
-            return 0;
-        }
+        if (n == 0) return 0;
 
-        for (int i = 0; i < n; i++) {
+        qsort(moves, n, sizeof(Move), _cmp_moves);
+
+        for (int i = 0; i < n; i++) { // Loop through each move
             int r = (_is_reduction_ok(moves[i], depth, i, has_failed_high, in_check)) ? LRM_R : 0; // Late move reduction
 
             // PVS

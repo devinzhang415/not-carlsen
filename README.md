@@ -41,6 +41,9 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+9/6/22 v1.6.4
+> Resolved multithreading crashes and updated printing info to be one operation to avoid threading complications from multiple threads' prints overlapping with each other.
+
 9/1/22 v1.6.3
 > Updated global variables like Board, Stack, and Rtable to use thread-local storage (TLS) macros to support multithreading.
 
