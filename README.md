@@ -41,6 +41,9 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+9/7/22 v1.6.5
+> Resolved multithreading crashes and successfully allocated thread-local storage variables. Code begins to crash around 3 threads on some compiles, with chance of crash increasingly as number of threads does. Not going to look into it until after the next update implementing full LazySMP, as cause of crash may be due to the spaghetti state of the iterative deepening that I've been using to test.
+
 9/6/22 v1.6.4
 > Resolved multithreading crashes and updated printing info to be one operation to avoid threading complications from multiple threads' prints overlapping with each other.
 

@@ -181,6 +181,10 @@ typedef struct Info {
  * 
  */
 typedef struct Param {
+    Board* board;
+    Stack** stack;
+    RTable* rtable;
+
     int depth;
     int alpha;
     int beta;

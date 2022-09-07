@@ -27,7 +27,7 @@ const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before l
 const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
 const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
-const int NUM_THREADS = 1; // Number of threads to be used.
+const int NUM_THREADS = 4; // Number of threads to be used.
 __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
 
 
@@ -37,28 +37,31 @@ __thread Move tt_move; // Hash move from transposition table saved globally for 
 void iterative_deepening(void) {
     clock_t start = clock();
 
-    uint64_t nodes = 0;
+    uint64_t nodes = 0; // TODO nodes are not updated between threads
     Move best_move;
 
     pthread_t threads[NUM_THREADS];
     
+    Board init_board = board;
+    Stack* init_stack = stack;
+    RTable init_rtable = rtable;
+
     for (int i = 0; i < NUM_THREADS; i++) {
         Param* args = malloc(sizeof(Param));
+        args->board = &init_board;
+        args->stack = &init_stack;
+        args->rtable = &rtable;
         args->depth = i + 1;
         args->alpha = -MATE_SCORE;
         args->beta = MATE_SCORE;
         args->pv_node = true;
         args->color = board.turn;
         args->start = start;
-
-        // args->nodes = &nodes;
-        uint64_t foo_nodes = 0;
-        args->nodes = &foo_nodes;
+        args->nodes = &nodes;
         
         args->pv = malloc(info.depth * sizeof(Move));
 
         pthread_create(&threads[i], NULL, _search, (void*) args);
-        // _search((void*) args);
     }
 
     for (int i = 0; i < NUM_THREADS; i++) {
@@ -79,6 +82,9 @@ void iterative_deepening(void) {
  */
 static void* _search(void* args) {
     Param* a = (Param*) args;
+    board = *(a->board);
+    stack = *(a->stack);
+    rtable = *(a->rtable);
     int score = _pvs(a->depth, a->alpha, a->beta, a->pv_node, a->color, a->start, a->nodes, a->pv);
 
     clock_t elapsed = clock() - a->start;
@@ -156,12 +162,12 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         bool in_check = is_check(board.turn);
 
         // Null move pruning
-        // if (_is_null_move_ok(in_check)) {
-        //     push(NULL_MOVE);
-        //     score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, start, nodes, pv);
-        //     pop();
-        //     if (score >= beta) return score;
-        // }
+        if (_is_null_move_ok(in_check)) {
+            push(NULL_MOVE);
+            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, start, nodes, pv);
+            pop();
+            if (score >= beta) return score;
+        }
 
         score = -MATE_SCORE;
         bool has_failed_high = false;
