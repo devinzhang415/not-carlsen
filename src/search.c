@@ -27,7 +27,7 @@ const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before l
 const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
 const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
-const int NUM_THREADS = 6; // Number of threads to be used.
+const int NUM_THREADS = 1; // Number of threads to be used.
 __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
 
 
@@ -43,8 +43,6 @@ void iterative_deepening(void) {
     pthread_t threads[NUM_THREADS];
     
     for (int i = 0; i < NUM_THREADS; i++) {
-        uint64_t foo_nodes = 0;
-
         Param* args = malloc(sizeof(Param));
         args->depth = i + 1;
         args->alpha = -MATE_SCORE;
@@ -52,8 +50,11 @@ void iterative_deepening(void) {
         args->pv_node = true;
         args->color = board.turn;
         args->start = start;
+
         // args->nodes = &nodes;
+        uint64_t foo_nodes = 0;
         args->nodes = &foo_nodes;
+        
         args->pv = malloc(info.depth * sizeof(Move));
 
         pthread_create(&threads[i], NULL, _search, (void*) args);
@@ -151,8 +152,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
     
     // Recursive case
     else {
-        int score;
-
+        int score = 0;
         bool in_check = is_check(board.turn);
 
         // Null move pruning
@@ -164,15 +164,11 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         // }
 
         score = -MATE_SCORE;
-        Move best_move = NULL_MOVE;
         bool has_failed_high = false;
 
         Move moves[MAX_MOVE_NUM];
         int n = gen_legal_moves(moves, board.turn);
-
-        // Stalemate
-        if (n == 0) return 0;
-
+        if (n == 0) return 0; // Stalemate
         qsort(moves, n, sizeof(Move), _cmp_moves);
 
         for (int i = 0; i < n; i++) { // Loop through each move
@@ -191,10 +187,8 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
             pop();
 
             if (score > alpha) {
-                best_move = moves[i];
                 alpha = score;
-
-                pv[depth - 1] = best_move; // Save move to PV // TODO duplicate entries
+                pv[depth - 1] = moves[i]; // Save best move to PV // TODO duplicate entries
             }
             if (alpha >= beta) {
                 has_failed_high = true;
@@ -209,7 +203,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         } else if (alpha >= beta) {
             flag = LOWERBOUND;
         }
-        ttable_add(board.zobrist, depth, best_move, alpha, flag);
+        ttable_add(board.zobrist, depth, pv[depth - 1], alpha, flag);
 
         return alpha;
     }
