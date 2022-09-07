@@ -6,13 +6,6 @@
 #include "rtable.h"
 
 
-// typedef struct Stack {
-//     Board board;
-//     Move move;
-//     struct Stack *next;
-// } Stack;
-
-
 extern __thread Board board;
 extern __thread Stack* stack;
 extern __thread RTable rtable;

@@ -20,6 +20,7 @@ extern __thread Stack* stack;
 extern __thread RTable rtable;
 extern Info info;
 
+
 const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
 const int LRM_R = 1; // Depth to reduce by in late move reduction.
 const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction.
