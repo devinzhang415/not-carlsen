@@ -42,31 +42,31 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
-10/17/22 v1.6.6
+10/17/22 v1.5.7
 > Added history heuristic to support Lazy SMP branch differences.
 >
 > Merged Lazy SMP branch into main.
 
-9/7/22 v1.6.5
+9/7/22 v1.5.6
 > Resolved multithreading crashes and successfully allocated thread-local storage variables. Code begins to crash around 3 threads on some compiles, with chance of crash increasingly as number of threads does. Not going to look into it until after the next update implementing full LazySMP, as cause of crash may be due to the spaghetti state of the iterative deepening that I've been using to test.
 
-9/6/22 v1.6.4
+9/6/22 v1.5.5
 > Resolved multithreading crashes and updated printing info to be one operation to avoid threading complications from multiple threads' prints overlapping with each other.
 
-9/1/22 v1.6.3
+9/1/22 v1.5.4
 > Updated global variables like Board, Stack, and Rtable to use thread-local storage (TLS) macros to support multithreading.
 
-7/21/22 v1.6.2
+7/21/22 v1.5.3
 > Rolled back PV changes as it was causing weird evaluation history issues.
 
-7/19/22 v1.6.1
+7/19/22 v1.5.2
 > Modified the transposition table for lockless multithreaded access.
 >
 > Switched to OpenMP from Pthreads for multithreading as Pthreads seems to struggle with the search functions.
 >
 > Fixed bugs involving time searched being rounded to the nearest second and transposition entries incorrectly being overridden.
 
-7/18/22 v1.6
+7/18/22 v1.5.1
 > Attempted several things to prevent overflow in quiescence search: delta pruning, transposition table access, and static exchange evaluation (SEE). With SEE, overflow seems to have been greatly minimized.
 >
 > Updated the PV line to spit out less nonsense. Move sequences of actual moves are longer, but still some issues that need to be ironed out.
