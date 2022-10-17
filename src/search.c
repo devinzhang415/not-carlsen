@@ -18,6 +18,7 @@ extern __thread Board board;
 extern TTable ttable;
 extern __thread Stack* stack;
 extern __thread RTable rtable;
+extern __thread int htable[2][64][64];
 extern Info info;
 
 
@@ -40,12 +41,13 @@ void iterative_deepening(void) {
 
     uint64_t nodes = 0; // TODO nodes are not updated between threads
     Move best_move;
-
-    pthread_t threads[NUM_THREADS];
+    int weight = (board.turn == WHITE) ? 1 : -1;  // Score from white or black perspective
     
     Board init_board = board;
     Stack* init_stack = stack;
     RTable init_rtable = rtable;
+    
+    pthread_t threads[NUM_THREADS];
 
     for (int i = 0; i < NUM_THREADS; i++) {
         Param* args = malloc(sizeof(Param));
@@ -68,6 +70,8 @@ void iterative_deepening(void) {
     for (int i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
+
+    memset(htable, 0, sizeof(htable)); // Reset history heuristic table to all 0s
 
     printf("bestmove ");
     print_move(best_move); // TODO
@@ -152,7 +156,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         return 0;
     }
     if (depth <= 0) {
-        // return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        // return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes); TODO
         (*nodes)++;
         return eval(board.turn);
     }
@@ -178,11 +182,19 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         if (n == 0) return 0; // Stalemate
         qsort(moves, n, sizeof(Move), _cmp_moves);
 
-        for (int i = 0; i < n; i++) { // Loop through each move
-            int r = (_is_reduction_ok(moves[i], depth, i, has_failed_high, in_check)) ? LRM_R : 0; // Late move reduction
+        // Stalemate
+        if (n == 0) {
+            return 0;
+        }
+
+        for (int i = 0; i < n; i++) {
+            Move move = moves[i];
+
+            int r = (_is_reduction_ok(move, depth, i, has_failed_high, in_check)) ? LRM_R : 0; // Late move reduction
+
 
             // PVS
-            push(moves[i]);
+            push(move);
             if (i == 0) {
                 score = -_pvs(depth - 1 - r, -beta, -alpha, true, color, start, nodes, pv);
             } else {
@@ -199,6 +211,9 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
             }
             if (alpha >= beta) {
                 has_failed_high = true;
+                if (is_capture(moves[i])) {
+                    htable[board.turn][move.from][move.to] = depth * depth; // Update history heuristic table
+                }
                 break;
             }
         }
@@ -384,9 +399,10 @@ static int _cmp_moves(const void* elem1, const void* elem2) {
 /**
  * Rates a move for move ordering purposes.
  * Uses the following move ordering:
- * - Hash move } score = 1000
+ * - Hash move | score = 1000
  * - Winning captures (low value piece captures high value piece) | 100 <= score <= 500
  * - Promotions / Equal captures (piece captured and capturing have the same value) | score = 0
+ * - Killer moves (from history heuristic table) | -100 < score < 0
  * - Losing captures (high value piece captures low value piece) | -500 <= score <= -100
  * - All others | score = -1000
  * 
@@ -405,6 +421,9 @@ static int _score_move(Move move) {
     if (move.to == tt_move.to && move.from == tt_move.from && move.flag == tt_move.flag) {
         return 1000;
     }
+
+    int killer_val = htable[board.turn][move.from][move.to];
+    if (killer_val != 0) return killer_val / -100;
     
     switch (move.flag) {
         case NONE:
