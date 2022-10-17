@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include "time.h"
 #include "search.h"
 #include "util.h"
@@ -13,11 +14,13 @@
 #include "timeman.h"
 
 
-extern Board board;
+extern __thread Board board;
 extern TTable ttable;
-extern RTable rtable;
-extern int htable[2][64][64];
+extern __thread Stack* stack;
+extern __thread RTable rtable;
+extern __thread int htable[2][64][64];
 extern Info info;
+
 
 const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
 const int LRM_R = 1; // Depth to reduce by in late move reduction.
@@ -26,41 +29,79 @@ const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before l
 const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
 const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
-Move tt_move; // Hash move from transposition table saved globally for move ordering.
+const int NUM_THREADS = 4; // Number of threads to be used.
+__thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
 
 
 /**
  * Searches the position with iterative depths.
- * Returns void* for multithreading.
  */
 void iterative_deepening(void) {
     clock_t start = clock();
 
-    uint64_t nodes = 0;
-    Move pv[info.depth]; // last index reserved to denote search wasn't complete
+    uint64_t nodes = 0; // TODO nodes are not updated between threads
     Move best_move;
-
     int weight = (board.turn == WHITE) ? 1 : -1;  // Score from white or black perspective
     
-    for (int d = 1; d <= info.depth; d++) {
-        int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, start, &nodes, pv);
+    Board init_board = board;
+    Stack* init_stack = stack;
+    RTable init_rtable = rtable;
+    
+    pthread_t threads[NUM_THREADS];
 
-        if (pv[info.depth - 1].flag == PASS) break;
-        best_move = pv[d - 1];
-
-        clock_t elapsed = clock() - start;
-        double time = (double) elapsed / CLOCKS_PER_SEC;
-        if (time == 0) time = .1;
+    for (int i = 0; i < NUM_THREADS; i++) {
+        Param* args = malloc(sizeof(Param));
+        args->board = &init_board;
+        args->stack = &init_stack;
+        args->rtable = &rtable;
+        args->depth = i + 1;
+        args->alpha = -MATE_SCORE;
+        args->beta = MATE_SCORE;
+        args->pv_node = true;
+        args->color = board.turn;
+        args->start = start;
+        args->nodes = &nodes;
         
-        print_info(d, score * weight, nodes, time, pv);
-        printf("\n");
+        args->pv = malloc(info.depth * sizeof(Move));
+
+        pthread_create(&threads[i], NULL, _search, (void*) args);
+    }
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
     }
 
     memset(htable, 0, sizeof(htable)); // Reset history heuristic table to all 0s
 
     printf("bestmove ");
-    print_move(best_move);
+    print_move(best_move); // TODO
     printf("\n");
+}
+
+
+/**
+ * Multithreaded wrapper for _pvs().
+ * Prints move info.
+ * 
+ * @param args arguments for _pvs wrapped in Param struct.
+ */
+static void* _search(void* args) {
+    Param* a = (Param*) args;
+    board = *(a->board);
+    stack = *(a->stack);
+    rtable = *(a->rtable);
+    int score = _pvs(a->depth, a->alpha, a->beta, a->pv_node, a->color, a->start, a->nodes, a->pv);
+
+    clock_t elapsed = clock() - a->start;
+    double time = (double) elapsed / CLOCKS_PER_SEC;
+    if (time == 0) time = .1;
+    
+    int weight = (a->color == WHITE) ? 1 : -1; // Score from white or black perspective
+
+    print_info(a->depth, score * weight, *a->nodes, time, a->pv);
+
+    free(a->pv);
+    free(a);
 }
 
 
@@ -122,8 +163,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
     
     // Recursive case
     else {
-        int score;
-
+        int score = 0;
         bool in_check = is_check(board.turn);
 
         // Null move pruning
@@ -135,11 +175,11 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         }
 
         score = -MATE_SCORE;
-        Move best_move = NULL_MOVE;
         bool has_failed_high = false;
 
         Move moves[MAX_MOVE_NUM];
         int n = gen_legal_moves(moves, board.turn);
+        if (n == 0) return 0; // Stalemate
         qsort(moves, n, sizeof(Move), _cmp_moves);
 
         // Stalemate
@@ -151,6 +191,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
             Move move = moves[i];
 
             int r = (_is_reduction_ok(move, depth, i, has_failed_high, in_check)) ? LRM_R : 0; // Late move reduction
+
 
             // PVS
             push(move);
@@ -165,10 +206,8 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
             pop();
 
             if (score > alpha) {
-                best_move = move;
                 alpha = score;
-
-                pv[depth - 1] = best_move; // Save move to PV // TODO duplicate entries
+                pv[depth - 1] = moves[i]; // Save best move to PV // TODO duplicate entries
             }
             if (alpha >= beta) {
                 has_failed_high = true;
@@ -186,7 +225,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         } else if (alpha >= beta) {
             flag = LOWERBOUND;
         }
-        ttable_add(board.zobrist, depth, best_move, alpha, flag);
+        ttable_add(board.zobrist, depth, pv[depth - 1], alpha, flag);
 
         return alpha;
     }

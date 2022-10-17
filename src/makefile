@@ -1,5 +1,5 @@
 TARGET = not-carlsen
-LIBS = -lm
+LIBS = -lm -lpthread
 CC = gcc
 CFLAGS = -s -O3
 

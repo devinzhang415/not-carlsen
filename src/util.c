@@ -6,7 +6,8 @@
 #include "util.h"
 
 
-extern Board board;
+extern __thread Board board;
+extern Info info;
 
 
 const bool WHITE = true;
@@ -305,7 +306,6 @@ void print_move(Move move) {
 }
 
 
-extern Info info;
 /**
  * Prints the search info to send to the GUI.
  * @param depth search depth in plies.
@@ -315,12 +315,67 @@ extern Info info;
  * @param pv the best line of moves found.
  */
 void print_info(int depth, int score, uint64_t nodes, double time, Move* pv) {
-    printf("info depth %d score cp %d nodes %llu nps %.0f time %d pv ",
-            depth, score, nodes, nodes / time, (int) (time * 1000));
-    for (int i = depth - 1; i >= 0; i--) {
-        print_move(pv[i]);
-        printf(" ");
+    size_t size = 1024;
+    char* str = malloc(size);
+
+    size_t i = 0;
+    for (int move_i = depth - 1; move_i >= 0; move_i--) {
+        if (i + 7 > size) {
+            size *= 2;
+            str = realloc(str, size);
+        }
+        i = _save_move_str(str, i, pv[move_i]);
+        str[i++] = ' ';
     }
+    str[i] = '\0';
+
+    printf("info depth %d score cp %d nodes %llu nps %.0f time %d pv %s\n",
+            depth, score, nodes, nodes / time, (int) (time * 1000), str);
+    free(str);
+}
+
+
+/**
+ * Saves the print of the move in from square - to square notation.
+ * @param str where to save the output.
+ * @param i index of where to start saving in the output buffer.
+ * @param move
+ * @return i at its updated index.
+ */
+static int _save_move_str(char* str, int i, Move move) {
+    str[i++] = 'a' + file_of(move.from);
+    str[i++] = (rank_of(move.from) + 1) + '0';
+    str[i++] = 'a' + file_of(move.to);
+    str[i++] = (rank_of(move.to) + 1) + '0';
+    
+    switch (move.flag) {
+        case PR_QUEEN:
+            str[i++] = 'q';
+            break;
+        case PR_ROOK:
+            str[i++] = 'r';
+            break;
+        case PR_BISHOP:
+            str[i++] = 'b';
+            break;
+        case PR_KNIGHT:
+            str[i++] = 'n';
+            break;
+        case PC_QUEEN:
+            str[i++] = 'q';
+            break;
+        case PC_ROOK:
+            str[i++] = 'r';
+            break;
+        case PC_BISHOP:
+            str[i++] = 'b';
+            break;
+        case PC_KNIGHT:
+            str[i++] = 'n';
+            break;
+    }
+
+    return i;
 }
 
 

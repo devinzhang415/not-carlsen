@@ -177,6 +177,25 @@ typedef struct Info {
 } Info;
 
 
+/**
+ * 
+ */
+typedef struct Param {
+    Board* board;
+    Stack** stack;
+    RTable* rtable;
+
+    int depth;
+    int alpha;
+    int beta;
+    bool pv_node;
+    bool color;
+    clock_t start;
+    uint64_t* nodes;
+    Move* pv;
+} Param;
+
+
 extern const bool WHITE;
 extern const bool BLACK;
 
@@ -267,10 +286,10 @@ void clear_bit(uint64_t* bb, int square);
 int pop_count(uint64_t bb);
 
 void print_bb(uint64_t bb);
-
 void print_move(Move move);
-
 void print_info(int depth, int score, uint64_t nodes, double time, Move* pv);
+
+static int _save_move_str(char* str, int i, Move move);
 
 int rank_of(int square);
 int file_of(int file);

@@ -6,6 +6,9 @@
 #include "board.h"
 
 
+extern __thread Board board;
+
+
 // Weights for final scoring
 const double MATERIAL_WEIGHT = 1;
 const double PSQT_WEIGHT = .1;
@@ -51,9 +54,6 @@ const int* MG_PSQTS[12] = {W_MG_PAWN_TABLE, W_MG_KNIGHT_TABLE, W_MG_BISHOP_TABLE
                            B_MG_PAWN_TABLE, B_MG_KNIGHT_TABLE, B_MG_BISHOP_TABLE, B_MG_ROOK_TABLE, B_MG_QUEEN_TABLE, B_MG_KING_TABLE};
 const int* EG_PSQTS[12] = {W_EG_PAWN_TABLE, W_EG_KNIGHT_TABLE, W_EG_BISHOP_TABLE, W_EG_ROOK_TABLE, W_EG_QUEEN_TABLE, W_EG_KING_TABLE,
                            B_EG_PAWN_TABLE, B_EG_KNIGHT_TABLE, B_EG_BISHOP_TABLE, B_EG_ROOK_TABLE, B_EG_QUEEN_TABLE, B_EG_KING_TABLE};
-
-
-extern Board board;
 
 
 /**

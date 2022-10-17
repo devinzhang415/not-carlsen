@@ -14,11 +14,11 @@
 #include "evaluate.h"
 
 
-Board board; // Board structure
-Stack stack; // Move and board history structure
+__thread Board board; // Board structure
+__thread Stack stack; // Move and board history structure
 TTable ttable; // Transposition table
-RTable rtable; // Threefold-repetition hashtable
-int htable[2][64][64]; // History heuristic table: [side to move][from][to]
+__thread RTable rtable; // Threefold-repetition hashtable
+__thread int htable[2][64][64]; // History heuristic table: [side to move][from][to]
 Info info; // Move generation parameter information
 
 

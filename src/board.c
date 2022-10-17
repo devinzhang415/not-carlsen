@@ -11,8 +11,8 @@
 #include "rtable.h"
 
 
-extern Board board;
-extern RTable rtable;
+extern __thread Board board;
+extern __thread RTable rtable;
 
 
 /**
