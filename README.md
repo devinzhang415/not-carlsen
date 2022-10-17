@@ -28,6 +28,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - Lockless transposition table
 - Iterative deepening
 - MVV-LVA move ordering
+- History heuristic
 - Null move pruning
 - Late move reduction
 - Delta pruning
@@ -41,6 +42,9 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+10/17/22 v1.6.3
+> Added history heuristic to support Lazy SMP branch differences.
+
 7/21/22 v1.6.2
 > Rolled back PV changes as it was causing weird evaluation history issues.
 

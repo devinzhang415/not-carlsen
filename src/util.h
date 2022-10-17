@@ -283,5 +283,7 @@ int pull_lsb(uint64_t* bb);
 int max(int x, int y);
 int min(int x, int y);
 
+bool is_capture(Move move);
+
 
 #endif
