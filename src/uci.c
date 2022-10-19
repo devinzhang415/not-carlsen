@@ -126,9 +126,9 @@ int main(void) {
             info.movestogo = (token = strstr(input, "movestogo")) ? atoi(token + 10) : 0;
             info.depth = (token = strstr(input, "depth")) ? atoi(token + 6) : MAX_DEPTH;
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
-            info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;
+            info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;\
 
-            iterative_deepening();
+            parallel_search();
         }
 
         else if (!strncmp(input, "quit", 4)) {
@@ -139,7 +139,7 @@ int main(void) {
 
 
 /**
- * Initializes the board, stack, and repetition table.
+ * Initializes the board, stack, repetition table, and history heuristic table.
  * @param fen the FEN of the position. Assumed valid.
  */
 static void _init_structs(char* fen) {
@@ -148,6 +148,7 @@ static void _init_structs(char* fen) {
     init_ttable();
     init_rtable();
     rtable_add(board.zobrist);
+    memset(htable, 0, sizeof(htable)); // Sets history heuristic table to all 0s
 }
 
 

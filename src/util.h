@@ -178,21 +178,16 @@ typedef struct Info {
 
 
 /**
- * 
+ * Initial condition of structs before multithreading.
+ * As well as other arguments to pass into threads.
  */
 typedef struct Param {
     Board* board;
     Stack** stack;
     RTable* rtable;
 
-    int depth;
-    int alpha;
-    int beta;
-    bool pv_node;
-    bool color;
-    clock_t start;
-    uint64_t* nodes;
-    Move* pv;
+    int start_depth; // depth to start iterative_deepening at
+    bool is_main; // whether thread is main thread
 } Param;
 
 

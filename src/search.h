@@ -12,12 +12,14 @@ extern const int Q_MAX_DEPTH;
 extern const int DELTA_MARGIN;
 extern const int SEE_THRESHOLD;
 extern const int NUM_THREADS;
+
 extern __thread Move tt_move;
+extern bool thread_exit;
 
 
-void iterative_deepening(void);
-static void* _search(void* args);
-static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes, Move* pv);
+void parallel_search(void);
+static void* _iterative_deepening(void* args);
+static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes, Move* pv);
 static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes);
 
 static int _see(bool color, int square);
