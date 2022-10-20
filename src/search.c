@@ -36,6 +36,42 @@ bool thread_exit = false; // set by main thread to tell the other threads to exi
 
 
 /**
+ * FOR TESTING ONLY
+ */
+void dummy_id_search() {
+    clock_t start = clock();
+
+    uint64_t nodes = 0;
+    int score;
+    Move pv[info.depth];
+    Move best_move;
+
+    thread_exit = false;
+
+    int weight = (board.turn == WHITE) ? 1 : -1;
+
+    int d = 0;
+    for (d = 1; d < info.depth; d++) {
+        score = _pvs(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, true, start, &nodes, pv);
+
+        if (thread_exit) break;
+        best_move = pv[d - 1];
+
+        clock_t elapsed = clock() - start;
+        double time = (double) elapsed / CLOCKS_PER_SEC;
+        if (time == 0) time = .1;
+        
+        print_info(d, score * weight, nodes, time, pv);
+    }
+    d--;
+
+    printf("\nbestmove ");
+    print_move(best_move);
+    printf("\n");
+}
+
+
+/**
  * Searches the position with Lazy SMP multithreading.
  * Uses threads running iterative deepening loops, half starting at depth 1 and half at depth 2.
  * Uses a main thread that has the UCI-info and exit checking. If main thread exits all other thread exits.
@@ -45,6 +81,8 @@ void parallel_search(void) {
     Board init_board = board;
     Stack* init_stack = stack;
     RTable init_rtable = rtable;
+
+    thread_exit = false;
 
     int start_depth = 1;
     for (int i = 0; i < NUM_THREADS; i++) {
@@ -118,7 +156,7 @@ static void* _iterative_deepening(void* args) {
  * - Negamax (fail soft)
  * - Quiescence search
  * - Transposition table
- * - MVV-LVA move ordering
+ * - MVV-LVA + history heuristic move ordering
  * - Null move pruning
  * - Late move reduction
  * 
@@ -163,9 +201,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         return 0;
     }
     if (depth <= 0) {
-        // return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes); TODO
-        (*nodes)++;
-        return eval(board.turn);
+        return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
     }
     
     // Recursive case
@@ -242,8 +278,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
  * Extends the search past depth 0 until there are no more captures.
  * Uses:
  * - Delta pruning
- * - Transposition table
- * - MVV-LVA move ordering
+ * - MVV-LVA + history heuristic move ordering
  * - SEE
  * 
  * @param depth how many ply to search.
@@ -254,9 +289,6 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @return value of depth 0 node.
- * 
- * TODO
- * stack overflow
  */
 static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {
@@ -264,24 +296,6 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
     }
 
     (*nodes)++;
-
-    // Search for position in the transposition table
-    TTable_Entry tt = ttable_get(board.zobrist);
-    if (tt.initialized && tt.depth >= depth) {
-        tt_move = tt.move;
-        switch (tt.flag) {
-            case EXACT:
-                if (pv_node) return tt.score;
-            case LOWERBOUND:
-                alpha = max(alpha, tt.score);
-                break;
-            case UPPERBOUND:
-                beta = min(beta, tt.score);
-                break;
-        }
-        if (alpha >= beta && pv_node) return tt.score;
-    }
-    int old_alpha = alpha;
 
     if (is_draw()) {
         return 0;
@@ -291,8 +305,6 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
     if (stand_pat >= beta) return beta;
     if (alpha < stand_pat) alpha = stand_pat;
     if (depth <= Q_MAX_DEPTH) return alpha;
-
-    Move best_move = NULL_MOVE;
 
     Move moves[MAX_CAPTURE_NUM];
     int n = gen_legal_captures(moves, board.turn);
@@ -314,21 +326,8 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
         pop();
 
         if (score >= beta) return beta;
-        if (score > alpha) {
-            best_move = moves[i];
-            alpha = score;
-        }
+        if (score > alpha) alpha = score;
     }
-
-    // Add position to the transposition table
-    int flag = EXACT;
-    if (alpha <= old_alpha) {
-        flag = UPPERBOUND;
-    } else if (alpha >= beta) {
-        flag = LOWERBOUND;
-    }
-    ttable_add(board.zobrist, 0, best_move, alpha, flag);
-
     return alpha;
 }
 

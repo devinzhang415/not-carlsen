@@ -42,6 +42,11 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+10/20/22 v1.5.8
+> Resolved quiescence search crash by increasing stack size (yay).
+>
+> Removed transposition table use in quiescence search due to blunders.
+
 10/17/22 v1.5.7
 > Added history heuristic to support Lazy SMP branch differences.
 >
