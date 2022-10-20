@@ -29,7 +29,7 @@ const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before l
 const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
 const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
-const int NUM_THREADS = 2; // Number of threads to be used.
+const int NUM_THREADS = 1; // Number of threads to be used.
 
 __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
 bool thread_exit = false; // set by main thread to tell the other threads to exit.
