@@ -29,7 +29,7 @@ const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before l
 const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
 const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
-const int NUM_THREADS = 1; // Number of threads to be used.
+const int NUM_THREADS = 2; // Number of threads to be used.
 
 __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
 bool thread_exit = false; // set by main thread to tell the other threads to exit.
@@ -55,6 +55,7 @@ void dummy_id_search() {
         score = _pvs(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, true, start, &nodes, pv);
 
         if (thread_exit) break;
+        if (score * weight >= MATE_SCORE - d) thread_exit = true; // break early if detect mate
         best_move = pv[d - 1];
 
         clock_t elapsed = clock() - start;
@@ -107,7 +108,12 @@ void parallel_search(void) {
 /**
  * Searches the position with iterative depths.
  * 
- * @param args arguments for wrapped in Param struct.
+ * @param args arguments for wrapped in Param struct:
+ * @param board thread-local board
+ * @param stack thread-local stack
+ * @param rtable thrad-local rtable
+ * @param start_depth the depth to start iterative deepening at (1 or 2 for purposes of jittering)
+ * @param is_main whether the thread running this is the main one.
  */
 static void* _iterative_deepening(void* args) {
     Param* a = (Param*) args;
@@ -127,7 +133,7 @@ static void* _iterative_deepening(void* args) {
     for (int d = start_depth; d <= info.depth; d++) {
         int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, &nodes, pv);
 
-        if (thread_exit) break;
+        if (thread_exit || score >= MATE_SCORE - d) break;
         if (is_main) {
             best_move = pv[d - 1];
 
@@ -152,7 +158,7 @@ static void* _iterative_deepening(void* args) {
 
 /**
  * Searches the possible moves using:
- * - PVS
+ * - Principal variation search
  * - Negamax (fail soft)
  * - Quiescence search
  * - Transposition table
@@ -222,20 +228,14 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
         Move moves[MAX_MOVE_NUM];
         int n = gen_legal_moves(moves, board.turn);
-        if (n == 0) return 0; // Stalemate
+        if (n == 0) return (in_check ? -MATE_SCORE + depth : 0); // Checkmate or stalemate, respectively
         qsort(moves, n, sizeof(Move), _cmp_moves);
-
-        // Stalemate
-        if (n == 0) {
-            return 0;
-        }
 
         for (int i = 0; i < n; i++) {
             Move move = moves[i];
 
             int r = (_is_reduction_ok(move, depth, i, has_failed_high, in_check)) ? LRM_R : 0; // Late move reduction
 
-            // PVS
             push(move);
             if (i == 0) {
                 score = -_pvs(depth - 1 - r, -beta, -alpha, true, color, is_main, start, nodes, pv);
@@ -249,7 +249,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
             if (score > alpha) {
                 alpha = score;
-                if (is_main) pv[depth - 1] = moves[i]; // Save best move to PV // TODO duplicate entries
+                if (is_main) pv[depth - 1] = moves[i]; // Save best move to PV // TODO simply incorrect
             }
             if (alpha >= beta) {
                 has_failed_high = true;
@@ -318,8 +318,8 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
         int delta = get_material_value(piece);
         if (stand_pat + delta + DELTA_MARGIN < alpha) continue;
 
-        // SEE
-        if (_see(board.turn, to) < SEE_THRESHOLD) continue;
+        // Static Exchange Evaluation
+        if (_SEE(board.turn, to) < SEE_THRESHOLD) continue;
 
         push(moves[i]);
         int score = -_qsearch(depth - 1, -beta, -alpha, (i == 0), color, start, nodes);
@@ -338,14 +338,14 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
  * @param victim the piece being attacked.
  * @return the expected material difference after a series of exchanges on a single square.
  */
-static int _see(bool color, int square) {
+static int _SEE(bool color, int square) {
     int score = 0;
     char victim = board.mailbox[square];
     int enemy_square = _get_smallest_attacker_square(color, square);
     if (enemy_square != INVALID) {
         Move capture = {enemy_square, square, CAPTURE}; // TODO promotion captures
         push(capture);
-        score = max(0, get_material_value(victim) - _see(!color, square));
+        score = max(0, get_material_value(victim) - _SEE(!color, square));
         pop();
     }
     return score;

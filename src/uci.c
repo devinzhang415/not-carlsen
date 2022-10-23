@@ -124,7 +124,7 @@ int main(void) {
             info.winc = (token = strstr(input, "winc")) ? atoi(token + 5) : 0;
             info.binc = (token = strstr(input, "binc")) ? atoi(token + 5) : 0;
             info.movestogo = (token = strstr(input, "movestogo")) ? atoi(token + 10) : 0;
-            info.depth = (token = strstr(input, "depth")) ? atoi(token + 6) : MAX_DEPTH;
+            info.depth = (token = strstr(input, "depth")) ? atoi(token + 6) + 1 : MAX_DEPTH;
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;\
 
