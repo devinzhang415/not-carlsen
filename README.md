@@ -4,6 +4,7 @@ Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-
 Special thanks to:
 - github.com/nkarve for their magic bitboard generation.
 - Peter Jones for their guide on legal move generation.
+- github.com/Disservin for their continual support and inspiration.
 
 ------
 
