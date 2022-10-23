@@ -46,7 +46,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 10/23/22 v1.5.9
 > Made explicit checkmates in search and distinguishing between different mate depths (M1 vs M2 vs M3 vs ...)
 >
-> While refactoring and code cleanup while continuing to investigate Lazy SMP crashes.
+> Refactoring and code cleanup while continuing to investigate Lazy SMP crashes.
 
 10/20/22 v1.5.8
 > Resolved quiescence search crash by increasing stack size (yay).
