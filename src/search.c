@@ -50,8 +50,7 @@ void dummy_id_search() {
 
     int weight = (board.turn == WHITE) ? 1 : -1;
 
-    int d = 0;
-    for (d = 1; d < info.depth; d++) {
+    for (int d = 1; d < info.depth; d++) {
         score = _pvs(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, true, start, &nodes, pv);
 
         if (thread_exit) break;
@@ -64,7 +63,6 @@ void dummy_id_search() {
         
         print_info(d, score * weight, nodes, time, pv);
     }
-    d--;
 
     printf("\nbestmove ");
     print_move(best_move);
@@ -249,11 +247,11 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
             if (score > alpha) {
                 alpha = score;
-                if (is_main) pv[depth - 1] = moves[i]; // Save best move to PV // TODO simply incorrect
+                if (is_main) pv[depth - 1] = move; // Save best move to PV // TODO simply incorrect
             }
             if (alpha >= beta) {
                 has_failed_high = true;
-                if (is_capture(moves[i])) {
+                if (is_capture(move)) {
                     htable[board.turn][move.from][move.to] = depth * depth; // Update history heuristic table
                 }
                 break;
