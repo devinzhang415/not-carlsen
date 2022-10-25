@@ -269,7 +269,7 @@ extern const int MAX_CAPTURE_NUM;
 
 
 uint64_t get_ray_between(int square1, int square2);
-uint64_t get_ray_between_inclusive(int square1, int square2);
+uint64_t get_full_ray_on(int square1, int square2);
 
 int parse_square(char* square);
 int parse_piece(char piece);
@@ -283,7 +283,6 @@ int pop_count(uint64_t bb);
 void print_bb(uint64_t bb);
 void print_move(Move move);
 void print_info(int depth, int score, uint64_t nodes, double time, Move* pv);
-
 static int _save_move_str(char* str, int i, Move move);
 
 int rank_of(int square);

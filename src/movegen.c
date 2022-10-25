@@ -765,7 +765,7 @@ static uint64_t _get_pinmask(bool color, int square) {
     key = (occupied * BISHOP_MAGICS[square]) >> BISHOP_ATTACK_SHIFTS[square];
     uint64_t bishop_attacks = BB_BISHOP_ATTACKS[square][key];
 
-    uint64_t direction = get_ray_between_inclusive(king_square, square);
+    uint64_t direction = get_full_ray_on(king_square, square);
     
     uint64_t pin = direction & rook_attacks;
     if (pin & enemy_rq_bb) {
