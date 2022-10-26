@@ -7,6 +7,7 @@
 
 
 void init_board(char* fen);
+void init_zobrist_table(void);
 
 void make_move(Move move);
 

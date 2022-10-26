@@ -27,7 +27,7 @@ int main(void) {
     init_bishop_attacks();
     init_rook_attacks();
     _init_rays();
-    _init_zobrist_table();
+    init_zobrist_table();
 
     int size = 256;
     char* input = malloc(size);
@@ -193,24 +193,5 @@ static void _init_rays(void) {
             
             BB_RAYS[square1][square2] = 0;
         }
-    }
-}
-
-
-/**
- * Initalizes ZOBRIST_VALUES[781] with random unsigned 64-bit integers.
- * - 768 numbers for each piece on each square
- * - 1 number to indicate side to move is black
- * - 4 numbers for castling rights
- * - 8 numbers to indicate en passant file
- * @author https://stackoverflow.com/a/28116032.
- */
-static void _init_zobrist_table(void) {
-    for (int i = 0; i < 781; i++) {
-        uint64_t n = 0;
-        for (int j = 0; j < 5; j++) {
-            n = (n << 15) | (rand() & 0x7FFF);
-        }
-        ZOBRIST_VALUES[i] = n & 0xFFFFFFFFFFFFFFFF;
     }
 }

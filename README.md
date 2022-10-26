@@ -44,7 +44,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 10/26/22 v1.5.10
 > Numerous refactoring changes and cleaned up deprecated code, including removing unused Kogge-Stone move generation functions and turning function-specific globals static.
 >
-> Attempted to fix possible memory issues causing multithreading to crash by using conditional memory cleanup in structure (repetition table, stack, transposition table) initailizations. 
+> Attempted to fix possible memory issues causing multithreading to crash by using conditional memory cleanup in structure (repetition table, stack, transposition table) initailizations.
 
 ## Devlog
 10/23/22 v1.5.9

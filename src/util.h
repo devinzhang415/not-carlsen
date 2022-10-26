@@ -257,8 +257,6 @@ extern const uint64_t BB_ANTI_DIAGONALS[15];
 
 extern uint64_t BB_RAYS[64][64];
 
-extern uint64_t ZOBRIST_VALUES[781];
-
 extern const Move NULL_MOVE;
 extern const int INVALID;
 extern const double MAX_LOAD_FACTOR;
