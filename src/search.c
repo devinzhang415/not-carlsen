@@ -112,6 +112,7 @@ void parallel_search(void) {
  * @param rtable thrad-local rtable
  * @param start_depth the depth to start iterative deepening at (1 or 2 for purposes of jittering)
  * @param is_main whether the thread running this is the main one.
+ * @return void* for multithreading requirements.
  */
 static void* _iterative_deepening(void* args) {
     Param* a = (Param*) args;
