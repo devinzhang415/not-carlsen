@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include "time.h"
+#include "uci.h"
 #include "search.h"
 #include "util.h"
 #include "board.h"
