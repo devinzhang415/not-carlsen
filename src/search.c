@@ -22,17 +22,17 @@ extern __thread int htable[2][64][64];
 extern Info info;
 
 
-const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
-const int LRM_R = 1; // Depth to reduce by in late move reduction.
-const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction.
-const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction.
-const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
-const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
-const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
-const int NUM_THREADS = 2; // Number of threads to be used.
+static const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
+static const int LRM_R = 1; // Depth to reduce by in late move reduction.
+static const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction.
+static const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction.
+static const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
+static const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
+static const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
+static const int NUM_THREADS = 2; // Number of threads to be used.
 
 __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
-bool thread_exit = false; // set by main thread to tell the other threads to exit.
+static bool thread_exit = false; // set by main thread to tell the other threads to exit.
 
 
 /**
@@ -123,7 +123,7 @@ static void* _iterative_deepening(void* args) {
     bool is_main = a->is_main;
 
     clock_t start = clock();
-    uint64_t nodes = 0;
+    uint64_t nodes = 0; // TODO
     Move* pv = malloc(info.depth * sizeof(Move));
     Move best_move = NULL_MOVE;
     int weight = (board.turn == WHITE) ? 1 : -1;

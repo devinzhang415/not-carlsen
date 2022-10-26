@@ -4,17 +4,7 @@
 #include "util.h"
 
 
-extern const int NULL_MOVE_R;
-extern const int LRM_R;
-extern const int DEPTH_THRESHOLD;
-extern const int FULL_MOVE_THRESHOLD;
-extern const int Q_MAX_DEPTH;
-extern const int DELTA_MARGIN;
-extern const int SEE_THRESHOLD;
-extern const int NUM_THREADS;
-
 extern __thread Move tt_move;
-extern bool thread_exit;
 
 
 void dummy_id_search();

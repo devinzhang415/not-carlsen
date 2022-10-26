@@ -6,17 +6,19 @@
 extern TTable ttable;
 
 
-const uint64_t TTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
+static bool initialized = false;
+static const uint64_t TTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
 
 
 /**
  * Initalizes the transposition table.
  */
 void init_ttable(void) {
-    free(ttable.entries);
+    if (!initialized) free(ttable.entries);
     ttable.size = 0;
     ttable.capacity = TTABLE_INIT_CAPACITY;
     ttable.entries = malloc(TTABLE_INIT_CAPACITY * sizeof(TTable_Entry));
+    initialized = true;
 }
 
 

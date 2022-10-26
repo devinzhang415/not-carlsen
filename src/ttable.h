@@ -4,9 +4,6 @@
 #include "util.h"
 
 
-extern const uint64_t TTABLE_INIT_CAPACITY;
-
-
 void init_ttable(void);
 
 TTable_Entry ttable_get(uint64_t key);

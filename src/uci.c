@@ -98,7 +98,7 @@ int main(void) {
                             flag = PR_KNIGHT;
                             break;
                         default:
-                            flag = get_flag(board.turn, toupper(board.mailbox[from]), from, to);
+                            flag = get_flag(toupper(board.mailbox[from]), from, to);
                     }
 
                     Move move = {from, to, flag};

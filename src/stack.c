@@ -8,7 +8,9 @@
 
 extern __thread Board board;
 extern __thread Stack* stack;
-extern __thread RTable rtable;
+
+
+static bool initialized = false;
 
 
 /**
@@ -20,6 +22,7 @@ void init_stack() {
     stack->move = NULL_MOVE;
     stack->board = board;
     stack->next = NULL;
+    initialized = true;
 }
 
 
@@ -60,9 +63,11 @@ void pop(void) {
  * Free every element in the stack.
  */
 static void _free_stack() {
+    if (!initialized) return;
     while (stack != NULL) {
         Stack* temp = stack;
         stack = stack->next;
         free(temp);
     }
+    initialized = false;
 }
