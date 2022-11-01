@@ -29,7 +29,7 @@ void init_ttable(void) {
  */
 TTable_Entry ttable_get(uint64_t key) {
     for (int i = 0; i < ttable.capacity; i++) {
-        int index = (key + i) % ttable.capacity;
+        int index = (key + i) & (ttable.capacity - 1); // (key + i) % ttable.capacity
         TTable_Entry entry = ttable.entries[index];
         if (!entry.initialized || entry.key ^ entry.score == key) {
             return entry;
@@ -54,7 +54,7 @@ void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
     }
 
     for (int i = 0; i < ttable.capacity; i++) {
-        int index = (key + i) % ttable.capacity;
+        int index = (key + i) & (ttable.capacity - 1); // (key + i) % ttable.capacity
         if (ttable.entries[index].initialized) {
             if (ttable.entries[index].key ^ score == key) { // Replace existing entry
                 ttable.entries[index].depth = depth;
