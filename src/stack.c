@@ -17,12 +17,26 @@ static bool initialized = false;
  * Initalizes the stack.
  */
 void init_stack() {
-    _free_stack();
-    stack = malloc(sizeof(Stack));
+    free_stack();
+    stack = smalloc(sizeof(Stack));
     stack->move = NULL_MOVE;
     stack->board = board;
     stack->next = NULL;
     initialized = true;
+}
+
+
+/**
+ * Free every element in the stack.
+ */
+void free_stack(void) {
+    if (!initialized) return;
+    while (stack != NULL) {
+        Stack* temp = stack;
+        stack = stack->next;
+        free(temp);
+    }
+    initialized = false;
 }
 
 
@@ -32,7 +46,7 @@ void init_stack() {
  */
 void push(Move move) {
     // Update move stack
-    Stack* node = malloc(sizeof(Stack));
+    Stack* node = smalloc(sizeof(Stack));
     make_move(move);
     node->board = board;
     node->move = move;
@@ -56,18 +70,4 @@ void pop(void) {
     stack = stack->next;
     board = stack->board;
     free(temp);
-}
-
-
-/**
- * Free every element in the stack.
- */
-static void _free_stack() {
-    if (!initialized) return;
-    while (stack != NULL) {
-        Stack* temp = stack;
-        stack = stack->next;
-        free(temp);
-    }
-    initialized = false;
 }

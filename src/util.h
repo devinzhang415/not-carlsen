@@ -266,6 +266,10 @@ extern const int MAX_MOVE_NUM;
 extern const int MAX_CAPTURE_NUM;
 
 
+void* smalloc(size_t size);
+void* scalloc(size_t n, size_t size);
+void* srealloc(void* ptr, size_t size);
+
 uint64_t get_ray_between(int square1, int square2);
 uint64_t get_full_ray_on(int square1, int square2);
 
@@ -291,8 +295,6 @@ int pull_lsb(uint64_t* bb);
 
 int max(int x, int y);
 int min(int x, int y);
-
-bool is_capture(Move move);
 
 
 #endif

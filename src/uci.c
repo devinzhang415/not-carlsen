@@ -30,7 +30,7 @@ int main(void) {
     init_zobrist_table();
 
     int size = 256;
-    char* input = malloc(size);
+    char* input = (char*) smalloc(size);
 
     while (true) {
         fflush(stdout);
@@ -41,7 +41,7 @@ int main(void) {
             input[i++] = (char) c;
             if (i == size) {
                 size *= 2;
-                input = realloc(input, size);
+                input = (char*) srealloc(input, size);
             }
         }
         input[i] = '\0';
@@ -128,14 +128,18 @@ int main(void) {
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;\
 
-            // parallel_search();
-            dummy_id_search();
+            parallel_search();
+            // dummy_id_search();
         }
 
         else if (!strncmp(input, "quit", 4)) {
             break;
         }
     }
+
+    free(input);
+    _free_structs();
+    return 0;
 }
 
 
@@ -149,7 +153,7 @@ int main(void) {
  */
 void print_info(int depth, int score, uint64_t nodes, double time, Move* pv) {
     size_t size = 1024;
-    char* str = malloc(size);
+    char* str = (char*) smalloc(size);
 
     size_t i = 0;
     for (int move_i = depth - 1; move_i >= 0; move_i--) {
@@ -223,6 +227,16 @@ static void _init_structs(char* fen) {
     init_rtable();
     rtable_add(board.zobrist);
     memset(htable, 0, sizeof(htable)); // Sets history heuristic table to all 0s
+}
+
+
+/**
+ * Frees all necessary shared data structures initalized in _init_structs().
+ */
+static void _free_structs(void) {
+    free_stack();
+    free_ttable();
+    free_rtable();
 }
 
 

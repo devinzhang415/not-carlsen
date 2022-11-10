@@ -85,7 +85,7 @@ void parallel_search(void) {
 
     int start_depth = 1;
     for (int i = 0; i < NUM_THREADS; i++) {
-        Param* args = malloc(sizeof(Param));
+        Param* args = (Param*) smalloc(sizeof(Param));
         args->board = &init_board;
         args->stack = &init_stack;
         args->rtable = &rtable;
@@ -125,7 +125,7 @@ static void* _iterative_deepening(void* args) {
 
     clock_t start = clock();
     uint64_t nodes = 0; // TODO
-    Move* pv = malloc(info.depth * sizeof(Move));
+    Move* pv = (Move*) smalloc(info.depth * sizeof(Move));
     Move best_move = NULL_MOVE;
     int weight = (board.turn == WHITE) ? 1 : -1;
     

@@ -14,11 +14,20 @@ static const uint64_t RTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo 
  * Initalizes the threefold repetition hashtable.
  */
 void init_rtable(void) {
-    if (!initialized) free(rtable.entries);
+    if (initialized) free(rtable.entries);
     rtable.size = 0;
     rtable.capacity = RTABLE_INIT_CAPACITY;
-    rtable.entries = malloc(RTABLE_INIT_CAPACITY * sizeof(RTable_Entry));
+    rtable.entries = (RTable_Entry*) scalloc(RTABLE_INIT_CAPACITY, sizeof(RTable_Entry));
     initialized = true;
+}
+
+
+/**
+ * Releases the rtable entries memory.
+ */
+void free_rtable(void) {
+    if (initialized) free(rtable.entries);
+    initialized = false;
 }
 
 
@@ -45,7 +54,7 @@ void rtable_add(uint64_t key) {
     // Resize
     if (((double) rtable.size / rtable.capacity) > MAX_LOAD_FACTOR) {
         rtable.capacity *= 2;
-        rtable.entries = realloc(rtable.entries, sizeof(RTable_Entry) * rtable.capacity);
+        rtable.entries = (RTable_Entry*) srealloc(rtable.entries, sizeof(RTable_Entry) * rtable.capacity);
     }
 
     for (int i = 0; i < rtable.capacity; i++) {

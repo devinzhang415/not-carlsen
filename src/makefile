@@ -14,6 +14,8 @@ HEADERS = $(wildcard *.h)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBS) $(CFLAGS) -o $@
+# 	$(CC) $(OBJECTS) $(LIBS) -static-libgcc -ggdb -o $@
+# Run drmemory -- not-carlsen.exe
 
 clean:
 	-rm -f $(TARGET)

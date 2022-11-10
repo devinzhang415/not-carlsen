@@ -13,6 +13,7 @@ void make_move(Move move);
 
 bool is_check(bool color);
 bool is_attacked(bool color, int square);
+bool is_capture(Move move);
 
 bool is_draw();
 static bool _is_threefold_rep(void);

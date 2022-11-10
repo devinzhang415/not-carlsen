@@ -109,6 +109,59 @@ const int MAX_CAPTURE_NUM = 74; // largest number of legal captures in a positio
 
 
 /**
+ * Malloc an amount of space equal to size safely,
+ * exiting program on failure.
+ * 
+ * @param size size of the memory block to allocate.
+ * @return void* to the beginning of the allocated memory.
+ */
+void* smalloc(size_t size) {
+    void* ptr = malloc(size);
+    if (ptr == NULL) {
+        printf("\nMem error in smalloc\n");
+        exit(EXIT_FAILURE);
+    }
+    return ptr;
+}
+
+
+/**
+ * Malloc an amount of space equal to size safely and set to 0,
+ * exiting program on failure.
+ * 
+ * @param n how many spaces to initalize.
+ * @param size the size of each space.
+ * @return void* to the beginning of the allocated memory.
+ */
+void* scalloc(size_t n, size_t size) {
+    void* ptr = calloc(n, size);
+    if (ptr == NULL) {
+        printf("\nMem error in scalloc\n");
+        exit(EXIT_FAILURE);
+    }
+    return ptr;
+}
+
+
+/**
+ * Realloc an amount of space equal to size safely,
+ * exiting program on failure.
+ * 
+ * @param ptr pointer to memory block previously malloced.
+ * @param size new size of the memory block to allocate.
+ * @return void* to the beginning of the allocated memory.
+ */
+void* srealloc(void* ptr, size_t size) {
+    void* nptr = realloc(ptr, size);
+    if (nptr == NULL) {
+        printf("\nMem error in srealloc\n");
+        exit(EXIT_FAILURE);
+    }
+    return nptr;
+}
+
+
+/**
  * @param square1 
  * @param square2 
  * @return the bitboard of the ray between the two squares (inclusive), if any.
@@ -383,14 +436,4 @@ int max(int x, int y) {
  */
 int min(int x, int y) {
     return (x <= y) ? x : y;
-}
-
-
-/**
- * @param move 
- * @return true if the move is a capture
- */
-bool is_capture(Move move) {
-    int flag = move.flag;
-    return (flag == CAPTURE || flag == PC_QUEEN || flag == PC_ROOK || flag == PC_BISHOP || flag == PC_KNIGHT);
 }

@@ -427,6 +427,16 @@ bool is_attacked(bool color, int square) {
 
 
 /**
+ * @param move 
+ * @return true if the move is a capture
+ */
+bool is_capture(Move move) {
+    int flag = move.flag;
+    return (flag == CAPTURE || flag == PC_QUEEN || flag == PC_ROOK || flag == PC_BISHOP || flag == PC_KNIGHT);
+}
+
+
+/**
  * @return true if the game is ended by:
  * - threefold rep.
  * - or 50-move rule.

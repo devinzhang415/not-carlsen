@@ -14,11 +14,20 @@ static const uint64_t TTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo 
  * Initalizes the transposition table.
  */
 void init_ttable(void) {
-    if (!initialized) free(ttable.entries);
+    free_ttable();
     ttable.size = 0;
     ttable.capacity = TTABLE_INIT_CAPACITY;
-    ttable.entries = malloc(TTABLE_INIT_CAPACITY * sizeof(TTable_Entry));
+    ttable.entries = (TTable_Entry*) scalloc(TTABLE_INIT_CAPACITY, sizeof(TTable_Entry));
     initialized = true;
+}
+
+
+/**
+ * Releases the ttable entries memory.
+ */
+void free_ttable(void) {
+    if (initialized) free(ttable.entries);
+    initialized = false;
 }
 
 
@@ -50,7 +59,7 @@ void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
     // Resize
     if (((double) ttable.size / ttable.capacity) > MAX_LOAD_FACTOR) {
         ttable.capacity *= 2;
-        ttable.entries = realloc(ttable.entries, sizeof(TTable_Entry) * ttable.capacity);
+        ttable.entries = (TTable_Entry*) srealloc(ttable.entries, sizeof(TTable_Entry) * ttable.capacity);
     }
 
     for (int i = 0; i < ttable.capacity; i++) {
