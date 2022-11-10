@@ -128,8 +128,8 @@ int main(void) {
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;\
 
-            parallel_search();
-            // dummy_id_search();
+            // parallel_search();
+            dummy_id_search();
         }
 
         else if (!strncmp(input, "quit", 4)) {
