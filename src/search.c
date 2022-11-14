@@ -48,20 +48,18 @@ void dummy_id_search() {
 
     thread_exit = false;
 
-    int weight = (board.turn == WHITE) ? 1 : -1;
-
     for (int d = 1; d < info.depth; d++) {
         score = _pvs(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, true, start, &nodes, pv);
 
         if (thread_exit) break;
-        if (score * weight >= MATE_SCORE - d) thread_exit = true; // break early if detect mate
+        if (score >= MATE_SCORE - d) thread_exit = true; // break early if detect mate
         best_move = pv[d - 1];
 
         clock_t elapsed = clock() - start;
         double time = (double) elapsed / CLOCKS_PER_SEC;
         if (time == 0) time = .1;
         
-        print_info(d, score * weight, nodes, time, pv);
+        print_info(d, score, nodes, time, pv);
     }
 
     printf("\nbestmove ");
@@ -127,12 +125,12 @@ static void* _iterative_deepening(void* args) {
     uint64_t nodes = 0; // TODO
     Move* pv = (Move*) smalloc(info.depth * sizeof(Move));
     Move best_move = NULL_MOVE;
-    int weight = (board.turn == WHITE) ? 1 : -1;
     
     for (int d = start_depth; d <= info.depth; d++) {
         int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, &nodes, pv);
 
-        if (thread_exit || score >= MATE_SCORE - d) break;
+        if (thread_exit) break;
+        if (score >= MATE_SCORE - d) thread_exit = true; // break early if detect mate
         if (is_main) {
             best_move = pv[d - 1];
 
@@ -140,7 +138,7 @@ static void* _iterative_deepening(void* args) {
             double time = (double) elapsed / CLOCKS_PER_SEC;
             if (time == 0) time = .1;
             
-            print_info(d, score * weight, nodes, time, pv);
+            print_info(d, score, nodes, time, pv);
         }
     }
 
