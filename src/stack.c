@@ -10,9 +10,6 @@ extern __thread Board board;
 extern __thread Stack* stack;
 
 
-static bool initialized = false;
-
-
 /**
  * Initalizes the stack.
  */
@@ -22,7 +19,6 @@ void init_stack() {
     stack->move = NULL_MOVE;
     stack->board = board;
     stack->next = NULL;
-    initialized = true;
 }
 
 
@@ -30,13 +26,11 @@ void init_stack() {
  * Free every element in the stack.
  */
 void free_stack(void) {
-    if (!initialized) return;
     while (stack != NULL) {
         Stack* temp = stack;
         stack = stack->next;
         free(temp);
     }
-    initialized = false;
 }
 
 

@@ -75,17 +75,13 @@ void dummy_id_search() {
  */
 void parallel_search(void) {
     pthread_t threads[NUM_THREADS];
-    Board init_board = board;
-    Stack* init_stack = stack;
-    RTable init_rtable = rtable;
-
     thread_exit = false;
 
     int start_depth = 1;
-    for (int i = 0; i < NUM_THREADS; i++) {
+    for (int i = 0; i < NUM_THREADS; i++) { // TODO start at i = 0, reuse this thread as a search thread
         Param* args = (Param*) smalloc(sizeof(Param));
-        args->board = &init_board;
-        args->stack = &init_stack;
+        args->board = &board;
+        args->stack = &stack;
         args->rtable = &rtable;
         args->start_depth = start_depth;
         args->is_main = (i == 0); // assign the first thread to be main
@@ -117,7 +113,6 @@ static void* _iterative_deepening(void* args) {
     board = *(a->board);
     stack = *(a->stack);
     rtable = *(a->rtable);
-    // TODO check if htable is 0s
     int start_depth = a->start_depth;
     bool is_main = a->is_main;
 
@@ -148,9 +143,9 @@ static void* _iterative_deepening(void* args) {
         printf("\n");
     }
 
-    free(pv);
     free_rtable();
     free_stack();
+    free(pv);
     free(a);
     pthread_exit(NULL);
 }

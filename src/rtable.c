@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include "rtable.h"
 
 
 extern __thread RTable rtable;
 
 
-static bool initialized = false;
 static const uint64_t RTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
 
 
@@ -18,7 +18,7 @@ void init_rtable(void) {
     rtable.size = 0;
     rtable.capacity = RTABLE_INIT_CAPACITY;
     rtable.entries = (RTable_Entry*) scalloc(RTABLE_INIT_CAPACITY, sizeof(RTable_Entry));
-    initialized = true;
+    rtable.initialized = true;
 }
 
 
@@ -26,8 +26,8 @@ void init_rtable(void) {
  * Releases the rtable entries memory.
  */
 void free_rtable(void) {
-    if (initialized) free(rtable.entries);
-    initialized = false;
+    if (rtable.initialized) free(rtable.entries);
+    rtable.initialized = false;
 }
 
 
@@ -60,15 +60,16 @@ void rtable_add(uint64_t key) {
 
     for (int i = 0; i < rtable.capacity; i++) {
         int index = (key + i) & (rtable.capacity - 1); // (key + i) % rtable.capacity
-        if (rtable.entries[index].initialized) {
-            if (rtable.entries[index].key == key) {
-                rtable.entries[index].num++;
+        RTable_Entry entry = rtable.entries[index];
+        if (entry.initialized) {
+            if (entry.key == key) {
+                entry.num++;
                 break;
             }
         } else {
-            rtable.entries[index].key = key;
-            rtable.entries[index].num = 1;
-            rtable.entries[index].initialized = true;
+            entry.key = key;
+            entry.num = 1;
+            entry.initialized = true;
             rtable.size++;
             break;
         }
@@ -83,15 +84,15 @@ void rtable_add(uint64_t key) {
 void rtable_remove(uint64_t key) {
     for (int i = 0; i < rtable.capacity; i++) {
         int index = (key + i) & (rtable.capacity - 1); // (key + i) % rtable.capacity
-        if (rtable.entries[index].key == key) {
-            rtable.entries[index].num--;
-            if (rtable.entries[index].num <= 0) {
-                rtable.entries[index].initialized = false;
+        RTable_Entry entry = rtable.entries[index];
+        if (entry.key == key) {
+            if (--entry.num <= 0) {
+                entry.initialized = false;
                 rtable.size--;
             }
             break;
         }
-        if (!rtable.entries[index].initialized) {
+        if (!entry.initialized) {
             break;
         }
     }

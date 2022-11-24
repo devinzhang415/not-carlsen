@@ -131,6 +131,7 @@ typedef struct TTable {
     uint64_t size;
     uint64_t capacity;
     TTable_Entry* entries;
+    bool initialized;
 } TTable;
 
 
@@ -152,6 +153,7 @@ typedef struct RTable {
     uint64_t size;
     uint64_t capacity;
     RTable_Entry* entries;
+    bool initialized;
 } RTable;
 
 

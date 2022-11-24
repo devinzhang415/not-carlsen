@@ -128,8 +128,8 @@ int main(void) {
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;
 
-            parallel_search();
-            // dummy_id_search();
+            // parallel_search();
+            dummy_id_search();
         }
 
         else if (!strncmp(input, "quit", 4)) {
@@ -226,7 +226,6 @@ static void _init_structs(char* fen) {
     init_ttable();
     init_rtable();
     rtable_add(board.zobrist);
-    memset(htable, 0, sizeof(htable)); // Sets history heuristic table to all 0s
 }
 
 

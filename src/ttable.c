@@ -6,7 +6,6 @@
 extern volatile TTable ttable;
 
 
-static bool initialized = false;
 static const uint64_t TTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
 
 
@@ -18,7 +17,7 @@ void init_ttable(void) {
     ttable.size = 0;
     ttable.capacity = TTABLE_INIT_CAPACITY;
     ttable.entries = (TTable_Entry*) scalloc(TTABLE_INIT_CAPACITY, sizeof(TTable_Entry));
-    initialized = true;
+    ttable.initialized = true;
 }
 
 
@@ -26,8 +25,8 @@ void init_ttable(void) {
  * Releases the ttable entries memory.
  */
 void free_ttable(void) {
-    if (initialized) free(ttable.entries);
-    initialized = false;
+    if (ttable.initialized) free(ttable.entries);
+    ttable.initialized = false;
 }
 
 
