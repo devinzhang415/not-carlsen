@@ -237,7 +237,7 @@ int parse_piece(char piece) {
  * Return needs to be freed.
  */
 char* parse_move(Move move) {
-    char* str = malloc(5);
+    char* str = smalloc(5);
     str[0] = 'a' + file_of(move.from);
     str[1] = '1' + rank_of(move.from);
     str[2] = 'a' + file_of(move.to);
