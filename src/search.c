@@ -160,6 +160,7 @@ static void* _iterative_deepening(void* args) {
  * - MVV-LVA + history heuristic move ordering
  * - Null move pruning
  * - Late move reduction
+ * // TODO futility, razoring
  * 
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
@@ -308,7 +309,7 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
     for (int i = 0; i < n; i++) {
         int to = moves[i].to;
 
-        // Delta pruning // TODO do not use in late endgame
+        // Delta pruning // TODO do not use in late endgame (use Tapered score, score in board struct?)
         char piece = board.mailbox[to];
         int delta = get_material_value(piece);
         if (stand_pat + delta + DELTA_MARGIN < alpha) continue;
@@ -483,7 +484,7 @@ static int _get_piece_score(char piece) {
  * @param in_check whether the side to move is in check.
  */
 static bool _is_null_move_ok(bool in_check) {
-    return !in_check; // TODO do not use in endgame
+    return !in_check; // TODO do not use in endgame (use Tapered score, score in board struct?)
 }
 
 

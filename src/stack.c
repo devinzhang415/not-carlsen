@@ -13,7 +13,7 @@ extern __thread Stack* stack;
 /**
  * Initalizes the stack.
  */
-void init_stack() {
+void init_stack() { // TODO change to array backing so don't have to keep mallocing?
     free_stack();
     stack = smalloc(sizeof(Stack));
     stack->move = NULL_MOVE;
