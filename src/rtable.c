@@ -17,7 +17,7 @@ void init_rtable(void) {
     free_rtable();
     rtable.size = 0;
     rtable.capacity = RTABLE_INIT_CAPACITY;
-    rtable.entries = (RTable_Entry*) scalloc(RTABLE_INIT_CAPACITY, sizeof(RTable_Entry));
+    rtable.entries = scalloc(RTABLE_INIT_CAPACITY, sizeof(RTable_Entry));
     rtable.initialized = true;
 }
 
@@ -55,7 +55,7 @@ void rtable_add(uint64_t key) {
     // Resize
     if (((double) rtable.size / rtable.capacity) > MAX_LOAD_FACTOR) {
         rtable.capacity *= 2;
-        rtable.entries = (RTable_Entry*) srealloc(rtable.entries, sizeof(RTable_Entry) * rtable.capacity);
+        rtable.entries = srealloc(rtable.entries, sizeof(RTable_Entry) * rtable.capacity);
     }
 
     for (int i = 0; i < rtable.capacity; i++) {

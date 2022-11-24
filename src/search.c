@@ -16,7 +16,7 @@
 
 extern __thread Board board;
 extern volatile TTable ttable;
-extern __thread Stack* stack;
+extern __thread Stack stack;
 extern __thread RTable rtable;
 extern __thread int htable[2][64][64];
 extern Info info;
@@ -79,7 +79,7 @@ void parallel_search(void) {
 
     int start_depth = 1;
     for (int i = 0; i < NUM_THREADS; i++) { // TODO start at i = 0, reuse this thread as a search thread
-        Param* args = (Param*) smalloc(sizeof(Param));
+        Param* args = smalloc(sizeof(Param));
         args->board = &board;
         args->stack = &stack;
         args->rtable = &rtable;
@@ -118,7 +118,7 @@ static void* _iterative_deepening(void* args) {
 
     clock_t start = clock();
     uint64_t nodes = 0; // TODO
-    Move* pv = (Move*) smalloc(info.depth * sizeof(Move));
+    Move* pv = smalloc(info.depth * sizeof(Move));
     Move best_move = NULL_MOVE;
     
     for (int d = start_depth; d <= info.depth; d++) {

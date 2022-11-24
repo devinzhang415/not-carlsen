@@ -100,13 +100,24 @@ typedef struct Board {
 
 
 /**
+ * Stack node of a previous board state.
+ */
+typedef struct Stack_Entry {
+    Board board;
+    Move move;
+    bool initialized;
+} Stack_Entry;
+
+
+/**
  * A stack of all the board positions that's been reached and
  * the moves that got to them.
  */
 typedef struct Stack {
-    Board board;
-    Move move;
-    struct Stack *next;
+    uint64_t size;
+    uint64_t capacity;
+    Stack_Entry* entries;
+    bool initialized;
 } Stack;
 
 
@@ -185,7 +196,7 @@ typedef struct Info {
  */
 typedef struct Param {
     Board* board;
-    Stack** stack;
+    Stack* stack;
     RTable* rtable;
 
     int start_depth; // depth to start iterative_deepening at

@@ -7,18 +7,21 @@
 
 
 extern __thread Board board;
-extern __thread Stack* stack;
+extern __thread Stack stack;
+
+
+static const uint64_t STACK_INIT_CAPACITY = 1024ULL; // Power of 2 for modulo efficiency
 
 
 /**
  * Initalizes the stack.
  */
-void init_stack() { // TODO change to array backing so don't have to keep mallocing?
+void init_stack() {
     free_stack();
-    stack = smalloc(sizeof(Stack));
-    stack->move = NULL_MOVE;
-    stack->board = board;
-    stack->next = NULL;
+    stack.size = 0;
+    stack.capacity = STACK_INIT_CAPACITY;
+    stack.entries = scalloc(STACK_INIT_CAPACITY, sizeof(Stack_Entry));
+    stack.initialized = true;
 }
 
 
@@ -26,11 +29,8 @@ void init_stack() { // TODO change to array backing so don't have to keep malloc
  * Free every element in the stack.
  */
 void free_stack(void) {
-    while (stack != NULL) {
-        Stack* temp = stack;
-        stack = stack->next;
-        free(temp);
-    }
+    if (stack.initialized) free(stack.entries);
+    stack.initialized = false;
 }
 
 
@@ -40,12 +40,15 @@ void free_stack(void) {
  */
 void push(Move move) {
     // Update move stack
-    Stack* node = smalloc(sizeof(Stack));
+    if (stack.size == stack.capacity) {
+        stack.capacity *= 2;
+        stack.entries = srealloc(stack.entries, sizeof(Stack_Entry) * stack.capacity);
+    }
+    Stack_Entry entry = stack.entries[stack.size++];
     make_move(move);
-    node->board = board;
-    node->move = move;
-    node->next = stack;
-    stack = node;
+    entry.board = board;
+    entry.move = move;
+    entry.initialized = true;
 
     // Update threefold rep table
     rtable_add(board.zobrist);
@@ -60,8 +63,6 @@ void pop(void) {
     rtable_remove(board.zobrist);
     
     // Update move stack
-    Stack* temp = stack;
-    stack = stack->next;
-    board = stack->board;
-    free(temp);
+    stack.entries[stack.size--].initialized = false;
+    board = stack.entries[stack.size].board;
 }

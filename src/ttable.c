@@ -16,7 +16,7 @@ void init_ttable(void) {
     free_ttable();
     ttable.size = 0;
     ttable.capacity = TTABLE_INIT_CAPACITY;
-    ttable.entries = (TTable_Entry*) scalloc(TTABLE_INIT_CAPACITY, sizeof(TTable_Entry));
+    ttable.entries = scalloc(TTABLE_INIT_CAPACITY, sizeof(TTable_Entry));
     ttable.initialized = true;
 }
 
@@ -58,7 +58,7 @@ void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
     // Resize
     if (((double) ttable.size / ttable.capacity) > MAX_LOAD_FACTOR) {
         ttable.capacity *= 2;
-        ttable.entries = (TTable_Entry*) srealloc(ttable.entries, sizeof(TTable_Entry) * ttable.capacity);
+        ttable.entries = srealloc(ttable.entries, sizeof(TTable_Entry) * ttable.capacity);
     }
 
     for (int i = 0; i < ttable.capacity; i++) {
