@@ -23,6 +23,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - FEN board initialization
 - UCI communication protocol
 - Magic bitboard legal move generator (92 million nps)
+- Lazy SMP parallel search
 - Principal variation search (PVS)
 - Fail soft alpha-beta negamax
 - Quiescence search
@@ -43,6 +44,13 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+11/23/22 v2.0.0
+> Implemented Lazy SMP! Tracked down the issue to __thread macro not creating a deep copy of allocated memory, such as in the move stack and repetition table. Set each thread to use its own allocated versions of these structures.
+>
+> To facilitate the above, switched the move stack's backing from a singly-linked list to an array.
+>
+> Changed history heuristic table to explicitly 1D instead of "3D" to ease in thread-local support.
+
 10/26/22 v1.5.10
 > Numerous refactoring changes and cleaned up deprecated code, including removing unused Kogge-Stone move generation functions and turning function-specific globals static.
 >

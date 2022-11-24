@@ -9,6 +9,7 @@
 #include "movegen.h"
 #include "stack.h"
 #include "rtable.h"
+#include "htable.h"
 #include "search.h"
 #include "ttable.h"
 #include "evaluate.h"
@@ -18,7 +19,7 @@ __thread Board board; // Board structure
 __thread Stack stack; // Move and board history structure
 volatile TTable ttable; // Transposition table
 __thread RTable rtable; // Threefold-repetition hashtable
-__thread int htable[2][64][64]; // History heuristic table: [side to move][from][to]
+__thread int* htable; // History heuristic table
 Info info; // Move generation parameter information
 
 
@@ -128,8 +129,7 @@ int main(void) {
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;
 
-            // parallel_search();
-            dummy_id_search();
+            parallel_search();
         }
 
         else if (!strncmp(input, "quit", 4)) {

@@ -199,6 +199,7 @@ typedef struct Param {
     Stack* stack;
     RTable* rtable;
 
+    uint64_t* nodes;
     int start_depth; // depth to start iterative_deepening at
     bool is_main; // whether thread is main thread
 } Param;

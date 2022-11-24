@@ -10,6 +10,7 @@
 #include "evaluate.h"
 #include "movegen.h"
 #include "stack.h"
+#include "htable.h"
 #include "ttable.h"
 #include "timeman.h"
 
@@ -18,7 +19,7 @@ extern __thread Board board;
 extern volatile TTable ttable;
 extern __thread Stack stack;
 extern __thread RTable rtable;
-extern __thread int htable[2][64][64];
+extern __thread int* htable;
 extern Info info;
 
 
@@ -29,43 +30,10 @@ static const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search b
 static const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
 static const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 static const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
-static const int NUM_THREADS = 2; // Number of threads to be used.
+static const int NUM_THREADS = 12; // Number of threads to be used.
 
 static __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
 static bool thread_exit = false; // set by main thread to tell the other threads to exit.
-
-
-/**
- * FOR TESTING ONLY
- */
-void dummy_id_search() {
-    clock_t start = clock();
-
-    uint64_t nodes = 0;
-    int score;
-    Move pv[info.depth];
-    Move best_move;
-
-    thread_exit = false;
-
-    for (int d = 1; d < info.depth; d++) {
-        score = _pvs(d, -MATE_SCORE, MATE_SCORE, 0, board.turn, true, start, &nodes, pv);
-
-        if (thread_exit) break;
-        if (score >= MATE_SCORE - d) thread_exit = true; // break early if detect mate
-        best_move = pv[d - 1];
-
-        clock_t elapsed = clock() - start;
-        double time = (double) elapsed / CLOCKS_PER_SEC;
-        if (time == 0) time = .1;
-        
-        print_info(d, score, nodes, time, pv);
-    }
-
-    printf("\nbestmove ");
-    print_move(best_move);
-    printf("\n");
-}
 
 
 /**
@@ -73,25 +41,36 @@ void dummy_id_search() {
  * Uses threads running iterative deepening loops, half starting at depth 1 and half at depth 2.
  * Uses a main thread that has the UCI-info and exit checking. If main thread exits all other thread exits.
  */
-void parallel_search(void) {
+void parallel_search(void) { // TODO voting
     pthread_t threads[NUM_THREADS];
     thread_exit = false;
-
+    uint64_t nodes = 0;
     int start_depth = 1;
-    for (int i = 0; i < NUM_THREADS; i++) { // TODO start at i = 0, reuse this thread as a search thread
-        Param* args = smalloc(sizeof(Param));
+
+    Param* args;
+    for (int i = 1; i < NUM_THREADS; i++) {
+        args = smalloc(sizeof(Param));
         args->board = &board;
         args->stack = &stack;
         args->rtable = &rtable;
+        args->nodes = &nodes;
         args->start_depth = start_depth;
-        args->is_main = (i == 0); // assign the first thread to be main
+        args->is_main = false;
 
         start_depth = (start_depth == 1 ? 2 : 1);
 
-        pthread_create(&threads[i], NULL, _iterative_deepening, (void*) args);
+        pthread_create(&threads[i], NULL, _iterative_deepening, args);
     }
+    args = smalloc(sizeof(Param));
+    args->board = &board;
+    args->stack = &stack;
+    args->rtable = &rtable;
+    args->nodes = &nodes;
+    args->start_depth = start_depth;
+    args->is_main = true;
+    _iterative_deepening(args); // reuse main thread
 
-    for (int i = 0; i < NUM_THREADS; i++) {
+    for (int i = 1; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
 }
@@ -109,20 +88,32 @@ void parallel_search(void) {
  * @return void* for multithreading requirements.
  */
 static void* _iterative_deepening(void* args) {
+    // Instantiate thread-local variables
     Param* a = (Param*) args;
+
     board = *(a->board);
+
     stack = *(a->stack);
+    stack.entries = smalloc(stack.capacity);
+    memcpy(stack.entries, a->stack->entries, stack.capacity);
+
     rtable = *(a->rtable);
+    rtable.entries = smalloc(rtable.capacity);
+    memcpy(rtable.entries, a->rtable->entries, rtable.capacity);
+
+    htable = scalloc(2 * 64 * 64, sizeof(int));
+
+    // Instantiate search variables
     int start_depth = a->start_depth;
     bool is_main = a->is_main;
+    uint64_t* nodes = a->nodes;
 
     clock_t start = clock();
-    uint64_t nodes = 0; // TODO
     Move* pv = smalloc(info.depth * sizeof(Move));
     Move best_move = NULL_MOVE;
     
     for (int d = start_depth; d <= info.depth; d++) {
-        int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, &nodes, pv);
+        int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, nodes, pv);
 
         if (thread_exit) break;
         if (score >= MATE_SCORE - d) thread_exit = true; // break early if detect mate
@@ -133,7 +124,7 @@ static void* _iterative_deepening(void* args) {
             double time = (double) elapsed / CLOCKS_PER_SEC;
             if (time == 0) time = .1;
             
-            print_info(d, score, nodes, time, pv);
+            print_info(d, score, *nodes, time, pv);
         }
     }
 
@@ -145,6 +136,7 @@ static void* _iterative_deepening(void* args) {
 
     free_rtable();
     free_stack();
+    free(htable);
     free(pv);
     free(a);
     pthread_exit(NULL);
@@ -250,7 +242,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
             if (alpha >= beta) {
                 has_failed_high = true;
                 if (is_capture(move)) {
-                    htable[board.turn][move.from][move.to] = depth * depth; // Update history heuristic table
+                    htable_add(board.turn, move.from, move.to, depth);
                 }
                 break;
             }
@@ -423,7 +415,7 @@ static int _score_move(Move move) {
         return 1000;
     }
 
-    int killer_val = htable[board.turn][move.from][move.to];
+    int killer_val = htable_get(board.turn, move.from, move.to);
     if (killer_val != 0) return killer_val / -100;
     
     switch (move.flag) {
