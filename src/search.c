@@ -15,7 +15,7 @@
 
 
 extern __thread Board board;
-extern TTable ttable;
+extern volatile TTable ttable;
 extern __thread Stack* stack;
 extern __thread RTable rtable;
 extern __thread int htable[2][64][64];
@@ -31,7 +31,7 @@ static const int DELTA_MARGIN = 200; // The amount of leeway in terms of score t
 static const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
 static const int NUM_THREADS = 2; // Number of threads to be used.
 
-__thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
+static __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
 static bool thread_exit = false; // set by main thread to tell the other threads to exit.
 
 
@@ -149,7 +149,10 @@ static void* _iterative_deepening(void* args) {
     }
 
     free(pv);
+    free_rtable();
+    free_stack();
     free(a);
+    pthread_exit(NULL);
 }
 
 
@@ -323,7 +326,7 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
         pop();
 
         if (score >= beta) return beta;
-        if (score > alpha) alpha = score;
+        alpha = max(score, alpha);
     }
     return alpha;
 }

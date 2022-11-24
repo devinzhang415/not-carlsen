@@ -3,7 +3,7 @@
 #include "util.h"
 
 
-extern TTable ttable;
+extern volatile TTable ttable;
 
 
 static bool initialized = false;

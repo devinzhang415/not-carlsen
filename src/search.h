@@ -4,9 +4,6 @@
 #include "util.h"
 
 
-extern __thread Move tt_move;
-
-
 void dummy_id_search();
 void parallel_search(void);
 static void* _iterative_deepening(void* args);
