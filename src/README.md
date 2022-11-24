@@ -4,7 +4,7 @@
 | --- | --- |
 | `board` | Functions associated with getting the board state and zobrist |
 | `evaluate` | Numerical analysis of the board and piece value constants |
-| 'htable' | History heuristic table functions |
+| `htable` | History heuristic table functions |
 | `movegen` | Tables and functions for all move generation and perft |
 | `rtable` | Repetition table functions |
 | `search` | Game tree search related functions |

@@ -14,8 +14,10 @@ HEADERS = $(wildcard *.h)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBS) $(CFLAGS) -o $@
+
+# TODO To debug, use following and run `drmemory -- not-carlsen.exe`
+# $(TARGET): $(OBJECTS)
 #	$(CC) $(OBJECTS) $(LIBS) -static-libgcc -ggdb -o $@
-# Run drmemory -- not-carlsen.exe
 
 clean:
 	-rm -f $(TARGET)
