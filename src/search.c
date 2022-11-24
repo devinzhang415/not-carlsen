@@ -40,6 +40,10 @@ static bool thread_exit = false; // set by main thread to tell the other threads
  * Searches the position with Lazy SMP multithreading.
  * Uses threads running iterative deepening loops, half starting at depth 1 and half at depth 2.
  * Uses a main thread that has the UCI-info and exit checking. If main thread exits all other thread exits.
+ * 
+ * TODO
+ * blunders if run in middle of game
+ * no blunders if searched from fresh position. Everything in memory gets cleared though??
  */
 void parallel_search(void) {
     pthread_t threads[NUM_THREADS];
@@ -203,13 +207,13 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         int score = 0;
         bool in_check = is_check(board.turn);
 
-        // Null move pruning TODO causing heavy blunders
-        // if (_is_null_move_ok(in_check)) {
-        //     push(NULL_MOVE);
-        //     score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start, nodes, pv);
-        //     pop();
-        //     if (score >= beta) return score;
-        // }
+        // Null move pruning
+        if (_is_null_move_ok(in_check)) {
+            push(NULL_MOVE);
+            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start, nodes, pv);
+            pop();
+            if (score >= beta) return score;
+        }
 
         score = -MATE_SCORE;
         bool has_failed_high = false;

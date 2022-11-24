@@ -221,6 +221,7 @@ static int _save_move_str(char* str, int i, Move move) {
  * @param fen the FEN of the position. Assumed valid.
  */
 static void _init_structs(char* fen) {
+    _free_structs();
     init_board(fen);
     init_stack();
     init_ttable();

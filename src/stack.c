@@ -17,7 +17,6 @@ static const uint64_t STACK_INIT_CAPACITY = 1024ULL; // Power of 2 for modulo ef
  * Initalizes the stack.
  */
 void init_stack() {
-    free_stack();
     stack.size = 0;
     stack.capacity = STACK_INIT_CAPACITY;
     stack.entries = scalloc(STACK_INIT_CAPACITY, sizeof(Stack_Entry));

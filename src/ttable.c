@@ -13,7 +13,6 @@ static const uint64_t TTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo 
  * Initalizes the transposition table.
  */
 void init_ttable(void) {
-    free_ttable();
     ttable.size = 0;
     ttable.capacity = TTABLE_INIT_CAPACITY;
     ttable.entries = scalloc(TTABLE_INIT_CAPACITY, sizeof(TTable_Entry));
