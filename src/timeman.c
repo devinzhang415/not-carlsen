@@ -14,7 +14,7 @@ extern Info info;
  * Search precedence: depth > movetime > nodes > time manager
  * 
  * TODO
- * clock() expensive
+ * better timeman
  */
 bool can_exit(bool color, clock_t start_time, int cur_nodes) {
     clock_t elpased = clock() - start_time;

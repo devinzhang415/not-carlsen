@@ -27,7 +27,7 @@ static const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
 static const int LRM_R = 1; // Depth to reduce by in late move reduction.
 static const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction.
 static const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction.
-static const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch.
+static const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch, the more negative the deeper.
 static const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 static const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
 static const int NUM_THREADS = 12; // Number of threads to be used.
@@ -41,7 +41,7 @@ static bool thread_exit = false; // set by main thread to tell the other threads
  * Uses threads running iterative deepening loops, half starting at depth 1 and half at depth 2.
  * Uses a main thread that has the UCI-info and exit checking. If main thread exits all other thread exits.
  */
-void parallel_search(void) { // TODO voting
+void parallel_search(void) {
     pthread_t threads[NUM_THREADS];
     thread_exit = false;
     uint64_t nodes = 0;
@@ -109,7 +109,7 @@ static void* _iterative_deepening(void* args) {
     uint64_t* nodes = a->nodes;
 
     clock_t start = clock();
-    Move* pv = smalloc(info.depth * sizeof(Move));
+    Move* pv = scalloc(info.depth, sizeof(Move));
     Move best_move = NULL_MOVE;
     
     for (int d = start_depth; d <= info.depth; d++) {
@@ -152,7 +152,7 @@ static void* _iterative_deepening(void* args) {
  * - MVV-LVA + history heuristic move ordering
  * - Null move pruning
  * - Late move reduction
- * // TODO futility, razoring
+ * // TODO futility, razoring, aspiration (?)
  * 
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
@@ -203,13 +203,13 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         int score = 0;
         bool in_check = is_check(board.turn);
 
-        // Null move pruning
-        if (_is_null_move_ok(in_check)) {
-            push(NULL_MOVE);
-            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start, nodes, pv);
-            pop();
-            if (score >= beta) return score;
-        }
+        // Null move pruning TODO causing heavy blunders
+        // if (_is_null_move_ok(in_check)) {
+        //     push(NULL_MOVE);
+        //     score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start, nodes, pv);
+        //     pop();
+        //     if (score >= beta) return score;
+        // }
 
         score = -MATE_SCORE;
         bool has_failed_high = false;
@@ -268,6 +268,8 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
  * - Delta pruning
  * - MVV-LVA + history heuristic move ordering
  * - SEE
+ * 
+ * TODO remove depth limit
  * 
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
