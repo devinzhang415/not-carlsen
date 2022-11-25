@@ -49,6 +49,17 @@ int main(void) {
 
         if (!strncmp(input, "ucinewgame", 10)) {
             _init_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+            // Set default search options
+            info.wtime = 0;
+            info.btime = 0;
+            info.winc = 0;
+            info.binc = 0;
+            info.movestogo = 0;
+            info.depth = MAX_DEPTH;
+            info.nodes = INVALID;
+            info.movetime = INVALID;
+            info.threads = 12;
         }
 
         else if (!strncmp(input, "uci", 3)) {
@@ -59,6 +70,15 @@ int main(void) {
 
         else if (!strncmp(input, "isready", 7)) {
             printf("readyok\n");
+        }
+
+        else if (!strncmp(input, "setoption name", 14)) {
+            char* token = NULL;
+
+            if (token = strstr(input, "Threads value")) {
+                info.threads = atoi(token + 14);
+                continue;
+            }
         }
 
         else if (!strncmp(input, "position", 8)) {
@@ -129,6 +149,7 @@ int main(void) {
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;
 
+            // Search and print search info, best move
             parallel_search();
         }
 

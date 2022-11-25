@@ -170,7 +170,7 @@ typedef struct RTable {
 
 /**
  * Parameters to search with for UCI.
- * Descriptions from http://wbec-ridderkerk.nl/html/UCIProtocol.html
+ * Most descriptions from http://wbec-ridderkerk.nl/html/UCIProtocol.html
  * 
  * TODO missing commands:
  * - searchmoves
@@ -187,6 +187,7 @@ typedef struct Info {
     int depth; // search x plies only
     int nodes; // search x nodes only 
     clock_t movetime; // search exactly x mseconds
+    int threads; // how many threads to search with
 } Info;
 
 

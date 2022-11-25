@@ -30,7 +30,6 @@ static const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search b
 static const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch, the more negative the deeper.
 static const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 static const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
-static const int NUM_THREADS = 12; // Number of threads to be used.
 
 static __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
 static bool thread_exit = false; // set by main thread to tell the other threads to exit.
@@ -46,13 +45,13 @@ static bool thread_exit = false; // set by main thread to tell the other threads
  * no blunders if searched from fresh position. Everything in memory gets cleared though??
  */
 void parallel_search(void) {
-    pthread_t threads[NUM_THREADS];
+    pthread_t threads[info.threads];
     thread_exit = false;
     uint64_t nodes = 0;
     int start_depth = 1;
 
     Param* args;
-    for (int i = 1; i < NUM_THREADS; i++) {
+    for (int i = 1; i < info.threads; i++) {
         args = smalloc(sizeof(Param));
         args->board = &board;
         args->stack = &stack;
@@ -74,7 +73,7 @@ void parallel_search(void) {
     args->is_main = true;
     _iterative_deepening(args); // reuse main thread
 
-    for (int i = 1; i < NUM_THREADS; i++) {
+    for (int i = 1; i < info.threads; i++) {
         pthread_join(threads[i], NULL);
     }
 }

@@ -13,9 +13,15 @@ Compile with the makefile:
 
 > mingw32-make
 
-Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol. Alongside the standard commands, the engine supports:
-- #### go perft x
-  Prints out the divided perft results for the initialized position for depth x.
+Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol.
+
+To modify engine options:
+- #### setoption name Threads \[x]
+  Sets the number of threads to search with.
+
+Alongside the standard commands, the engine supports:
+- #### go perft \[x]
+  Prints out the divided perft results for the initialized position for depth \[x].
 
 ------
 
@@ -44,7 +50,10 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
-11/23/22 v2.0.0
+11/25/22 v2.0.1
+> Created UCI option to set the number of threads to be used.
+
+11/23/22 v2.0
 > Implemented Lazy SMP! Tracked down the issue to __thread macro not creating a deep copy of allocated memory, such as in the move stack and repetition table. Set each thread to use its own allocated versions of these structures.
 >
 > To facilitate the above, switched the move stack's backing from a singly-linked list to an array.
