@@ -13,15 +13,11 @@ Compile with the makefile:
 
 > mingw32-make
 
-Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol.
-
-To modify engine options:
-- #### setoption name Threads \[x]
-  Sets the number of threads to search with.
-
-Alongside the standard commands, the engine supports:
+Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol. The engine also supports:
 - #### go perft \[x]
   Prints out the divided perft results for the initialized position for depth \[x].
+- #### setoption name Threads \[x]
+  Sets the number of threads to search with.
 
 ------
 
