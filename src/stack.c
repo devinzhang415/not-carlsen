@@ -28,8 +28,10 @@ void init_stack() {
  * Free every element in the stack.
  */
 void free_stack(void) {
-    if (stack.initialized) free(stack.entries);
-    stack.initialized = false;
+    if (stack.initialized) {
+        free(stack.entries);
+        stack.initialized = false;
+    }
 }
 
 

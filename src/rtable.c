@@ -25,8 +25,10 @@ void init_rtable(void) {
  * Releases the rtable entries memory.
  */
 void free_rtable(void) {
-    if (rtable.initialized) free(rtable.entries);
-    rtable.initialized = false;
+    if (rtable.initialized) {
+        free(rtable.entries);
+        rtable.initialized = false;
+    }
 }
 
 

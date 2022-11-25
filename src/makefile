@@ -1,7 +1,7 @@
 TARGET = not-carlsen
 LIBS = -lm -lpthread
 CC = gcc
-CFLAGS = -s -O3 -Wl,--stack,67108864 -fsyntax-only
+CFLAGS = -s -O3 -Wl,--stack,67108864 -w
 
 .PHONY: default all clean
 .PRECIOUS: $(TARGET) $(OBJECTS)

@@ -115,6 +115,7 @@ static void* _iterative_deepening(void* args) {
     Move* pv = scalloc(info.depth, sizeof(Move));
     Move best_move = NULL_MOVE;
     
+    // Begin search
     for (int d = start_depth; d <= info.depth; d++) {
         int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, nodes, pv);
 
@@ -168,7 +169,8 @@ static void* _iterative_deepening(void* args) {
  * @param pv the best line of moves found.
  * @return the best score.
  */
-static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes, Move* pv) {
+int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main,
+                clock_t start, uint64_t* nodes, Move* pv) {
     // Stop searching if main thread meets parameters
     if (is_main && can_exit(color, start, *nodes)) thread_exit = true;
     if (thread_exit) return 0;

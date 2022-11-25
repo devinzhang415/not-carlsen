@@ -24,8 +24,10 @@ void init_ttable(void) {
  * Releases the ttable entries memory.
  */
 void free_ttable(void) {
-    if (ttable.initialized) free(ttable.entries);
-    ttable.initialized = false;
+    if (ttable.initialized) {
+        free(ttable.entries);
+        ttable.initialized = false;
+    }
 }
 
 

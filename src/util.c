@@ -147,17 +147,17 @@ void* scalloc(size_t n, size_t size) {
  * Realloc an amount of space equal to size safely,
  * exiting program on failure.
  * 
- * @param ptr pointer to memory block previously malloced.
+ * @param ptr pointer to pointer to memory block previously malloced.
  * @param size new size of the memory block to allocate.
  * @return void* to the beginning of the allocated memory.
  */
 void* srealloc(void* ptr, size_t size) {
-    void* nptr = realloc(ptr, size);
-    if (nptr == NULL) {
+    ptr = realloc(ptr, size);
+    if (ptr == NULL) {
         printf("\nMem error in srealloc\n");
         exit(EXIT_FAILURE);
     }
-    return nptr;
+    return ptr;
 }
 
 

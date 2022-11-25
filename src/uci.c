@@ -150,7 +150,13 @@ int main(void) {
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;
 
             // Search and print search info, best move
-            parallel_search();
+            // parallel_search();
+            uint64_t nodes = 0;
+            Move pv[8];
+            _pvs(8, -MATE_SCORE, MATE_SCORE, true, WHITE, false, clock(), &nodes, pv);
+            printf("bestmove ");
+            print_move(pv[7]);
+            printf("\n");
         }
 
         else if (!strncmp(input, "quit", 4)) {
@@ -243,6 +249,7 @@ static int _save_move_str(char* str, int i, Move move) {
  */
 static void _init_structs(char* fen) {
     _free_structs();
+    
     init_board(fen);
     init_stack();
     init_ttable();
