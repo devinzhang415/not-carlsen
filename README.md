@@ -52,7 +52,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 >
 > This brings the necessary stability to Lazy SMP to push the search depth from 13 -> 21 running on 12 threads.
 >
-> Investigating odd crashes on extended engine runtime.
+> Investigating odd crashes and engine stalling (not disconnect but won't respond) on extended engine runtime. For some reason I cannot reproduce this in terminal or GDB, but happens frequently in the GUI.
 
 11/25/22 v2.1
 > Switched to clear scheme instead of free and re-alloc scheme to reduce overhead costs.
