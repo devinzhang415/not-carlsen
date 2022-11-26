@@ -11,7 +11,7 @@ extern __thread Board board;
 extern __thread Stack stack;
 
 
-static const uint64_t STACK_INIT_CAPACITY = 1024ULL; // Power of 2 for modulo efficiency
+static const uint64_t STACK_INIT_CAPACITY = 256ULL; // Power of 2 for modulo efficiency
 
 
 /**
@@ -21,8 +21,7 @@ void init_stack() {
     stack.size = 0;
     stack.capacity = STACK_INIT_CAPACITY;
     stack.entries = scalloc(STACK_INIT_CAPACITY, sizeof(Stack_Entry));
-
-    push(NULL_MOVE);
+    _seed();
 }
 
 
@@ -32,8 +31,7 @@ void init_stack() {
 void clear_stack(void) {
     stack.size = 0;
     memset(stack.entries, 0, stack.capacity * sizeof(Stack_Entry));
-
-    push(NULL_MOVE);
+    _seed();
 }
 
 
@@ -53,7 +51,6 @@ void push(Move move) {
     stack.entries[stack.size].board = board;
     stack.entries[stack.size].move = move;
 
-    // Update threefold rep table
     rtable_add(board.zobrist);
 }
 
@@ -62,10 +59,21 @@ void push(Move move) {
  * Unmakes the most recent move and updates the tables.
  */
 void pop(void) {
-    // Update threefold rep table
     rtable_remove(board.zobrist);
     
     // Update move stack
     stack.size--;
     board = stack.entries[stack.size].board;
+}
+
+
+/**
+ * Populate the stack with the initial position.
+ */
+static void _seed(void) {
+    stack.size++;
+    stack.entries[stack.size].board = board;
+    stack.entries[stack.size].move = NULL_MOVE;
+
+    rtable_add(board.zobrist);
 }

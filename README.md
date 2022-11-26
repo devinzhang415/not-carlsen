@@ -2,9 +2,10 @@
 Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-Magnus's goal was to learn the popular algorithims and techniques in modern chess engines, this engine will efficently implement them. Thus, the goal of this engine is simply to be strong while providing me an opportunity to solidify my C programming skills.
 
 Special thanks to:
-- github.com/nkarve for their magic bitboard generation.
-- Peter Jones for their guide on legal move generation.
-- github.com/Disservin for their continual support and inspiration.
+- [github.com/Disservin](https://github.com/Disservin) for their continual support and inspiration.
+- [github.com/nkarve](https://github.com/nkarve) for their magic bitboard generation.
+- Peter Jones for their [guide on legal move generation](https://peterellisjones.com/posts/generating-legal-chess-moves-efficiently/).
+- The [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page).
 
 ------
 

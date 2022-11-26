@@ -51,9 +51,9 @@ void dummy_id_search(void) {
     htable = scalloc(2 * 64 * 64, sizeof(int));
 
     for (int d = 1; d < info.depth; d++) {
-        score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, true, start, &nodes, pv);
-
         if (thread_exit) break;
+
+        score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, true, start, &nodes, pv);
         if (is_mate(score, d)) thread_exit = true;
         best_move = pv[d - 1];
 
@@ -154,9 +154,9 @@ static void* _iterative_deepening(void* args) {
     
     // Begin search
     for (int d = start_depth; d <= info.depth; d++) {
-        int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, nodes, pv);
-
         if (thread_exit) break;
+
+        int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, nodes, pv);
         if (is_mate(score, d)) thread_exit = true;
         if (is_main) {
             best_move = pv[d - 1];

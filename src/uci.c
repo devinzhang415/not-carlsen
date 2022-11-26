@@ -57,15 +57,7 @@ int main(void) {
         if (!strncmp(input, "ucinewgame", 10)) {
             _reset_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-            // Set default search options
-            info.wtime = 0;
-            info.btime = 0;
-            info.winc = 0;
-            info.binc = 0;
-            info.movestogo = 0;
-            info.depth = MAX_DEPTH;
-            info.nodes = INVALID;
-            info.movetime = INVALID;
+            // Set default options
             // info.threads = 12;
             info.threads = 1;
         }
@@ -148,16 +140,17 @@ int main(void) {
                 continue;
             }
 
+            // Set search parameters
             info.wtime = (token = strstr(input, "wtime")) ? atoi(token + 6) : 0;
             info.btime = (token = strstr(input, "btime")) ? atoi(token + 6) : 0;
             info.winc = (token = strstr(input, "winc")) ? atoi(token + 5) : 0;
             info.binc = (token = strstr(input, "binc")) ? atoi(token + 5) : 0;
-            info.movestogo = (token = strstr(input, "movestogo")) ? atoi(token + 10) : 0;
+            info.movestogo = (token = strstr(input, "movestogo")) ? atoi(token + 10) : 40;
             info.depth = (token = strstr(input, "depth")) ? atoi(token + 6) + 1 : MAX_DEPTH;
-            info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : INVALID;
-            info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : INVALID;
+            info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : 0;
+            info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : 0;
 
-            // Search and print search info, best move
+            // Search
             // parallel_search();
 
             dummy_id_search();

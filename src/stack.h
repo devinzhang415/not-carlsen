@@ -11,5 +11,7 @@ void clear_stack(void);
 void push(Move move);
 void pop(void);
 
+static void _seed(void);
+
 
 #endif
