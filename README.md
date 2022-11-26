@@ -47,6 +47,13 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+11/26/22 v2.2
+> Implemented improvements to concurrent hashtable access: pushed resizing to subsequent iterations to avoid rehashing and threading access issues and more checksum techniques to better adhere to Robert Hyatt's lockless technique.
+>
+> Pushed search depth from 13 -> 21.
+>
+> Investigating odd crashes on extended engine runtime.
+
 11/25/22 v2.1
 > Switched to clear scheme instead of free and re-alloc scheme to reduce overhead costs.
 >

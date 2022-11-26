@@ -44,17 +44,13 @@ void parallel_search(void) {
     pthread_t threads[info.threads - 1];
     thread_exit = false;
     clock_t start = clock();
-    uint64_t nodes = 0;
     int start_depth = 1;
 
     Param* args;
     for (int i = 0; i < info.threads; i++) {
-        args = smalloc(sizeof(Param)); // Thread is responsible for freeing args
-        args->board = &board;
-        args->stack = &stack;
-        args->rtable = &rtable;
+        args = smalloc(sizeof(Param)); // Threads are responsible for freeing args
+
         args->start = start;
-        args->nodes = &nodes;
         args->start_depth = start_depth;
 
         start_depth = (start_depth == 1 ? 2 : 1);
@@ -65,6 +61,9 @@ void parallel_search(void) {
             _iterative_deepening(args);
         } else {
             args->is_main = false;
+            args->board = &board;
+            args->stack = &stack;
+            args->rtable = &rtable;
             pthread_create(&threads[i], NULL, _iterative_deepening, (void*) args);
         }
     }
@@ -78,21 +77,20 @@ void parallel_search(void) {
 /**
  * Searches the position with iterative depths.
  * 
- * @param args arguments for wrapped in Param struct:
- * @param board thread-local board
- * @param stack thread-local stack
- * @param rtable thrad-local rtable
- * @param start_depth the depth to start iterative deepening at (1 or 2 for purposes of jittering)
- * @param is_main whether the thread running this is the main one.
- * @return void* for multithreading requirements.
+ * @param args search parameters wrapped in Param struct.
+ *             some parameters will be NULL if thread is main.
  */
 static void* _iterative_deepening(void* args) {
     // Instantiate thread-local variables
     Param* a = (Param*) args;
+
     bool is_main = a->is_main;
+    clock_t start = a->start;
+    int start_depth = a->start_depth;
 
     Move* pv = NULL;
     Move best_move = NULL_MOVE;
+    uint64_t nodes = 0;
 
     if (is_main) {
         pv = scalloc(info.depth, sizeof(Move));
@@ -109,17 +107,12 @@ static void* _iterative_deepening(void* args) {
     }
 
     htable = scalloc(2 * 64 * 64, sizeof(int));
-
-    // Instantiate search variables
-    clock_t start = a->start;
-    uint64_t* nodes = a->nodes;
-    int start_depth = a->start_depth;
     
     // Begin search
     for (int d = start_depth; d < info.depth; d++) {
         if (thread_exit) break;
 
-        int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, nodes, pv);
+        int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, &nodes, pv);
         if (is_mate(score, d)) thread_exit = true;
         if (is_main) {
             best_move = pv[d - 1];
@@ -128,7 +121,7 @@ static void* _iterative_deepening(void* args) {
             double time = (double) elapsed / CLOCKS_PER_SEC;
             if (time == 0) time = .1;
             
-            print_info(d, score, *nodes, time, pv);
+            print_info(d, score, nodes, time, pv);
         }
     }
 
@@ -161,9 +154,9 @@ static void* _iterative_deepening(void* args) {
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
- * @param pv_node whether the node is the first node at the depth.
+ * @param pv_node is this node the first node at this depth?
  * @param color the side to search for a move for.
- * @param is_main is the thread running this the main thread.
+ * @param is_main is the thread running this the main thread?
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @param pv the best line of moves found.
@@ -180,7 +173,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
     // Search for position in the transposition table
     TTable_Entry tt = ttable_get(board.zobrist);
     if (tt.initialized && tt.depth >= depth) {
-        (*nodes)++;
+        if (is_main) (*nodes)++;
         tt_move = tt.move;
         switch (tt.flag) {
             case EXACT:
@@ -198,11 +191,11 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
     // Base case
     if (is_draw()) {
-        (*nodes)++;
+        if (is_main) (*nodes)++;
         return 0;
     }
     if (depth <= 0) {
-        return _qsearch(depth - 1, alpha, beta, pv_node, color, start, nodes);
+        return _qsearch(depth - 1, alpha, beta, pv_node, color, is_main, start, nodes);
     }
     
     // Recursive case
@@ -246,7 +239,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
             if (score > alpha) {
                 alpha = score;
                 best_move = move;
-                if (is_main) pv[depth - 1] = best_move; // TODO simply incorrect
+                if (is_main) pv[depth - 1] = best_move; // TODO triangular pv
             }
             if (alpha >= beta) {
                 has_failed_high = true;
@@ -278,23 +271,24 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
  * - MVV-LVA + history heuristic move ordering
  * - SEE
  * 
- * TODO remove depth limit
+ * TODO remove depth limit / fix stack overflow
  * 
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
- * @param pv_node whether the node is the first node at the depth.
+ * @param pv_node is this node the first node at this depth?
  * @param color the side to search for a move for.
+ * @param is_main is the thread running this the main thread?
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @return value of depth 0 node.
  */
-static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes) {
+static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {
         return 0;
     }
 
-    (*nodes)++;
+    if (is_main) (*nodes)++;
 
     if (is_draw()) {
         return 0;
@@ -321,7 +315,7 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, cl
         if (_SEE(board.turn, to) < SEE_THRESHOLD) continue;
 
         push(moves[i]);
-        int score = -_qsearch(depth - 1, -beta, -alpha, (i == 0), color, start, nodes);
+        int score = -_qsearch(depth - 1, -beta, -alpha, (i == 0), color, is_main, start, nodes);
         pop();
 
         if (score >= beta) return beta;

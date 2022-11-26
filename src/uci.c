@@ -58,7 +58,6 @@ int main(void) {
             _reset_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
             // Set default options
-            // info.threads = 12;
             info.threads = 1;
         }
 
@@ -150,6 +149,7 @@ int main(void) {
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : 0;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : 0;
 
+            // Begin search
             parallel_search();
         }
 

@@ -11,7 +11,7 @@ extern __thread Board board;
 extern __thread Stack stack;
 
 
-static const size_t STACK_INIT_CAPACITY = 256; // Power of 2 for modulo efficiency
+static const size_t STACK_INIT_CAPACITY = 256ULL; // Power of 2 for modulo efficiency
 
 
 /**

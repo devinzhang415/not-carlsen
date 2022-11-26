@@ -139,6 +139,7 @@ typedef struct TTable_Entry {
 typedef struct TTable {
     size_t size;
     size_t capacity;
+    bool resize; // resize on the next iteration?
     TTable_Entry* entries;
 } TTable;
 
@@ -160,6 +161,7 @@ typedef struct RTable_Entry {
 typedef struct RTable {
     size_t size;
     size_t capacity;
+    bool resize; // resize on the next iteration?
     RTable_Entry* entries;
 } RTable;
 
@@ -197,8 +199,7 @@ typedef struct Param {
     RTable* rtable;
 
     clock_t start; // time search started
-    uint64_t* nodes;
-    int start_depth; // depth to start iterative_deepening at
+    int start_depth; // depth to start iterative deepening at
     bool is_main; // whether thread is main thread
 } Param;
 

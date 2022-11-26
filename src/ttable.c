@@ -7,7 +7,7 @@
 extern volatile TTable ttable;
 
 
-static const size_t TTABLE_INIT_CAPACITY = 65536; // Power of 2 for modulo efficiency
+static const size_t TTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
 
 
 /**
@@ -16,6 +16,7 @@ static const size_t TTABLE_INIT_CAPACITY = 65536; // Power of 2 for modulo effic
 void init_ttable(void) {
     ttable.size = 0;
     ttable.capacity = TTABLE_INIT_CAPACITY;
+    ttable.resize = false;
     ttable.entries = scalloc(TTABLE_INIT_CAPACITY, sizeof(TTable_Entry));
 }
 
@@ -24,6 +25,11 @@ void init_ttable(void) {
  * Clear the transposition table entries.
  */
 void clear_ttable(void) {
+    if (ttable.resize) {
+        ttable.capacity *= 2;
+        ttable.entries = srealloc(ttable.entries, ttable.capacity * sizeof(TTable_Entry));
+        ttable.resize = false;
+    }
     memset(ttable.entries, 0, ttable.capacity * sizeof(TTable_Entry));
 }
 
@@ -34,10 +40,10 @@ void clear_ttable(void) {
  * not exist, return an uninitialized entry.
  */
 TTable_Entry ttable_get(uint64_t key) {
-    for (int i = 0; i < ttable.capacity; i++) {
-        int index = (key + i) & (ttable.capacity - 1); // (key + i) % ttable.capacity
+    for (size_t i = 0; i < ttable.capacity; i++) {
+        size_t index = (key + i) & (ttable.capacity - 1); // (key + i) % ttable.capacity
         TTable_Entry entry = ttable.entries[index];
-        if (!entry.initialized || entry.key ^ entry.score == key) {
+        if (!entry.initialized || entry.key ^ entry.depth ^ entry.score ^ entry.flag == key) {
             return entry;
         }
     }
@@ -53,16 +59,16 @@ TTable_Entry ttable_get(uint64_t key) {
  * @param flag the type of node the position is.
  */
 void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
-    // Resize
-    if (((double) ttable.size / ttable.capacity) > MAX_LOAD_FACTOR) {
-        ttable.capacity *= 2;
-        ttable.entries = srealloc(ttable.entries, sizeof(TTable_Entry) * ttable.capacity);
+    if (ttable.resize || (double) ttable.size / ttable.capacity > MAX_LOAD_FACTOR) {
+        ttable.resize = true; // Avoid rehashing as cost is likely not worth it, just resize table for next iteration
     }
 
-    for (int i = 0; i < ttable.capacity; i++) {
-        int index = (key + i) & (ttable.capacity - 1); // (key + i) % ttable.capacity
-        if (ttable.entries[index].initialized) {
-            if (ttable.entries[index].key ^ score == key) { // Replace existing entry
+    for (size_t i = 0; i < ttable.capacity; i++) {
+        size_t index = (key + i) & (ttable.capacity - 1); // (key + i) % ttable.capacity
+        TTable_Entry entry = ttable.entries[index];
+        if (entry.initialized) {
+            if (entry.key ^ entry.depth ^ entry.score ^ entry.flag == key) { // Replace existing entry
+                ttable.entries[index].key = key ^ depth ^ score ^ flag;
                 ttable.entries[index].depth = depth;
                 ttable.entries[index].move = move;
                 ttable.entries[index].score = score;
@@ -70,7 +76,7 @@ void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
                 break;
             }
         } else {
-            ttable.entries[index].key = key ^ score; // Lockless transposition table hack
+            ttable.entries[index].key = key ^ depth ^ score ^ flag; // Lockless transposition table hack
             ttable.entries[index].depth = depth;
             ttable.entries[index].move = move;
             ttable.entries[index].score = score;
