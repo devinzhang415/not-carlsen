@@ -50,7 +50,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 11/26/22 v2.2
 > Implemented improvements to concurrent hashtable access: pushed resizing to subsequent iterations to avoid rehashing and threading access issues and more checksum techniques to better adhere to Robert Hyatt's lockless technique.
 >
-> Pushed search depth from 13 -> 21.
+> This brings the necessary stability to Lazy SMP to push the search depth from 13 -> 21 running on 12 threads.
 >
 > Investigating odd crashes on extended engine runtime.
 
