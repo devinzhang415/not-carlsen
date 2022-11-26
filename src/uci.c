@@ -59,7 +59,7 @@ int main(void) {
 
             // Set default options
             // info.threads = 12;
-            info.threads = 2;
+            info.threads = 1;
         }
 
         else if (!strncmp(input, "uci", 3)) {

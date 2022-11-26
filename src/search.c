@@ -60,14 +60,13 @@ void parallel_search(void) {
         start_depth = (start_depth == 1 ? 2 : 1);
 
         if (i == info.threads - 1) { // Reuse main thread
-            // args->is_main = true;
             args->is_main = true;
             args->start_depth = 1;
             _iterative_deepening(args);
         } else {
             args->is_main = false;
-            pthread_create(&threads[i], NULL, _iterative_deepening, args);
-        }     
+            pthread_create(&threads[i], NULL, _iterative_deepening, (void*) args);
+        }
     }
 
     for (int i = 0; i < info.threads - 1; i++) {
@@ -117,7 +116,7 @@ static void* _iterative_deepening(void* args) {
     int start_depth = a->start_depth;
     
     // Begin search
-    for (int d = start_depth; d <= info.depth; d++) {
+    for (int d = start_depth; d < info.depth; d++) {
         if (thread_exit) break;
 
         int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, nodes, pv);
@@ -144,7 +143,6 @@ static void* _iterative_deepening(void* args) {
     } else {
         free(stack.entries);
         free(rtable.entries);
-        pthread_exit(NULL);
     }
 }
 
@@ -221,6 +219,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         }
 
         score = -MATE_SCORE;
+        Move best_move = NULL_MOVE;
         bool has_failed_high = false;
 
         Move moves[MAX_MOVE_NUM];
@@ -246,7 +245,8 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
             if (score > alpha) {
                 alpha = score;
-                if (is_main) pv[depth - 1] = move; // Save best move to PV // TODO simply incorrect
+                best_move = move;
+                if (is_main) pv[depth - 1] = best_move; // TODO simply incorrect
             }
             if (alpha >= beta) {
                 has_failed_high = true;
@@ -264,7 +264,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         } else if (alpha >= beta) {
             flag = LOWERBOUND;
         }
-        ttable_add(board.zobrist, depth, pv[depth - 1], alpha, flag);
+        ttable_add(board.zobrist, depth, best_move, alpha, flag);
 
         return alpha;
     }

@@ -118,7 +118,7 @@ const int MAX_CAPTURE_NUM = 74; // largest number of legal captures in a positio
 void* smalloc(size_t size) {
     void* ptr = malloc(size);
     if (ptr == NULL) {
-        printf("\nMem error in smalloc\n");
+        printf("\nMem error in smalloc\n\n");
         exit(EXIT_FAILURE);
     }
     return ptr;
@@ -136,7 +136,7 @@ void* smalloc(size_t size) {
 void* scalloc(size_t n, size_t size) {
     void* ptr = calloc(n, size);
     if (ptr == NULL) {
-        printf("\nMem error in scalloc\n");
+        printf("\nMem error in scalloc\n\n");
         exit(EXIT_FAILURE);
     }
     return ptr;
@@ -154,7 +154,7 @@ void* scalloc(size_t n, size_t size) {
 void* srealloc(void* ptr, size_t size) {
     ptr = realloc(ptr, size);
     if (ptr == NULL) {
-        printf("\nMem error in srealloc\n");
+        printf("\nMem error in srealloc\n\n");
         exit(EXIT_FAILURE);
     }
     return ptr;
