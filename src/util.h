@@ -105,7 +105,6 @@ typedef struct Board {
 typedef struct Stack_Entry {
     Board board;
     Move move;
-    bool initialized;
 } Stack_Entry;
 
 
@@ -117,7 +116,6 @@ typedef struct Stack {
     uint64_t size;
     uint64_t capacity;
     Stack_Entry* entries;
-    bool initialized;
 } Stack;
 
 
@@ -142,7 +140,6 @@ typedef struct TTable {
     uint64_t size;
     uint64_t capacity;
     TTable_Entry* entries;
-    bool initialized;
 } TTable;
 
 
@@ -164,7 +161,6 @@ typedef struct RTable {
     uint64_t size;
     uint64_t capacity;
     RTable_Entry* entries;
-    bool initialized;
 } RTable;
 
 

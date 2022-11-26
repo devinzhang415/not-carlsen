@@ -36,6 +36,43 @@ static bool thread_exit = false; // set by main thread to tell the other threads
 
 
 /**
+ * FOR TESTING ONLY
+ */
+void dummy_id_search(void) {
+    clock_t start = clock();
+
+    uint64_t nodes = 0;
+    int score;
+    Move pv[info.depth];
+    Move best_move;
+
+    thread_exit = false;
+
+    htable = scalloc(2 * 64 * 64, sizeof(int));
+
+    for (int d = 1; d < info.depth; d++) {
+        score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, true, start, &nodes, pv);
+
+        if (thread_exit) break;
+        if (is_mate(score, d)) thread_exit = true;
+        best_move = pv[d - 1];
+
+        clock_t elapsed = clock() - start;
+        double time = (double) elapsed / CLOCKS_PER_SEC;
+        if (time == 0) time = .1;
+        
+        print_info(d, score, nodes, time, pv);
+    }
+
+    printf("\nbestmove ");
+    print_move(best_move);
+    printf("\n");
+
+    free(htable);
+}
+
+
+/**
  * Searches the position with Lazy SMP multithreading.
  * Uses threads running iterative deepening loops, half starting at depth 1 and half at depth 2.
  * Uses a main thread that has the UCI-info and exit checking. If main thread exits all other thread exits.
@@ -64,6 +101,7 @@ void parallel_search(void) {
 
         pthread_create(&threads[i], NULL, _iterative_deepening, args);
     }
+    // Reuse main thread
     args = smalloc(sizeof(Param));
     args->board = &board;
     args->stack = &stack;
@@ -71,7 +109,7 @@ void parallel_search(void) {
     args->nodes = &nodes;
     args->start_depth = start_depth;
     args->is_main = true;
-    _iterative_deepening(args); // reuse main thread
+    _iterative_deepening(args);
 
     for (int i = 1; i < info.threads; i++) {
         pthread_join(threads[i], NULL);
@@ -110,7 +148,6 @@ static void* _iterative_deepening(void* args) {
     int start_depth = a->start_depth;
     bool is_main = a->is_main;
     uint64_t* nodes = a->nodes;
-
     clock_t start = clock();
     Move* pv = scalloc(info.depth, sizeof(Move));
     Move best_move = NULL_MOVE;
@@ -120,7 +157,7 @@ static void* _iterative_deepening(void* args) {
         int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, nodes, pv);
 
         if (thread_exit) break;
-        if (score >= MATE_SCORE - d) thread_exit = true; // break early if detect mate
+        if (is_mate(score, d)) thread_exit = true;
         if (is_main) {
             best_move = pv[d - 1];
 
@@ -138,8 +175,8 @@ static void* _iterative_deepening(void* args) {
         printf("\n");
     }
 
-    free_rtable();
-    free_stack();
+    free(rtable.entries);
+    free(stack.entries);
     free(htable);
     free(pv);
     free(a);
@@ -169,11 +206,14 @@ static void* _iterative_deepening(void* args) {
  * @param pv the best line of moves found.
  * @return the best score.
  */
-int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main,
+static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main,
                 clock_t start, uint64_t* nodes, Move* pv) {
     // Stop searching if main thread meets parameters
-    if (is_main && can_exit(color, start, *nodes)) thread_exit = true;
     if (thread_exit) return 0;
+    if (is_main && can_exit(color, start, *nodes)) {
+        thread_exit = true;
+        return 0;
+    }
 
     // Search for position in the transposition table
     TTable_Entry tt = ttable_get(board.zobrist);

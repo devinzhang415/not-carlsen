@@ -6,7 +6,7 @@
 
 
 void init_stack(void);
-void free_stack(void);
+void clear_stack(void);
 
 void push(Move move);
 void pop(void);

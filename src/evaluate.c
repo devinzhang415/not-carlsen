@@ -121,3 +121,13 @@ int get_material_value(char piece) {
     piece = toupper(piece);
     return MATERIAL_VALUES[parse_piece(piece)];
 }
+
+
+/**
+ * @param score 
+ * @param depth 
+ * @return true if the given score a mate score modified by the depth it was found at.
+ */
+bool is_mate(int score, int depth) {
+    return (score >= MATE_SCORE - depth);
+}

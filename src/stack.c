@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include "stack.h"
 #include "util.h"
 #include "board.h"
@@ -20,18 +21,19 @@ void init_stack() {
     stack.size = 0;
     stack.capacity = STACK_INIT_CAPACITY;
     stack.entries = scalloc(STACK_INIT_CAPACITY, sizeof(Stack_Entry));
-    stack.initialized = true;
+
+    push(NULL_MOVE);
 }
 
 
 /**
- * Free every element in the stack.
+ * Clear the stack.
  */
-void free_stack(void) {
-    if (stack.initialized) {
-        free(stack.entries);
-        stack.initialized = false;
-    }
+void clear_stack(void) {
+    stack.size = 0;
+    memset(stack.entries, 0, stack.capacity * sizeof(Stack_Entry));
+
+    push(NULL_MOVE);
 }
 
 
@@ -45,11 +47,11 @@ void push(Move move) {
         stack.capacity *= 2;
         stack.entries = srealloc(stack.entries, sizeof(Stack_Entry) * stack.capacity);
     }
-    Stack_Entry entry = stack.entries[stack.size++];
+
+    stack.size++;
     make_move(move);
-    entry.board = board;
-    entry.move = move;
-    entry.initialized = true;
+    stack.entries[stack.size].board = board;
+    stack.entries[stack.size].move = move;
 
     // Update threefold rep table
     rtable_add(board.zobrist);
@@ -64,6 +66,6 @@ void pop(void) {
     rtable_remove(board.zobrist);
     
     // Update move stack
-    stack.entries[stack.size--].initialized = false;
+    stack.size--;
     board = stack.entries[stack.size].board;
 }

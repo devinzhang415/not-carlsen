@@ -17,18 +17,14 @@ void init_rtable(void) {
     rtable.size = 0;
     rtable.capacity = RTABLE_INIT_CAPACITY;
     rtable.entries = scalloc(RTABLE_INIT_CAPACITY, sizeof(RTable_Entry));
-    rtable.initialized = true;
 }
 
 
 /**
- * Releases the rtable entries memory.
+ * Clear the repetition table entries.
  */
-void free_rtable(void) {
-    if (rtable.initialized) {
-        free(rtable.entries);
-        rtable.initialized = false;
-    }
+void clear_rtable(void) {
+    memset(rtable.entries, 0, rtable.capacity * sizeof(RTable_Entry));
 }
 
 
@@ -61,16 +57,15 @@ void rtable_add(uint64_t key) {
 
     for (int i = 0; i < rtable.capacity; i++) {
         int index = (key + i) & (rtable.capacity - 1); // (key + i) % rtable.capacity
-        RTable_Entry entry = rtable.entries[index];
-        if (entry.initialized) {
-            if (entry.key == key) {
-                entry.num++;
+        if (rtable.entries[index].initialized) {
+            if (rtable.entries[index].key == key) {
+                rtable.entries[index].num++;
                 break;
             }
         } else {
-            entry.key = key;
-            entry.num = 1;
-            entry.initialized = true;
+            rtable.entries[index].key = key;
+            rtable.entries[index].num = 1;
+            rtable.entries[index].initialized = true;
             rtable.size++;
             break;
         }
@@ -85,15 +80,14 @@ void rtable_add(uint64_t key) {
 void rtable_remove(uint64_t key) {
     for (int i = 0; i < rtable.capacity; i++) {
         int index = (key + i) & (rtable.capacity - 1); // (key + i) % rtable.capacity
-        RTable_Entry entry = rtable.entries[index];
-        if (entry.key == key) {
-            if (--entry.num <= 0) {
-                entry.initialized = false;
+        if (rtable.entries[index].key == key) {
+            if (--rtable.entries[index].num <= 0) {
+                rtable.entries[index].initialized = false;
                 rtable.size--;
             }
             break;
         }
-        if (!entry.initialized) {
+        if (!rtable.entries[index].initialized) {
             break;
         }
     }

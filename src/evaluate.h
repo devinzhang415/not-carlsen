@@ -9,5 +9,7 @@ int eval(bool color);
 
 int get_material_value(char piece);
 
+bool is_mate(int score, int depth);
+
 
 #endif

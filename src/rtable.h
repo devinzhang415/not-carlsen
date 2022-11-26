@@ -5,7 +5,7 @@
 
 
 void init_rtable(void);
-void free_rtable(void);
+void clear_rtable(void);
 
 RTable_Entry rtable_get(uint64_t key);
 void rtable_add(uint64_t key);

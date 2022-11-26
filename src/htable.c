@@ -14,7 +14,7 @@ extern __thread int* htable;
  * @return a heuristic value based on how many times this move has been searched.
  */
 int htable_get(int color, int from, int to) {
-    return *(htable + 2*64*color + 64*from + to);
+    return *(htable + color*64*64 + from*64 + to);
 }
 
 
@@ -27,5 +27,5 @@ int htable_get(int color, int from, int to) {
  * @param depth the depth this move was played at.
  */
 void htable_add(int color, int from, int to, int depth) {
-    *(htable + 2*64*color + 64*from + to) += depth * depth;
+    *(htable + color*64*64 + from*64 + to) += depth * depth;
 }

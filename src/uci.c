@@ -24,11 +24,18 @@ Info info; // Move generation parameter information
 
 
 int main(void) {
+    // Initialize misc
     srand(time(NULL));
     init_bishop_attacks();
     init_rook_attacks();
     _init_rays();
     init_zobrist_table();
+
+    // Initialize structs
+    init_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    init_stack();
+    init_ttable();
+    init_rtable();
 
     int size = 256;
     char* input = (char*) smalloc(size);
@@ -48,7 +55,7 @@ int main(void) {
         input[i] = '\0';
 
         if (!strncmp(input, "ucinewgame", 10)) {
-            _init_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            _reset_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
             // Set default search options
             info.wtime = 0;
@@ -59,7 +66,8 @@ int main(void) {
             info.depth = MAX_DEPTH;
             info.nodes = INVALID;
             info.movetime = INVALID;
-            info.threads = 12;
+            // info.threads = 12;
+            info.threads = 1;
         }
 
         else if (!strncmp(input, "uci", 3)) {
@@ -84,12 +92,12 @@ int main(void) {
         else if (!strncmp(input, "position", 8)) {
             char* startpos = strstr(input, "startpos");
             if (startpos) {
-                _init_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+                _reset_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             } else {
                 char* fen = strstr(input, "fen");
                 if (fen) {
                     fen += 4; // Pointer location manipulation
-                    _init_structs(fen);
+                    _reset_structs(fen);
                 }
             }
 
@@ -151,12 +159,8 @@ int main(void) {
 
             // Search and print search info, best move
             // parallel_search();
-            uint64_t nodes = 0;
-            Move pv[8];
-            _pvs(8, -MATE_SCORE, MATE_SCORE, true, WHITE, false, clock(), &nodes, pv);
-            printf("bestmove ");
-            print_move(pv[7]);
-            printf("\n");
+
+            dummy_id_search();
         }
 
         else if (!strncmp(input, "quit", 4)) {
@@ -164,8 +168,6 @@ int main(void) {
         }
     }
 
-    free(input);
-    _free_structs();
     return 0;
 }
 
@@ -244,27 +246,14 @@ static int _save_move_str(char* str, int i, Move move) {
 
 
 /**
- * Initializes the board, stack, repetition table, and history heuristic table.
- * @param fen the FEN of the position. Assumed valid.
+ * Reset the board to the given fen and clear the struct entries.
+ * @param fen 
  */
-static void _init_structs(char* fen) {
-    _free_structs();
-    
+static void _reset_structs(char* fen) {
     init_board(fen);
-    init_stack();
-    init_ttable();
-    init_rtable();
-    rtable_add(board.zobrist);
-}
-
-
-/**
- * Frees all necessary shared data structures initalized in _init_structs().
- */
-static void _free_structs(void) {
-    free_stack();
-    free_ttable();
-    free_rtable();
+    clear_ttable();
+    clear_stack();
+    clear_rtable();
 }
 
 

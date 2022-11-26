@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "ttable.h"
 #include "util.h"
 
@@ -16,18 +17,14 @@ void init_ttable(void) {
     ttable.size = 0;
     ttable.capacity = TTABLE_INIT_CAPACITY;
     ttable.entries = scalloc(TTABLE_INIT_CAPACITY, sizeof(TTable_Entry));
-    ttable.initialized = true;
 }
 
 
 /**
- * Releases the ttable entries memory.
+ * Clear the transposition table entries.
  */
-void free_ttable(void) {
-    if (ttable.initialized) {
-        free(ttable.entries);
-        ttable.initialized = false;
-    }
+void clear_ttable(void) {
+    memset(ttable.entries, 0, ttable.capacity * sizeof(TTable_Entry));
 }
 
 
