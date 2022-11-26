@@ -59,7 +59,7 @@ int main(void) {
 
             // Set default options
             // info.threads = 12;
-            info.threads = 1;
+            info.threads = 2;
         }
 
         else if (!strncmp(input, "uci", 3)) {
@@ -150,10 +150,7 @@ int main(void) {
             info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : 0;
             info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : 0;
 
-            // Search
-            // parallel_search();
-
-            dummy_id_search();
+            parallel_search();
         }
 
         else if (!strncmp(input, "quit", 4)) {

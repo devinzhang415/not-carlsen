@@ -36,82 +36,41 @@ static bool thread_exit = false; // set by main thread to tell the other threads
 
 
 /**
- * FOR TESTING ONLY
- */
-void dummy_id_search(void) {
-    clock_t start = clock();
-
-    uint64_t nodes = 0;
-    int score;
-    Move pv[info.depth];
-    Move best_move;
-
-    thread_exit = false;
-
-    htable = scalloc(2 * 64 * 64, sizeof(int));
-
-    for (int d = 1; d < info.depth; d++) {
-        if (thread_exit) break;
-
-        score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, true, start, &nodes, pv);
-        if (is_mate(score, d)) thread_exit = true;
-        best_move = pv[d - 1];
-
-        clock_t elapsed = clock() - start;
-        double time = (double) elapsed / CLOCKS_PER_SEC;
-        if (time == 0) time = .1;
-        
-        print_info(d, score, nodes, time, pv);
-    }
-
-    printf("\nbestmove ");
-    print_move(best_move);
-    printf("\n");
-
-    free(htable);
-}
-
-
-/**
  * Searches the position with Lazy SMP multithreading.
  * Uses threads running iterative deepening loops, half starting at depth 1 and half at depth 2.
- * Uses a main thread that has the UCI-info and exit checking. If main thread exits all other thread exits.
- * 
- * TODO
- * blunders if run in middle of game
- * no blunders if searched from fresh position. Everything in memory gets cleared though??
+ * Uses a main thread that has the UCI-info and exit checking. If main thread quits all other threads quit.
  */
 void parallel_search(void) {
-    pthread_t threads[info.threads];
+    pthread_t threads[info.threads - 1];
     thread_exit = false;
+    clock_t start = clock();
     uint64_t nodes = 0;
     int start_depth = 1;
 
     Param* args;
-    for (int i = 1; i < info.threads; i++) {
-        args = smalloc(sizeof(Param));
+    for (int i = 0; i < info.threads; i++) {
+        args = smalloc(sizeof(Param)); // Thread is responsible for freeing args
         args->board = &board;
         args->stack = &stack;
         args->rtable = &rtable;
+        args->start = start;
         args->nodes = &nodes;
         args->start_depth = start_depth;
-        args->is_main = false;
 
         start_depth = (start_depth == 1 ? 2 : 1);
 
-        pthread_create(&threads[i], NULL, _iterative_deepening, args);
+        if (i == info.threads - 1) { // Reuse main thread
+            // args->is_main = true;
+            args->is_main = true;
+            args->start_depth = 1;
+            _iterative_deepening(args);
+        } else {
+            args->is_main = false;
+            pthread_create(&threads[i], NULL, _iterative_deepening, args);
+        }     
     }
-    // Reuse main thread
-    args = smalloc(sizeof(Param));
-    args->board = &board;
-    args->stack = &stack;
-    args->rtable = &rtable;
-    args->nodes = &nodes;
-    args->start_depth = start_depth;
-    args->is_main = true;
-    _iterative_deepening(args);
 
-    for (int i = 1; i < info.threads; i++) {
+    for (int i = 0; i < info.threads - 1; i++) {
         pthread_join(threads[i], NULL);
     }
 }
@@ -131,26 +90,31 @@ void parallel_search(void) {
 static void* _iterative_deepening(void* args) {
     // Instantiate thread-local variables
     Param* a = (Param*) args;
+    bool is_main = a->is_main;
 
-    board = *(a->board);
+    Move* pv = NULL;
+    Move best_move = NULL_MOVE;
 
-    stack = *(a->stack);
-    stack.entries = smalloc(stack.capacity);
-    memcpy(stack.entries, a->stack->entries, stack.capacity);
+    if (is_main) {
+        pv = scalloc(info.depth, sizeof(Move));
+    } else {
+        board = *(a->board);
 
-    rtable = *(a->rtable);
-    rtable.entries = smalloc(rtable.capacity);
-    memcpy(rtable.entries, a->rtable->entries, rtable.capacity);
+        stack = *(a->stack);
+        stack.entries = smalloc(stack.capacity * sizeof(Stack_Entry));
+        memcpy(stack.entries, a->stack->entries, stack.capacity * sizeof(Stack_Entry));
+
+        rtable = *(a->rtable);
+        rtable.entries = smalloc(rtable.capacity * sizeof(RTable_Entry));
+        memcpy(rtable.entries, a->rtable->entries, rtable.capacity * sizeof(RTable_Entry));
+    }
 
     htable = scalloc(2 * 64 * 64, sizeof(int));
 
     // Instantiate search variables
-    int start_depth = a->start_depth;
-    bool is_main = a->is_main;
+    clock_t start = a->start;
     uint64_t* nodes = a->nodes;
-    clock_t start = clock();
-    Move* pv = scalloc(info.depth, sizeof(Move));
-    Move best_move = NULL_MOVE;
+    int start_depth = a->start_depth;
     
     // Begin search
     for (int d = start_depth; d <= info.depth; d++) {
@@ -169,18 +133,19 @@ static void* _iterative_deepening(void* args) {
         }
     }
 
+    free(htable);
+    free(a);
     if (is_main) {
+        free(pv);
+
         printf("bestmove ");
         print_move(best_move);
         printf("\n");
+    } else {
+        free(stack.entries);
+        free(rtable.entries);
+        pthread_exit(NULL);
     }
-
-    free(rtable.entries);
-    free(stack.entries);
-    free(htable);
-    free(pv);
-    free(a);
-    pthread_exit(NULL);
 }
 
 
@@ -206,8 +171,7 @@ static void* _iterative_deepening(void* args) {
  * @param pv the best line of moves found.
  * @return the best score.
  */
-static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main,
-                clock_t start, uint64_t* nodes, Move* pv) {
+static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes, Move* pv) {
     // Stop searching if main thread meets parameters
     if (thread_exit) return 0;
     if (is_main && can_exit(color, start, *nodes)) {

@@ -113,8 +113,8 @@ typedef struct Stack_Entry {
  * the moves that got to them.
  */
 typedef struct Stack {
-    uint64_t size;
-    uint64_t capacity;
+    size_t size;
+    size_t capacity;
     Stack_Entry* entries;
 } Stack;
 
@@ -137,8 +137,8 @@ typedef struct TTable_Entry {
  * Lockless transposition hashtable structure.
  */
 typedef struct TTable {
-    uint64_t size;
-    uint64_t capacity;
+    size_t size;
+    size_t capacity;
     TTable_Entry* entries;
 } TTable;
 
@@ -158,8 +158,8 @@ typedef struct RTable_Entry {
  * Threefold repetition hashtable structure.
  */
 typedef struct RTable {
-    uint64_t size;
-    uint64_t capacity;
+    size_t size;
+    size_t capacity;
     RTable_Entry* entries;
 } RTable;
 
@@ -196,6 +196,7 @@ typedef struct Param {
     Stack* stack;
     RTable* rtable;
 
+    clock_t start; // time search started
     uint64_t* nodes;
     int start_depth; // depth to start iterative_deepening at
     bool is_main; // whether thread is main thread

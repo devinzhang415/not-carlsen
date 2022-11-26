@@ -7,7 +7,7 @@
 extern __thread RTable rtable;
 
 
-static const uint64_t RTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
+static const size_t RTABLE_INIT_CAPACITY = 65536; // Power of 2 for modulo efficiency
 
 
 /**
