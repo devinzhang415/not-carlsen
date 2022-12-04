@@ -6,7 +6,7 @@
 #include <time.h>
 
 
-enum squares {
+enum Square {
     A1, B1, C1, D1, E1, F1, G1, H1,
     A2, B2, C2, D2, E2, F2, G2, H2,
     A3, B3, C3, D3, E3, F3, G3, H3,
@@ -19,7 +19,7 @@ enum squares {
 
 
 // Special characteristic of a move
-enum move_flags {
+enum Move_Flag {
     NONE, // No special flag
     PASS, // Null move
     CAPTURE,
@@ -37,7 +37,7 @@ enum move_flags {
 
 
 // Transposition score types
-enum tt_flags {
+enum TT_Flag {
     EXACT,
     LOWERBOUND,
     UPPERBOUND
