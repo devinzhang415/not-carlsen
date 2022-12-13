@@ -15,7 +15,14 @@ extern __thread Board board;
 extern __thread RTable rtable;
 
 
-static uint64_t ZOBRIST_VALUES[781];
+static const int ZOBRIST_SIZE = 781;
+static const int ZOBRIST_TURN = 768;
+static const int ZOBRIST_W_KS_CR = 769;
+static const int ZOBRIST_W_QS_CR = 770;
+static const int ZOBRIST_B_KS_CR = 771;
+static const int ZOBRIST_B_QS_CR = 772;
+static const int ZOBRIST_EP_FILE_A = 773;
+static uint64_t ZOBRIST_VALUES[ZOBRIST_SIZE];
 
 
 /**
@@ -117,22 +124,22 @@ void init_board(char* fen) {
         }
     }
     if (board.turn == BLACK) {
-        board.zobrist ^= ZOBRIST_VALUES[768];
+        board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_TURN];
     }
     if (board.w_kingside_castling_rights) {
-        board.zobrist ^= ZOBRIST_VALUES[769];
+        board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_W_KS_CR];
     }
     if (board.w_queenside_castling_rights) {
-        board.zobrist ^= ZOBRIST_VALUES[770];
+        board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_W_QS_CR];
     }
     if (board.b_kingside_castling_rights) {
-        board.zobrist ^= ZOBRIST_VALUES[771];
+        board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_B_KS_CR];
     }
     if (board.b_queenside_castling_rights) {
-        board.zobrist ^= ZOBRIST_VALUES[772];
+        board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_B_QS_CR];
     }
     if (board.en_passant_square != INVALID) {
-        board.zobrist ^= ZOBRIST_VALUES[773 + file_of(board.en_passant_square)];
+        board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_EP_FILE_A + file_of(board.en_passant_square)];
     }
 
     free(rest);
@@ -140,15 +147,15 @@ void init_board(char* fen) {
 
 
 /**
- * Initalizes ZOBRIST_VALUES[781] with random unsigned 64-bit integers.
- * - 768 numbers for each piece on each square
+ * Initalizes ZOBRIST_VALUES[] with random unsigned 64-bit integers.
+ * - 2*6*64 numbers for each piece on each square
  * - 1 number to indicate side to move is black
  * - 4 numbers for castling rights
  * - 8 numbers to indicate en passant file
  * @author https://stackoverflow.com/a/28116032.
  */
 void init_zobrist_table(void) {
-    for (int i = 0; i < 781; i++) {
+    for (int i = 0; i < ZOBRIST_SIZE; i++) {
         uint64_t n = 0;
         for (int j = 0; j < 5; j++) {
             n = (n << 15) | (rand() & 0x7FFF);
@@ -168,19 +175,19 @@ void make_move(Move move) {
     int flag = move.flag;
     bool color = board.turn;
 
-    char attacker = board.mailbox[from];
-    char victim = board.mailbox[to];
-
     if (flag == PASS) {
         board.turn = !color;
-        board.zobrist ^= ZOBRIST_VALUES[768];
+        board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_TURN];
         return;
     }
+
+    char attacker = board.mailbox[from];
+    char victim = board.mailbox[to];
 
     bool reset_halfmove = false;
 
     if (board.en_passant_square != INVALID) {
-        board.zobrist ^= ZOBRIST_VALUES[773 + file_of(board.en_passant_square)];
+        board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_EP_FILE_A + file_of(board.en_passant_square)];
         board.en_passant_square = INVALID;
     }
 
@@ -198,7 +205,7 @@ void make_move(Move move) {
 
             if (rank_of(to) - rank_of(from) == 2) {
                 board.en_passant_square = to - 8;
-                board.zobrist ^= ZOBRIST_VALUES[773 + file_of(board.en_passant_square)];
+                board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_EP_FILE_A + file_of(board.en_passant_square)];
             }
 
             else if (flag == EN_PASSANT) {
@@ -238,10 +245,10 @@ void make_move(Move move) {
         case 'R':
             if (from == H1 && board.w_kingside_castling_rights) {
                 board.w_kingside_castling_rights = false;
-                board.zobrist ^= ZOBRIST_VALUES[769];
+                board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_W_KS_CR];
             } else if (from == A1 && board.w_queenside_castling_rights) {
                 board.w_queenside_castling_rights = false;
-                board.zobrist ^= ZOBRIST_VALUES[770];
+                board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_W_QS_CR];
             }
             break;
         case 'K':
@@ -267,11 +274,11 @@ void make_move(Move move) {
 
             if (board.w_kingside_castling_rights) {
                 board.w_kingside_castling_rights = false;
-                board.zobrist ^= ZOBRIST_VALUES[769];
+                board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_W_KS_CR];
             }
             if (board.w_queenside_castling_rights) {
                 board.w_queenside_castling_rights = false;
-                board.zobrist ^= ZOBRIST_VALUES[770];
+                board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_W_QS_CR];
             }
 
             break;
@@ -280,7 +287,7 @@ void make_move(Move move) {
 
             if (rank_of(to) - rank_of(from) == -2) {
                 board.en_passant_square = to + 8;
-                board.zobrist ^= ZOBRIST_VALUES[773 + file_of(board.en_passant_square)];
+                board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_EP_FILE_A + file_of(board.en_passant_square)];
             }
 
             else if (flag == EN_PASSANT) {
@@ -320,10 +327,10 @@ void make_move(Move move) {
         case 'r':
             if (from == H8 && board.b_kingside_castling_rights) {
                 board.b_kingside_castling_rights = false;
-                board.zobrist ^= ZOBRIST_VALUES[771];
+                board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_B_KS_CR];
             } else if (from == A8 && board.b_queenside_castling_rights) {
                 board.b_queenside_castling_rights = false;
-                board.zobrist ^= ZOBRIST_VALUES[772];
+                board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_B_QS_CR];
             }
             break;
         case 'k':
@@ -349,11 +356,11 @@ void make_move(Move move) {
 
             if (board.b_kingside_castling_rights) {
                 board.b_kingside_castling_rights = false;
-                board.zobrist ^= ZOBRIST_VALUES[771];
+                board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_B_KS_CR];
             }
             if (board.b_queenside_castling_rights) {
                 board.b_queenside_castling_rights = false;
-                board.zobrist ^= ZOBRIST_VALUES[772];
+                board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_B_QS_CR];
             }
 
             break;
@@ -379,7 +386,7 @@ void make_move(Move move) {
     if (color == BLACK) board.fullmove_number++;
 
     board.turn = !color;
-    board.zobrist ^= ZOBRIST_VALUES[768];
+    board.zobrist ^= ZOBRIST_VALUES[ZOBRIST_TURN];
 }
 
 
