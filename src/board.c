@@ -15,6 +15,13 @@ extern __thread Board board;
 extern __thread RTable rtable;
 
 
+/**
+ * - 000-767: numbers for each piece on each square.
+ * -     768: number to indicate side to move is black.
+ * - 769-772: numbers for castling rights.
+ * - 773-780: numbers to indicate en passant file.
+ */
+static uint64_t ZOBRIST_VALUES[781];
 static const int ZOBRIST_SIZE = 781;
 static const int ZOBRIST_TURN = 768;
 static const int ZOBRIST_W_KS_CR = 769;
@@ -22,7 +29,6 @@ static const int ZOBRIST_W_QS_CR = 770;
 static const int ZOBRIST_B_KS_CR = 771;
 static const int ZOBRIST_B_QS_CR = 772;
 static const int ZOBRIST_EP_FILE_A = 773;
-static uint64_t ZOBRIST_VALUES[ZOBRIST_SIZE];
 
 
 /**

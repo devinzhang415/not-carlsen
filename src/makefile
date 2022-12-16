@@ -1,9 +1,10 @@
 TARGET = not-carlsen
 LIBS = -lm -lpthread
 CC = gcc
-# CFLAGS = -O3 -Wl,--stack,67108864 -w
+CFLAGS = -O3 -Wl,--stack,67108864 -w
+
 # GDB Debug: `gdb not-carlsen`, `run`, ..., `bt`
-CFLAGS = -g -O0 -Wl,--stack,67108864 -w
+# CFLAGS = -g -O0 -Wl,--stack,67108864 -w
 
 .PHONY: default all clean
 .PRECIOUS: $(TARGET) $(OBJECTS)

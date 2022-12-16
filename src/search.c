@@ -112,7 +112,7 @@ static void* _iterative_deepening(void* args) {
     for (int d = start_depth; d < info.depth; d++) {
         if (thread_exit) break;
 
-        int score = _pvs(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, &nodes, pv);
+        int score = _PVS(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, &nodes, pv);
         if (is_mate(score, d)) thread_exit = true;
         if (is_main) {
             best_move = pv[d - 1];
@@ -162,7 +162,7 @@ static void* _iterative_deepening(void* args) {
  * @param pv the best line of moves found.
  * @return the best score.
  */
-static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes, Move* pv) {
+static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes, Move* pv) {
     // Stop searching if main thread meets parameters
     if (thread_exit) return 0;
     if (is_main && can_exit(color, start, *nodes)) {
@@ -206,7 +206,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         // Null move pruning
         if (_is_null_move_ok(in_check)) {
             push(NULL_MOVE);
-            score = -_pvs(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start, nodes, pv);
+            score = -_PVS(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start, nodes, pv);
             pop();
             if (score >= beta) return score;
         }
@@ -227,11 +227,11 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
             push(move);
             if (i == 0) {
-                score = -_pvs(depth - 1 - r, -beta, -alpha, true, color, is_main, start, nodes, pv);
+                score = -_PVS(depth - 1 - r, -beta, -alpha, true, color, is_main, start, nodes, pv);
             } else {
-                score = -_pvs(depth - 1 - r, -alpha - 1, -alpha, false, color, is_main, start, nodes, pv);
+                score = -_PVS(depth - 1 - r, -alpha - 1, -alpha, false, color, is_main, start, nodes, pv);
                 if (score > alpha && score < beta) {
-                    score = -_pvs(depth - 1 - r, -beta, -alpha, false, color, is_main, start, nodes, pv);
+                    score = -_PVS(depth - 1 - r, -beta, -alpha, false, color, is_main, start, nodes, pv);
                 }
             }
             pop();
@@ -269,7 +269,7 @@ static int _pvs(int depth, int alpha, int beta, bool pv_node, bool color, bool i
  * Uses:
  * - Delta pruning
  * - MVV-LVA + history heuristic move ordering
- * - SEE
+ * - Static exchange evaluation
  * 
  * TODO remove depth limit / fix stack overflow
  * 
@@ -330,6 +330,9 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, bo
  * @param square the square being attacked.
  * @param victim the piece being attacked.
  * @return the expected material difference after a series of exchanges on a single square.
+ * 
+ * TODO
+ * make iterative
  */
 static int _SEE(bool color, int square) {
     int score = 0;
@@ -353,27 +356,21 @@ static int _SEE(bool color, int square) {
  */
 static int _get_smallest_attacker_square(bool color, int square) {
     uint64_t pot_attackers;
+    uint64_t square_bb = BB_SQUARES[square];
     if (color == BLACK) {
-        uint64_t square_bb = BB_SQUARES[square];
-
         if (pot_attackers = ((((square_bb << 9) & ~BB_FILE_A) | ((square_bb << 7) & ~BB_FILE_H)) & board.b_pawns)) return get_lsb(pot_attackers);
         if (pot_attackers = (get_knight_moves(WHITE, square) & board.b_knights)) return get_lsb(pot_attackers);
         if (pot_attackers = (get_bishop_moves(WHITE, square) & board.b_bishops)) return get_lsb(pot_attackers);
         if (pot_attackers = (get_rook_moves(WHITE, square) & board.b_rooks)) return get_lsb(pot_attackers);
         if (pot_attackers = (get_queen_moves(WHITE, square) & board.b_queens)) return get_lsb(pot_attackers);
-        
-        return INVALID;
     } else {
-        uint64_t square_bb = BB_SQUARES[square];
-        
         if (pot_attackers = (((square_bb >> 9) & ~BB_FILE_H) | ((square_bb >> 7) & ~BB_FILE_A)) & board.w_pawns) return get_lsb(pot_attackers);
         if (pot_attackers = (get_knight_moves(BLACK, square) & board.w_knights)) return get_lsb(pot_attackers);
         if (pot_attackers = (get_bishop_moves(BLACK, square) & board.w_bishops)) return get_lsb(pot_attackers);
         if (pot_attackers = (get_rook_moves(BLACK, square) & board.w_rooks)) return get_lsb(pot_attackers);
         if (pot_attackers = (get_queen_moves(BLACK, square) & board.w_queens)) return get_lsb(pot_attackers);
-        
-        return INVALID;
     }
+    return INVALID;
 }
 
 

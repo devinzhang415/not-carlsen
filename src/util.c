@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <assert.h>
 #include "util.h"
 
 
@@ -90,14 +91,6 @@ const uint64_t BB_ANTI_DIAGONALS[15] = {BB_ANTI_DIAGONAL_1, BB_ANTI_DIAGONAL_2, 
 
 uint64_t BB_RAYS[64][64];
 
-/**
- * - 000-767: numbers for each piece on each square.
- * -     768: number to indicate side to move is black.
- * - 769-772: numbers for castling rights.
- * - 773-780: numbers to indicate en passant file.
- */
-uint64_t ZOBRIST_VALUES[781];
-
 // Misc
 const Move NULL_MOVE = {A1, A1, PASS};
 const int INVALID = -1;
@@ -117,10 +110,7 @@ const int MAX_CAPTURE_NUM = 74; // largest number of legal captures in a positio
  */
 void* smalloc(size_t size) {
     void* ptr = malloc(size);
-    if (ptr == NULL) {
-        printf("\nMem error in smalloc\n\n");
-        exit(EXIT_FAILURE);
-    }
+    assert(ptr);
     return ptr;
 }
 
@@ -135,10 +125,7 @@ void* smalloc(size_t size) {
  */
 void* scalloc(size_t n, size_t size) {
     void* ptr = calloc(n, size);
-    if (ptr == NULL) {
-        printf("\nMem error in scalloc\n\n");
-        exit(EXIT_FAILURE);
-    }
+    assert(ptr);
     return ptr;
 }
 
@@ -153,10 +140,7 @@ void* scalloc(size_t n, size_t size) {
  */
 void* srealloc(void* ptr, size_t size) {
     ptr = realloc(ptr, size);
-    if (ptr == NULL) {
-        printf("\nMem error in srealloc\n\n");
-        exit(EXIT_FAILURE);
-    }
+    assert(ptr);
     return ptr;
 }
 

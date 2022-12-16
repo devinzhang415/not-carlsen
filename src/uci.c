@@ -87,7 +87,7 @@ int main(void) {
             } else {
                 char* fen = strstr(input, "fen");
                 if (fen) {
-                    fen += 4; // Pointer location manipulation
+                    fen += 4; // Move pointer to beginning of FEN
                     _reset_structs(fen);
                 }
             }
