@@ -49,6 +49,8 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ## Devlog
 12/15/22 v2.2.1
 > Traced engine crash to the static exchange evaluation returning attackers from empty squares. Solved issues, but issues persist where multithreading makes the engine play worse.
+>
+> Switched zobrist table to use names instead of magic numbers. Cleaned up various code.
 
 11/26/22 v2.2
 > Implemented improvements to concurrent hashtable access: pushed resizing to subsequent iterations to avoid rehashing and threading access issues and more checksum techniques to better adhere to Robert Hyatt's lockless technique.
