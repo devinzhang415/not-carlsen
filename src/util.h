@@ -104,7 +104,7 @@ typedef struct Board {
  * Uses triangular PV on the stack scheme.
  */
 typedef struct PV {
-    Move table[100];
+    Move table[100]; // should be MAX_DEPTH, not 100
     int length;
 } PV;
 

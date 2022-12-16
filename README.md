@@ -49,9 +49,12 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 
 ## Devlog
 12/16/22 v2.3
-> Implemented triangular PV (using a stack-based scheme) to help hunt down the misplays.
+> Implemented triangular PV (using a stack-based scheme) to help hunt down the misplays. Current observations:
+> - The deepest depth searched will always return a move with score 0, and a single PV entry--likely a transposition move.
+> - This move is usually the blunder. Depth - 1 searches are usually normal moves.
+> - Shorter search times (ie playing with 1 minute vs 5 minutes) yields better moves.
 >
-> Reverted UCI printing to iterative instead of printing all at once as only main line prints move info now.
+> Also reverted UCI printing to iterative instead of printing all at once as only main line prints move info now.
 
 12/15/22 v2.2.1
 > Traced engine crash to the static exchange evaluation returning attackers from empty squares. Solved issues, but issues persist where multithreading makes the engine play worse.
