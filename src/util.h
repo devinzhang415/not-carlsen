@@ -58,7 +58,7 @@ typedef struct Move {
 
 
 /**
- * Representation of the board
+ * Representation of the board.
  */
 typedef struct Board {
     char mailbox[64]; // piece-centric board representation
@@ -97,6 +97,16 @@ typedef struct Board {
 
     uint64_t zobrist; // zobrist hash value for the current position
 } Board;
+
+
+/**
+ * Stores the sequence of best moves found.
+ * Uses triangular PV on the stack scheme.
+ */
+typedef struct PV {
+    Move table[100];
+    int length;
+} PV;
 
 
 /**

@@ -88,13 +88,12 @@ static void* _iterative_deepening(void* args) {
     clock_t start = a->start;
     int start_depth = a->start_depth;
 
-    Move* pv = NULL;
+    PV pv;
+    pv.length = 0;
     Move best_move = NULL_MOVE;
     uint64_t nodes = 0;
 
-    if (is_main) {
-        pv = scalloc(info.depth, sizeof(Move));
-    } else {
+    if (!is_main) {
         board = *(a->board);
 
         stack = *(a->stack);
@@ -112,24 +111,22 @@ static void* _iterative_deepening(void* args) {
     for (int d = start_depth; d < info.depth; d++) {
         if (thread_exit) break;
 
-        int score = _PVS(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, &nodes, pv);
+        int score = _PVS(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, &nodes, &pv);
         if (is_mate(score, d)) thread_exit = true;
         if (is_main) {
-            best_move = pv[d - 1];
+            best_move = pv.table[0];
 
             clock_t elapsed = clock() - start;
             double time = (double) elapsed / CLOCKS_PER_SEC;
             if (time == 0) time = .1;
             
-            print_info(d, score, nodes, time, pv);
+            print_info(d, score, nodes, time, &pv);
         }
     }
 
     free(htable);
     free(a);
     if (is_main) {
-        free(pv);
-
         printf("bestmove ");
         print_move(best_move);
         printf("\n");
@@ -162,13 +159,16 @@ static void* _iterative_deepening(void* args) {
  * @param pv the best line of moves found.
  * @return the best score.
  */
-static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes, Move* pv) {
+static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes, PV* pv) {
     // Stop searching if main thread meets parameters
     if (thread_exit) return 0;
     if (is_main && can_exit(color, start, *nodes)) {
         thread_exit = true;
         return 0;
     }
+
+    PV new_pv;
+    new_pv.length = 0;
 
     // Search for position in the transposition table
     TTable_Entry tt = ttable_get(board.zobrist);
@@ -195,6 +195,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         return 0;
     }
     if (depth <= 0) {
+        pv->length = 0;
         return _qsearch(depth - 1, alpha, beta, pv_node, color, is_main, start, nodes);
     }
     
@@ -206,7 +207,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         // Null move pruning
         if (_is_null_move_ok(in_check)) {
             push(NULL_MOVE);
-            score = -_PVS(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start, nodes, pv);
+            score = -_PVS(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start, nodes, &new_pv);
             pop();
             if (score >= beta) return score;
         }
@@ -227,11 +228,11 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
             push(move);
             if (i == 0) {
-                score = -_PVS(depth - 1 - r, -beta, -alpha, true, color, is_main, start, nodes, pv);
+                score = -_PVS(depth - 1 - r, -beta, -alpha, true, color, is_main, start, nodes, &new_pv);
             } else {
-                score = -_PVS(depth - 1 - r, -alpha - 1, -alpha, false, color, is_main, start, nodes, pv);
+                score = -_PVS(depth - 1 - r, -alpha - 1, -alpha, false, color, is_main, start, nodes, &new_pv);
                 if (score > alpha && score < beta) {
-                    score = -_PVS(depth - 1 - r, -beta, -alpha, false, color, is_main, start, nodes, pv);
+                    score = -_PVS(depth - 1 - r, -beta, -alpha, false, color, is_main, start, nodes, &new_pv);
                 }
             }
             pop();
@@ -239,7 +240,11 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
             if (score > alpha) {
                 alpha = score;
                 best_move = move;
-                if (is_main) pv[depth - 1] = best_move; // TODO triangular pv
+                if (is_main) { // Update PV
+                    pv->table[0] = best_move;
+                    memcpy(pv->table + 1, new_pv.table, new_pv.length * sizeof(Move));
+                    pv->length = new_pv.length + 1;
+                }
             }
             if (alpha >= beta) {
                 has_failed_high = true;

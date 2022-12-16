@@ -12,4 +12,4 @@
 | `timeman` | Time management functions |
 | `ttable` | Transposition table functions |
 | `uci` | **Main** loop, communication protocol with the GUI, and table initiations |
-| `util` | Structures, constants, tables, and helper functions |
+| `util` | Types, constants, tables, and helper functions |
