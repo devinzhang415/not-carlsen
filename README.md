@@ -48,6 +48,9 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+12/17/22 v2.3.1
+> Tracked down misplays to incomplete searches being considered in the final evaluation. Once those results are thrown out, engine stability and strength has *massively* improved.
+
 12/16/22 v2.3
 > Implemented triangular PV (using a stack-based scheme) to help hunt down the misplays. Current observations:
 > - The deepest depth searched will always return a move with score 0, and a single PV entry--likely a transposition move.

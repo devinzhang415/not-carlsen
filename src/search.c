@@ -55,7 +55,7 @@ void parallel_search(void) {
 
         start_depth = (start_depth == 1 ? 2 : 1);
 
-        if (i == info.threads - 1) { // Reuse main thread
+        if (i == info.threads - 1) { // Reuse main thread (created last)
             args->is_main = true;
             args->start_depth = 1;
             _iterative_deepening(args);
@@ -112,6 +112,8 @@ static void* _iterative_deepening(void* args) {
         if (thread_exit) break;
 
         int score = _PVS(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, &nodes, &pv);
+        if (thread_exit) break;
+
         if (is_mate(score, d)) thread_exit = true;
         if (is_main) {
             best_move = pv.table[0];
