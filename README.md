@@ -49,6 +49,8 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 
 ## Devlog
 12/21/22 v2.3.2
+> Error in SEE causing multithreaded searches to crash has returned. Changed SEE from recrusive to iterative search, and resolved issue in most multithreaded searches. However, crashes still persist in rare cases. Still investigating cause. Nonetheless, currently very happy with the strength of the single-threaded search, even with the extremely rudimentary evaluation function.
+>
 > Made piece scoring functions case agnostic.
 >
 > Changed scoring of promotion captures in MVV-LVA to use the value of the promoting target rather than the pawn.
@@ -65,7 +67,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 > Also reverted UCI printing to iterative instead of printing all at once as only main line prints move info now.
 
 12/15/22 v2.2.1
-> Traced engine crash to the static exchange evaluation returning attackers from empty squares. Solved issues, but issues persist where multithreading makes the engine play worse.
+> Traced engine crash to SEE returning attackers from empty squares. Solved issues, but issues persist where multithreading makes the engine play worse.
 >
 > Switched zobrist table to use names instead of magic numbers. Cleaned up various code.
 
