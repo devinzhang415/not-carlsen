@@ -37,6 +37,8 @@ void clear_stack(void) {
 
 /**
  * Makes the given move and updates the tables.
+ * 
+ * TODO only store irrevocable info, not whole board state
  * @param move
  */
 void push(Move move) {
