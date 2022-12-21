@@ -311,6 +311,7 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, bo
     qsort(moves, n, sizeof(Move), _cmp_moves);
 
     for (int i = 0; i < n; i++) {
+        int from = moves[i].from;
         int to = moves[i].to;
 
         // Delta pruning // TODO do not use in late endgame (use Tapered score, score in board struct?)
@@ -319,7 +320,7 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, bo
         if (stand_pat + delta + DELTA_MARGIN < alpha) continue;
 
         // Static Exchange Evaluation
-        if (_SEE(board.turn, to) < SEE_THRESHOLD) continue;
+        if (_SEE(board.turn, from, to) < SEE_THRESHOLD) continue;
 
         push(moves[i]);
         int score = -_qsearch(depth - 1, -beta, -alpha, (i == 0), color, is_main, start, nodes);
@@ -334,48 +335,68 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, bo
 
 /**
  * @param color the color of the attackers.
- * @param square the square being attacked.
- * @param victim the piece being attacked.
+ * @param from the square the initial attack is coming from.
+ * @param to the square being attacked.
  * @return the expected material difference after a series of exchanges on a single square.
- * 
- * TODO
- * make iterative
+ *         Does not consider exchange legality.
  */
-static int _SEE(bool color, int square) {
-    int score = 0;
-    char victim = board.mailbox[square];
-    int enemy_square = _get_smallest_attacker_square(color, square);
-    if (enemy_square != INVALID) {
-        Move capture = {enemy_square, square, CAPTURE}; // TODO promotion captures
-        push(capture);
-        score = max(0, get_material_value(victim) - _SEE(!color, square));
-        pop();
+static int _SEE(bool color, int from, int to) {
+    int scores[35]; // 35 = absolute max possible number of attacks on a single square
+
+    scores[0] = get_material_value(board.mailbox[to]);
+
+    uint64_t defenders = get_attackers(!color, to);
+    if (!defenders) return scores[0]; // Test easy case, capture is not defended
+
+    uint64_t attackers = get_attackers(color, to) | defenders;
+    uint64_t pot_xrays = board.w_pawns | board.w_bishops | board.w_rooks | board.w_queens |
+                         board.b_pawns | board.b_bishops | board.b_rooks | board.b_queens;
+
+    int d;
+    bool side = color;
+    for (d = 1; d < 35; d++) {
+        side = !side;
+
+        scores[d] = get_material_value(board.mailbox[from]) - scores[d - 1];
+
+        uint64_t from_bb = BB_SQUARES[from];
+        attackers ^= from_bb;
+
+        // if attacker is a piece that can have a xray,
+        // add potential attacker hiding behind "moved" piece
+        if (from_bb & pot_xrays) attackers |= (get_queen_moves(side, from) & get_full_ray_on(from, to));
+
+        from = _get_smallest_attacker_square(side, attackers);
+        if (from == INVALID || from == to) break;
     }
-    return score;
+
+    while (--d >= 1) scores[d - 1] = -max(-scores[d - 1], scores[d]);
+    return scores[0];
 }
 
 
 /**
  * @param color the color of the attackers.
- * @param square the square being attacked.
+ * @param attackers the bitboard of all attackers.
  * @return the square of the least valuable attacker on the given square.
- * Returns invalid if no piece is attacking the square.
+ *         Returns invalid if no piece is attacking the square. 
  */
-static int _get_smallest_attacker_square(bool color, int square) {
+static int _get_smallest_attacker_square(bool color, uint64_t attackers) {
     uint64_t pot_attackers;
-    uint64_t square_bb = BB_SQUARES[square];
-    if (color == BLACK) {
-        if (pot_attackers = ((((square_bb << 9) & ~BB_FILE_A) | ((square_bb << 7) & ~BB_FILE_H)) & board.b_pawns)) return get_lsb(pot_attackers);
-        if (pot_attackers = (get_knight_moves(WHITE, square) & board.b_knights)) return get_lsb(pot_attackers);
-        if (pot_attackers = (get_bishop_moves(WHITE, square) & board.b_bishops)) return get_lsb(pot_attackers);
-        if (pot_attackers = (get_rook_moves(WHITE, square) & board.b_rooks)) return get_lsb(pot_attackers);
-        if (pot_attackers = (get_queen_moves(WHITE, square) & board.b_queens)) return get_lsb(pot_attackers);
+    if (color == WHITE) {
+        if (pot_attackers = (attackers & board.w_pawns)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.w_knights)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.w_bishops)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.w_rooks)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.w_queens)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.w_king)) return board.w_king_square;
     } else {
-        if (pot_attackers = (((square_bb >> 9) & ~BB_FILE_H) | ((square_bb >> 7) & ~BB_FILE_A)) & board.w_pawns) return get_lsb(pot_attackers);
-        if (pot_attackers = (get_knight_moves(BLACK, square) & board.w_knights)) return get_lsb(pot_attackers);
-        if (pot_attackers = (get_bishop_moves(BLACK, square) & board.w_bishops)) return get_lsb(pot_attackers);
-        if (pot_attackers = (get_rook_moves(BLACK, square) & board.w_rooks)) return get_lsb(pot_attackers);
-        if (pot_attackers = (get_queen_moves(BLACK, square) & board.w_queens)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.b_pawns)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.b_knights)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.b_bishops)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.b_rooks)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.b_queens)) return get_lsb(pot_attackers);
+        if (pot_attackers = (attackers & board.b_king)) return board.b_king_square;
     }
     return INVALID;
 }
@@ -427,6 +448,8 @@ static int _score_move(Move move) {
     int killer_val = htable_get(board.turn, move.from, move.to);
     if (killer_val != 0) return killer_val / -100;
     
+    int attacker_score = 0;
+    int victim_score = 0;
     switch (move.flag) {
         case NONE:
             return -1000;
@@ -443,24 +466,24 @@ static int _score_move(Move move) {
         case EN_PASSANT:
             return 0;
         case CAPTURE:
-            int attacker_score = _get_piece_score(board.mailbox[move.from]);
-            int victim_score = _get_piece_score(board.mailbox[move.to]);;
+            attacker_score = _get_piece_score(board.mailbox[move.from]);
+            victim_score = _get_piece_score(board.mailbox[move.to]);;
             return (victim_score - attacker_score);
         case PC_KNIGHT:
-            int attacker_score = _get_piece_score('N');
-            int victim_score = _get_piece_score(board.mailbox[move.to]);;
+            attacker_score = _get_piece_score('N');
+            victim_score = _get_piece_score(board.mailbox[move.to]);;
             return (victim_score - attacker_score);
         case PC_BISHOP:
-            int attacker_score = _get_piece_score('B');
-            int victim_score = _get_piece_score(board.mailbox[move.to]);;
+            attacker_score = _get_piece_score('B');
+            victim_score = _get_piece_score(board.mailbox[move.to]);;
             return (victim_score - attacker_score);
         case PC_ROOK:
-            int attacker_score = _get_piece_score('R');
-            int victim_score = _get_piece_score(board.mailbox[move.to]);;
+            attacker_score = _get_piece_score('R');
+            victim_score = _get_piece_score(board.mailbox[move.to]);;
             return (victim_score - attacker_score);
         case PC_QUEEN:
-            int attacker_score = _get_piece_score('Q');
-            int victim_score = _get_piece_score(board.mailbox[move.to]);;
+            attacker_score = _get_piece_score('Q');
+            victim_score = _get_piece_score(board.mailbox[move.to]);;
             return (victim_score - attacker_score);
     }
 }

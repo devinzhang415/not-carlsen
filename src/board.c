@@ -523,6 +523,34 @@ uint64_t get_occ_bitboard(bool color) {
 
 
 /**
+ * @param color 
+ * @param square 
+ * @return the bitboard of the attackers of the color attacking the square.
+ *         does not consider pins.
+ */
+uint64_t get_attackers(bool color, int square) {
+    uint64_t attackers = 0;
+    uint64_t square_bb = BB_SQUARES[square];
+    if (color == WHITE) {
+        attackers |= (((square_bb << 9) & ~BB_FILE_A) | ((square_bb << 7) & ~BB_FILE_H)) & board.w_pawns;
+        attackers |= get_knight_moves(BLACK, square) & board.w_knights;
+        attackers |= get_king_moves(BLACK, square) & board.w_king;
+
+        uint64_t rays = board.w_bishops | board.w_rooks | board.w_queens;
+        attackers |= get_queen_moves(BLACK, square) & rays;
+    } else {
+        attackers |=  (((square_bb >> 9) & ~BB_FILE_H) | ((square_bb >> 7) & ~BB_FILE_A)) & board.b_pawns;
+        attackers |= get_knight_moves(WHITE, square) & board.b_knights;
+        attackers |= get_king_moves(WHITE, square) & board.b_king;
+
+        uint64_t rays = board.b_bishops | board.b_rooks | board.b_queens;
+        attackers |= get_queen_moves(WHITE, square) & rays;
+    }
+    return attackers;
+}
+
+
+/**
  * Prints the labeled representation of the mailbox board.
  */
 void print_board(void) {
