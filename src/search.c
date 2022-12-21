@@ -443,14 +443,24 @@ static int _score_move(Move move) {
         case EN_PASSANT:
             return 0;
         case CAPTURE:
+            int attacker_score = _get_piece_score(board.mailbox[move.from]);
+            int victim_score = _get_piece_score(board.mailbox[move.to]);;
+            return (victim_score - attacker_score);
         case PC_KNIGHT:
+            int attacker_score = _get_piece_score('N');
+            int victim_score = _get_piece_score(board.mailbox[move.to]);;
+            return (victim_score - attacker_score);
         case PC_BISHOP:
+            int attacker_score = _get_piece_score('B');
+            int victim_score = _get_piece_score(board.mailbox[move.to]);;
+            return (victim_score - attacker_score);
         case PC_ROOK:
+            int attacker_score = _get_piece_score('R');
+            int victim_score = _get_piece_score(board.mailbox[move.to]);;
+            return (victim_score - attacker_score);
         case PC_QUEEN:
-            char attacker = toupper(board.mailbox[move.from]);
-            char victim = toupper(board.mailbox[move.to]);
-            int attacker_score = _get_piece_score(attacker);
-            int victim_score = _get_piece_score(victim);;
+            int attacker_score = _get_piece_score('Q');
+            int victim_score = _get_piece_score(board.mailbox[move.to]);;
             return (victim_score - attacker_score);
     }
 }
@@ -463,17 +473,25 @@ static int _score_move(Move move) {
 static int _get_piece_score(char piece) {
     switch (piece) {
         case 'P':
+        case 'p':
             return 100;
         case 'N':
+        case 'n':
             return 200;
         case 'B':
+        case 'b':
             return 300;
         case 'R':
+        case 'r':
             return 400;
         case 'Q':
+        case 'q':
             return 500;
         case 'K':
+        case 'k':
             return 600;
+        default:
+            return 0;
     }
 }
 

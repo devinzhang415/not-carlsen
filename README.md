@@ -48,6 +48,11 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+12/21/22 v2.3.2
+> Made piece scoring functions case agnostic.
+>
+> Changed scoring of promotion captures in MVV-LVA to use the value of the promoting target rather than the pawn.
+
 12/17/22 v2.3.1
 > Tracked down misplays to incomplete searches being considered in the final evaluation. Once those results are thrown out, engine stability and strength has *massively* improved.
 

@@ -62,6 +62,9 @@ static const int* EG_PSQTS[12] = {W_EG_PAWN_TABLE, W_EG_KNIGHT_TABLE, W_EG_BISHO
  * - PSQTs
  * - Tapered evaluation
  * 
+ * TODO
+ * replace with NNUE Half-KP
+ * 
  * @param color 
  * @return the advantage for the color in the given position, in centipawns.
  * A positive value means the color has advantage, and not that strictly
@@ -118,8 +121,25 @@ int eval(bool color) {
  * @return the material value of the given piece.
  */
 int get_material_value(char piece) {
-    piece = toupper(piece);
-    return MATERIAL_VALUES[parse_piece(piece)];
+    switch (piece) {
+        case 'P':
+        case 'p':
+            return MATERIAL_VALUES[0];
+        case 'N':
+        case 'n':
+            return MATERIAL_VALUES[1];
+        case 'B':
+        case 'b':
+            return MATERIAL_VALUES[2];
+        case 'R':
+        case 'r':
+            return MATERIAL_VALUES[3];
+        case 'Q':
+        case 'q':
+            return MATERIAL_VALUES[4];
+        default:
+            return 0;
+    }
 }
 
 
