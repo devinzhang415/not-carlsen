@@ -27,7 +27,6 @@ static const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
 static const int LRM_R = 1; // Depth to reduce by in late move reduction.
 static const int DEPTH_THRESHOLD = 3; // Smallest depth to reduce at for late move reduction.
 static const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search before late move reduction.
-static const int Q_MAX_DEPTH = -3; // Maximum depth to go to for qearch, the more negative the deeper.
 static const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 static const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
 
@@ -202,7 +201,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
     }
     if (depth <= 0) {
         pv->length = 0;
-        return _qsearch(depth - 1, alpha, beta, pv_node, color, is_main, start, nodes);
+        return _qsearch(alpha, beta, pv_node, color, is_main, start, nodes);
     }
     
     // Recursive case
@@ -282,9 +281,6 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
  * - MVV-LVA + history heuristic move ordering
  * - Static exchange evaluation
  * 
- * TODO remove depth limit / fix stack overflow
- * 
- * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
  * @param pv_node is this node the first node at this depth?
@@ -294,7 +290,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
  * @param nodes number of leaf nodes visited.
  * @return value of depth 0 node.
  */
-static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes) {
+static int _qsearch(int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {
         return 0;
     }
@@ -308,7 +304,6 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, bo
     int stand_pat = eval(board.turn);
     if (stand_pat >= beta) return beta;
     if (alpha < stand_pat) alpha = stand_pat;
-    if (depth <= Q_MAX_DEPTH) return alpha;
 
     Move moves[MAX_CAPTURE_NUM];
     int n = gen_legal_captures(moves, board.turn);
@@ -327,7 +322,7 @@ static int _qsearch(int depth, int alpha, int beta, bool pv_node, bool color, bo
         if (_SEE(board.turn, from, to) < SEE_THRESHOLD) continue;
 
         push(moves[i]);
-        int score = -_qsearch(depth - 1, -beta, -alpha, (i == 0), color, is_main, start, nodes);
+        int score = -_qsearch(-beta, -alpha, (i == 0), color, is_main, start, nodes);
         pop();
 
         if (score >= beta) return beta;

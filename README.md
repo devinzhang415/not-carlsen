@@ -48,8 +48,10 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
-12/22/22 v2.3.3
+12/22/22 v2.4
 > Cannot manage to reproduce crash in cmd or gdb, on any compile configuration. Crash only seems to occur when playing in GUI on time controls of \< 1 min. Shelving issue for now.
+>
+> Unsure what change did it, but quiescence search no longer stack overflows without depth limits in place. Removed depth limits from code.
 >
 > Added const modifers to parameters where appropriate. 
 

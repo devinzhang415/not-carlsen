@@ -1,7 +1,7 @@
 TARGET = not-carlsen
 LIBS = -lm -lpthread
 CC = gcc
-CFLAGS = -O3 -Wl,--stack,67108864 -w
+CFLAGS = -O3 -w
 # CFLAGS = -g -O3 -Wl,--stack,67108864 -w # GDB Debug Flags
 
 .PHONY: default all clean
