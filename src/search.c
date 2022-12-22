@@ -39,6 +39,10 @@ static bool thread_exit = false; // set by main thread to tell the other threads
  * Searches the position with Lazy SMP multithreading.
  * Uses threads running iterative deepening loops, half starting at depth 1 and half at depth 2.
  * Uses a main thread that has the UCI-info and exit checking. If main thread quits all other threads quit.
+ * 
+ * TODO
+ * crash on more than 1 thread, when playing in GUI with < 1 min
+ * Not reproducible from cmd or gdb
  */
 void parallel_search(void) {
     pthread_t threads[info.threads - 1];

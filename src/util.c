@@ -172,7 +172,7 @@ uint64_t get_full_ray_on(int square1, int square2) {
  * @return the square's integer value.
  * https://www.chessprogramming.org/images/0/0d/BBUniverse.jpg
  */
-int parse_square(char* square) {
+int parse_square(const char* square) {
     int file = square[0] - 'a';
     int rank = square[1] - '0';
     return 8 * (rank - 1) + file;

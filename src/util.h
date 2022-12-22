@@ -296,7 +296,7 @@ void* srealloc(void* ptr, size_t size);
 uint64_t get_ray_between(int square1, int square2);
 uint64_t get_full_ray_on(int square1, int square2);
 
-int parse_square(char* square);
+int parse_square(const char* square);
 int parse_piece(char piece);
 char* parse_move(Move move);
 

@@ -35,7 +35,7 @@ static const int ZOBRIST_EP_FILE_A = 773;
  * Initalizes the board
  * @param fen the FEN string to initalize the board to. Assumed valid.
  */
-void init_board(char* fen) {
+void init_board(const char* fen) {
     char* rest = strdup(fen);
 
     // Initalize bitboards and mailbox

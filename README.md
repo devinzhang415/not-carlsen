@@ -48,6 +48,11 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+12/22/22 v2.3.3
+> Cannot manage to reproduce crash in cmd or gdb, on any compile configuration. Crash only seems to occur when playing in GUI on time controls of \< 1 min. Shelving issue for now.
+>
+> Added const modifers to parameters where appropriate. 
+
 12/21/22 v2.3.2
 > Error in SEE causing multithreaded searches to crash has returned. Changed SEE from recrusive to iterative search, and resolved issue in most multithreaded searches. However, crashes still persist in rare cases. Still investigating cause. Nonetheless, currently very happy with the strength of the single-threaded search, even with the extremely rudimentary evaluation function.
 >

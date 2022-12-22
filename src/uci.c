@@ -170,7 +170,7 @@ int main(void) {
  * @param time the time searched in ms.
  * @param pv the best line of moves found.
  */
-void print_info(int depth, int score, uint64_t nodes, double time, PV* pv) {
+void print_info(int depth, int score, uint64_t nodes, double time, const PV* pv) {
     printf("info depth %d score cp %d nodes %llu nps %.0f time %d pv ",
             depth, score, nodes, nodes / time, (int) (time * 1000));
 
@@ -187,7 +187,7 @@ void print_info(int depth, int score, uint64_t nodes, double time, PV* pv) {
  * Reset the board to the given fen and clear the struct entries.
  * @param fen 
  */
-static void _reset_structs(char* fen) {
+static void _reset_structs(const char* fen) {
     init_board(fen);
     clear_ttable();
     clear_stack();
