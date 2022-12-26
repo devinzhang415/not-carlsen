@@ -48,6 +48,9 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+12/25/22 v2.4.1
+> In move ordering, switched non-captures to be sorted by history heuristic, instead of history heuristic being a separate category.
+
 12/22/22 v2.4
 > Cannot manage to reproduce crash in cmd or gdb, on any compile configuration. Crash only seems to occur when playing in GUI on time controls of \< 1 min. Shelving issue for now.
 >

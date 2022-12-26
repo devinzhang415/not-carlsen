@@ -281,6 +281,9 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
  * - MVV-LVA + history heuristic move ordering
  * - Static exchange evaluation
  * 
+ * TODO
+ * add check extensions
+ * 
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
  * @param beta upperbound of the score. Initially MATE_SCORE.
  * @param pv_node is this node the first node at this depth?
@@ -424,9 +427,8 @@ static int _cmp_moves(const void* elem1, const void* elem2) {
  * - Hash move | score = 1000
  * - Winning captures (low value piece captures high value piece) | 100 <= score <= 500
  * - Promotions / Equal captures (piece captured and capturing have the same value) | score = 0
- * - Killer moves (from history heuristic table) | -100 < score < 0
  * - Losing captures (high value piece captures low value piece) | -500 <= score <= -100
- * - All others | score = -1000
+ * - All others | score = -1000 (sorted by history heuristic value)
  * 
  * Pieces have the following values:
  * - Pawn: 100
@@ -443,15 +445,12 @@ static int _score_move(Move move) {
     if (move.to == tt_move.to && move.from == tt_move.from && move.flag == tt_move.flag) {
         return 1000;
     }
-
-    int killer_val = htable_get(board.turn, move.from, move.to);
-    if (killer_val != 0) return killer_val / -100;
     
     int attacker_score = 0;
     int victim_score = 0;
     switch (move.flag) {
         case NONE:
-            return -1000;
+            return -1000 + htable_get(board.turn, move.from, move.to);
         case CASTLING:
             return -1000;
         case PR_KNIGHT:
