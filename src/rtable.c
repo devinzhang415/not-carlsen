@@ -53,7 +53,7 @@ RTable_Entry rtable_get(uint64_t key) {
  * @param key the zobrist hash of the position. 
  */
 void rtable_add(uint64_t key) {
-    if (!rtable.size && (double) rtable.size / rtable.capacity > MAX_LOAD_FACTOR) {
+    if (!rtable.size && (double) rtable.size / rtable.capacity > MAX_LOAD_FACTOR_PERCENTAGE / 100) {
         rtable.resize = true; // Avoid rehashing as cost is likely not worth it, just resize table for next iteration
     }
 

@@ -88,23 +88,14 @@ const uint64_t BB_ANTI_DIAGONALS[15] = {BB_ANTI_DIAGONAL_1, BB_ANTI_DIAGONAL_2, 
                                         BB_ANTI_DIAGONAL_13, BB_ANTI_DIAGONAL_14, BB_ANTI_DIAGONAL_15};
 
 uint64_t BB_RAYS[64][64];
-
-// Misc
 const Move NULL_MOVE = {A1, A1, PASS};
-const int INVALID = -1;
-const double MAX_LOAD_FACTOR = .75; // max load factor for hashtables.
-const int MATE_SCORE = 20000;
-const int MAX_DEPTH = 100;
-const int MAX_MOVE_NUM = 218; // largest number of legal moves in a position.
-const int MAX_CAPTURE_NUM = 74; // largest number of legal captures in a position.
-const int MAX_THREADS = 100;
 
 
 /**
  * Initalizes BB_RAYS[64][64] with all rays that connect from one square to another.
  * For example, there is a ray between a1 and c3, but not betweem a1 and b3.
  */
-void _init_rays(void) {
+void init_rays(void) {
     for (int square1 = A1; square1 <= H8; square1++) {
         for (int square2 = A1; square2 <= H8; square2++) {
             if (square1 == square2) {

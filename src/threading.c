@@ -1,13 +1,14 @@
 #include <pthread.h>
 #include "threading.h"
+#include "util.h"
 #include "search.h"
-
 
 extern __thread Board board;
 extern __thread Stack stack;
 extern __thread RTable rtable;
 extern Info info;
 
+pthread_t threads[MAX_THREADS];
 bool thread_exit = false; // set by main thread to tell the other threads to exit.
 
 

@@ -279,15 +279,17 @@ extern const uint64_t BB_ANTI_DIAGONAL_15;
 extern const uint64_t BB_ANTI_DIAGONALS[15];
 
 extern uint64_t BB_RAYS[64][64];
-
 extern const Move NULL_MOVE;
-extern const int INVALID;
-extern const double MAX_LOAD_FACTOR;
-extern const int MATE_SCORE;
-extern const int MAX_DEPTH;
-extern const int MAX_MOVE_NUM;
-extern const int MAX_CAPTURE_NUM;
-extern const int MAX_THREADS;
+
+enum Constant {
+    INVALID = -1,
+    MAX_LOAD_FACTOR_PERCENTAGE = 75, // max load factor for hashtables
+    MATE_SCORE = 20000,
+    MAX_DEPTH = 100,
+    MAX_MOVE_NUM = 218, // largest number of legal moves in a position.
+    MAX_CAPTURE_NUM = 74, // largest number of legal captures in a position.
+    MAX_THREADS = 100
+};
 
 
 void init_rays(void);

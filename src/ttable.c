@@ -57,7 +57,7 @@ TTable_Entry ttable_get(uint64_t key) {
  * @param flag the type of node the position is.
  */
 void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
-    if (!ttable.resize && (double) ttable.size / ttable.capacity > MAX_LOAD_FACTOR) {
+    if (!ttable.resize && (double) ttable.size / ttable.capacity > MAX_LOAD_FACTOR_PERCENTAGE / 100) {
         ttable.resize = true; // Avoid rehashing as cost is likely not worth it, just resize table for next iteration
     }
 
