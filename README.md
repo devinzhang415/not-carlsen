@@ -27,6 +27,7 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - UCI communication protocol
 - Magic bitboard legal move generator (92 million nps)
 - Lazy SMP parallel search
+- Thread pool
 - Principal variation search (PVS)
 - Fail soft alpha-beta negamax
 - Quiescence search
@@ -48,6 +49,11 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+2/11/13 v2.5
+> Implemented a thread pool so threads are saved and managed between searches instead of being unnecessarily destroyed just to be recreated. Special thanks to @bodokaiser for their excellent framework.
+>
+> Cannot reproduce crashing issue from v2.4. Marking as resolved.
+
 2/10/22 v2.4.2
 > New year, slightly new file structure. Improved consistency across files and moved multithreading operations, including multithreaded search, over to the new threading.c/.h files in preparation of adding a thread pool.
 

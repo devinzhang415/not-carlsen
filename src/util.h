@@ -116,7 +116,7 @@ typedef struct Board {
  * Uses triangular PV on the stack scheme.
  */
 typedef struct PV {
-    Move table[100]; // should be MAX_DEPTH, not 100
+    Move table[MAX_DEPTH];
     int length;
 } PV;
 
@@ -234,10 +234,11 @@ typedef struct Param {
  * Singleton.
  */
 typedef struct Work_Queue {
-    int size;
+    size_t size;
+    size_t capacity; // capacity = MAX_THREADS
     int head_idx;
     int tail_idx;
-    Param entries[MAX_THREADS]; // capacity guaranteed to be MAX_THREADS
+    Param* entries[MAX_THREADS];
 } Work_Queue;
 
 

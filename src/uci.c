@@ -59,8 +59,8 @@ int main(void) {
             _reset_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
             // Set default options
-            info.threads = 1;
-            // info.threads = 12;
+            // info.threads = 1;
+            info.threads = 12;
         }
 
         else if (!strncmp(input, "uci", 3)) {

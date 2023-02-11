@@ -36,17 +36,17 @@ static __thread Move tt_move; // Hash move from transposition table saved global
 /**
  * Searches the position with iterative depths.
  * 
- * @param args search parameters wrapped in Param struct.
+ * @param param search parameters wrapped in Param struct.
  *             See Param in util.h for full description.
- *             Some parameters will be NULL if thread is main.
+ *             Board, stack, rtable will be NULL if thread is main.
  */
-void* _iterative_deepening(void* args) {
+void* _iterative_deepening(void* param) {
     // Instantiate thread-local variables
-    Param* a = (Param*) args;
+    Param* args = (Param*) param;
 
-    bool is_main = a->is_main;
-    clock_t start = a->start;
-    int start_depth = a->start_depth;
+    bool is_main = args->is_main;
+    clock_t start = args->start;
+    int start_depth = args->start_depth;
 
     PV pv;
     pv.length = 0;
@@ -54,15 +54,15 @@ void* _iterative_deepening(void* args) {
     uint64_t nodes = 0;
 
     if (!is_main) {
-        board = *(a->board);
+        board = *(args->board);
 
-        stack = *(a->stack);
+        stack = *(args->stack);
         stack.entries = smalloc(stack.capacity * sizeof(Stack_Entry));
-        memcpy(stack.entries, a->stack->entries, stack.capacity * sizeof(Stack_Entry));
+        memcpy(stack.entries, args->stack->entries, stack.capacity * sizeof(Stack_Entry));
 
-        rtable = *(a->rtable);
+        rtable = *(args->rtable);
         rtable.entries = smalloc(rtable.capacity * sizeof(RTable_Entry));
-        memcpy(rtable.entries, a->rtable->entries, rtable.capacity * sizeof(RTable_Entry));
+        memcpy(rtable.entries, args->rtable->entries, rtable.capacity * sizeof(RTable_Entry));
     }
 
     htable = scalloc(2 * 64 * 64, sizeof(int));
@@ -87,7 +87,7 @@ void* _iterative_deepening(void* args) {
     }
 
     free(htable);
-    free(a);
+    free(args);
     if (is_main) {
         printf("bestmove ");
         print_move(best_move);
@@ -121,10 +121,10 @@ void* _iterative_deepening(void* args) {
  * @param pv the best line of moves found.
  * @return the best score.
  */
-static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes, PV* pv) {
+static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start_time, uint64_t* nodes, PV* pv) {
     // Stop searching if main thread meets parameters
     if (thread_exit) return 0;
-    if (is_main && can_exit(color, start, *nodes)) {
+    if (is_main && can_exit(color, start_time, *nodes)) {
         thread_exit = true;
         return 0;
     }
@@ -158,7 +158,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
     }
     if (depth <= 0) {
         pv->length = 0;
-        return _qsearch(alpha, beta, pv_node, color, is_main, start, nodes);
+        return _qsearch(alpha, beta, pv_node, color, is_main, start_time, nodes);
     }
     
     // Recursive case
@@ -169,7 +169,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         // Null move pruning
         if (_is_null_move_ok(in_check)) {
             stack_push(NULL_MOVE);
-            score = -_PVS(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start, nodes, &new_pv);
+            score = -_PVS(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start_time, nodes, &new_pv);
             stack_pop();
             if (score >= beta) return score;
         }
@@ -190,11 +190,11 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
             stack_push(move);
             if (i == 0) {
-                score = -_PVS(depth - 1 - r, -beta, -alpha, true, color, is_main, start, nodes, &new_pv);
+                score = -_PVS(depth - 1 - r, -beta, -alpha, true, color, is_main, start_time, nodes, &new_pv);
             } else {
-                score = -_PVS(depth - 1 - r, -alpha - 1, -alpha, false, color, is_main, start, nodes, &new_pv);
+                score = -_PVS(depth - 1 - r, -alpha - 1, -alpha, false, color, is_main, start_time, nodes, &new_pv);
                 if (score > alpha && score < beta) {
-                    score = -_PVS(depth - 1 - r, -beta, -alpha, false, color, is_main, start, nodes, &new_pv);
+                    score = -_PVS(depth - 1 - r, -beta, -alpha, false, color, is_main, start_time, nodes, &new_pv);
                 }
             }
             stack_pop();
