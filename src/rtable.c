@@ -3,9 +3,7 @@
 #include <string.h>
 #include "rtable.h"
 
-
 extern __thread RTable rtable;
-
 
 static const size_t RTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
 

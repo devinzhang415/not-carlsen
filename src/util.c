@@ -6,10 +6,8 @@
 #include <assert.h>
 #include "util.h"
 
-
 extern __thread Board board;
 extern Info info;
-
 
 const bool WHITE = true;
 const bool BLACK = false;
@@ -99,6 +97,51 @@ const int MATE_SCORE = 20000;
 const int MAX_DEPTH = 100;
 const int MAX_MOVE_NUM = 218; // largest number of legal moves in a position.
 const int MAX_CAPTURE_NUM = 74; // largest number of legal captures in a position.
+const int MAX_THREADS = 100;
+
+
+/**
+ * Initalizes BB_RAYS[64][64] with all rays that connect from one square to another.
+ * For example, there is a ray between a1 and c3, but not betweem a1 and b3.
+ */
+void _init_rays(void) {
+    for (int square1 = A1; square1 <= H8; square1++) {
+        for (int square2 = A1; square2 <= H8; square2++) {
+            if (square1 == square2) {
+                BB_RAYS[square1][square2] = 0;
+                continue;
+            }
+
+            uint64_t square2_bb = BB_SQUARES[square2];
+
+            uint64_t rank = BB_RANKS[rank_of(square1)];
+            if (rank & square2_bb) {
+                BB_RAYS[square1][square2] = rank;
+                continue;
+            }
+
+            uint64_t file = BB_FILES[file_of(square1)];
+            if (file & square2_bb) {
+                BB_RAYS[square1][square2] = file;
+                continue;
+            }
+
+            uint64_t diagonal = BB_DIAGONALS[diagonal_of(square1)];
+            if (diagonal & square2_bb) {
+                BB_RAYS[square1][square2] = diagonal;
+                continue;
+            }
+
+            uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square1)];
+            if (anti_diagonal & square2_bb) {
+                BB_RAYS[square1][square2] = anti_diagonal;
+                continue;
+            }
+            
+            BB_RAYS[square1][square2] = 0;
+        }
+    }
+}
 
 
 /**

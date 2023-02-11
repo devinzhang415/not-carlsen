@@ -14,7 +14,6 @@
 #include "ttable.h"
 #include "timeman.h"
 
-
 extern __thread Board board;
 extern volatile TTable ttable;
 extern __thread Stack stack;
@@ -22,6 +21,7 @@ extern __thread RTable rtable;
 extern __thread int* htable;
 extern Info info;
 
+extern bool thread_exit;
 
 static const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
 static const int LRM_R = 1; // Depth to reduce by in late move reduction.
@@ -31,50 +31,6 @@ static const int DELTA_MARGIN = 200; // The amount of leeway in terms of score t
 static const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
 
 static __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
-static bool thread_exit = false; // set by main thread to tell the other threads to exit.
-
-
-/**
- * Searches the position with Lazy SMP multithreading.
- * Uses threads running iterative deepening loops, half starting at depth 1 and half at depth 2.
- * Uses a main thread that has the UCI-info and exit checking. If main thread quits all other threads quit.
- * 
- * TODO
- * crash on more than 1 thread, when playing in GUI with < 1 min
- * Not reproducible from cmd or gdb
- */
-void parallel_search(void) {
-    pthread_t threads[info.threads - 1];
-    thread_exit = false;
-    clock_t start = clock();
-    int start_depth = 1;
-
-    Param* args;
-    for (int i = 0; i < info.threads; i++) {
-        args = smalloc(sizeof(Param)); // Threads are responsible for freeing args
-
-        args->start = start;
-        args->start_depth = start_depth;
-
-        start_depth = (start_depth == 1 ? 2 : 1);
-
-        if (i == info.threads - 1) { // Reuse main thread (created last)
-            args->is_main = true;
-            args->start_depth = 1;
-            _iterative_deepening(args);
-        } else {
-            args->is_main = false;
-            args->board = &board;
-            args->stack = &stack;
-            args->rtable = &rtable;
-            pthread_create(&threads[i], NULL, _iterative_deepening, (void*) args);
-        }
-    }
-
-    for (int i = 0; i < info.threads - 1; i++) {
-        pthread_join(threads[i], NULL);
-    }
-}
 
 
 /**
@@ -83,7 +39,7 @@ void parallel_search(void) {
  * @param args search parameters wrapped in Param struct.
  *             some parameters will be NULL if thread is main.
  */
-static void* _iterative_deepening(void* args) {
+void* _iterative_deepening(void* args) {
     // Instantiate thread-local variables
     Param* a = (Param*) args;
 

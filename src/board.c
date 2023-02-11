@@ -10,10 +10,8 @@
 #include "movegen.h"
 #include "rtable.h"
 
-
 extern __thread Board board;
 extern __thread RTable rtable;
-
 
 /**
  * - 000-767: numbers for each piece on each square.

@@ -8,7 +8,6 @@
 
 extern __thread Board board;
 
-
 // Weights for final scoring
 static const double MATERIAL_WEIGHT = 1;
 static const double PSQT_WEIGHT = .1;

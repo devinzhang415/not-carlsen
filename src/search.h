@@ -4,8 +4,7 @@
 #include "util.h"
 
 
-void parallel_search(void);
-static void* _iterative_deepening(void* args);
+void* _iterative_deepening(void* args);
 static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes, PV* pv);
 static int _qsearch(int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes);
 

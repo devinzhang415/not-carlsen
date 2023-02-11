@@ -7,8 +7,9 @@
 | `htable` | History heuristic table functions |
 | `movegen` | Tables and functions for all move generation and perft |
 | `rtable` | Repetition table functions |
-| `search` | Game tree search related functions |
+| `search` | Single-threaded tree search related functions |
 | `stack` | Move/game hisory stack functions |
+| `threading` | Multithreaded search and thread management operations |
 | `timeman` | Time management functions |
 | `ttable` | Transposition table functions |
 | `uci` | **Main** loop, communication protocol with the GUI, and table initiations |

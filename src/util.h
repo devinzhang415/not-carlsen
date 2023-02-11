@@ -287,7 +287,10 @@ extern const int MATE_SCORE;
 extern const int MAX_DEPTH;
 extern const int MAX_MOVE_NUM;
 extern const int MAX_CAPTURE_NUM;
+extern const int MAX_THREADS;
 
+
+void init_rays(void);
 
 void* smalloc(size_t size);
 void* scalloc(size_t n, size_t size);

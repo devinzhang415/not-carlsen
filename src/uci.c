@@ -13,7 +13,7 @@
 #include "search.h"
 #include "ttable.h"
 #include "evaluate.h"
-
+#include "threading.h"
 
 __thread Board board; // Board structure
 __thread Stack stack; // Move and board history structure
@@ -28,7 +28,7 @@ int main(void) {
     srand(time(NULL));
     init_bishop_attacks();
     init_rook_attacks();
-    _init_rays();
+    init_rays();
     init_zobrist_table();
 
     // Initialize structs
@@ -59,6 +59,7 @@ int main(void) {
 
             // Set default options
             info.threads = 1;
+            // info.threads = 12;
         }
 
         else if (!strncmp(input, "uci", 3)) {
@@ -75,7 +76,7 @@ int main(void) {
             char* token = NULL;
 
             if (token = strstr(input, "Threads value")) {
-                info.threads = atoi(token + 14);
+                info.threads = min(atoi(token + 14), MAX_THREADS);
                 continue;
             }
         }
@@ -192,48 +193,4 @@ static void _reset_structs(const char* fen) {
     clear_ttable();
     clear_stack();
     clear_rtable();
-}
-
-
-/**
- * Initalizes BB_RAYS[64][64] with all rays that connect from one square to another.
- * For example, there is a ray between a1 and c3, but not betweem a1 and b3.
- */
-static void _init_rays(void) {
-    for (int square1 = A1; square1 <= H8; square1++) {
-        for (int square2 = A1; square2 <= H8; square2++) {
-            if (square1 == square2) {
-                BB_RAYS[square1][square2] = 0;
-                continue;
-            }
-
-            uint64_t square2_bb = BB_SQUARES[square2];
-
-            uint64_t rank = BB_RANKS[rank_of(square1)];
-            if (rank & square2_bb) {
-                BB_RAYS[square1][square2] = rank;
-                continue;
-            }
-
-            uint64_t file = BB_FILES[file_of(square1)];
-            if (file & square2_bb) {
-                BB_RAYS[square1][square2] = file;
-                continue;
-            }
-
-            uint64_t diagonal = BB_DIAGONALS[diagonal_of(square1)];
-            if (diagonal & square2_bb) {
-                BB_RAYS[square1][square2] = diagonal;
-                continue;
-            }
-
-            uint64_t anti_diagonal = BB_ANTI_DIAGONALS[anti_diagonal_of(square1)];
-            if (anti_diagonal & square2_bb) {
-                BB_RAYS[square1][square2] = anti_diagonal;
-                continue;
-            }
-            
-            BB_RAYS[square1][square2] = 0;
-        }
-    }
 }

@@ -6,10 +6,8 @@
 #include "board.h"
 #include "rtable.h"
 
-
 extern __thread Board board;
 extern __thread Stack stack;
-
 
 static const size_t STACK_INIT_CAPACITY = 256ULL; // Power of 2 for modulo efficiency
 

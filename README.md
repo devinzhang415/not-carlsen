@@ -48,6 +48,9 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+2/10/22 v2.4.2
+> New year, slightly new file structure. Improved consistency across files and moved multithreading operations, including multithreaded search, over to the new threading.c/.h files in preparation of adding a thread pool.
+
 12/25/22 v2.4.1
 > In move ordering, switched non-captures to be sorted by history heuristic, instead of history heuristic being a separate category.
 
