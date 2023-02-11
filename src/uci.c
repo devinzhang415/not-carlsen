@@ -26,16 +26,17 @@ Info info; // Move generation parameter information
 int main(void) {
     // Initialize misc
     srand(time(NULL));
-    init_bishop_attacks();
-    init_rook_attacks();
-    init_rays();
-    init_zobrist_table();
+    bishop_attacks_init();
+    rook_attacks_init();
+    rays_init();
+    zobrist_table_init();
+    work_queue_init();
 
     // Initialize structs
-    init_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    init_stack();
-    init_ttable();
-    init_rtable();
+    board_init("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    stack_init();
+    ttable_init();
+    rtable_init();
 
     int size = 256;
     char* input = (char*) smalloc(size);
@@ -123,7 +124,7 @@ int main(void) {
                     }
 
                     Move move = {from, to, flag};
-                    push(move);
+                    stack_push(move);
 
                     token = strtok_r(moves, " ", &moves);
                 }
@@ -189,8 +190,8 @@ void print_info(int depth, int score, uint64_t nodes, double time, const PV* pv)
  * @param fen 
  */
 static void _reset_structs(const char* fen) {
-    init_board(fen);
-    clear_ttable();
-    clear_stack();
-    clear_rtable();
+    board_init(fen);
+    ttable_clear();
+    stack_clear();
+    rtable_clear();
 }

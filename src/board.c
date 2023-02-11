@@ -33,7 +33,7 @@ static const int ZOBRIST_EP_FILE_A = 773;
  * Initalizes the board
  * @param fen the FEN string to initalize the board to. Assumed valid.
  */
-void init_board(const char* fen) {
+void board_init(const char* fen) {
     char* rest = strdup(fen);
 
     // Initalize bitboards and mailbox
@@ -158,7 +158,7 @@ void init_board(const char* fen) {
  * - 8 numbers to indicate en passant file
  * @author https://stackoverflow.com/a/28116032.
  */
-void init_zobrist_table(void) {
+void zobrist_table_init(void) {
     for (int i = 0; i < ZOBRIST_SIZE; i++) {
         uint64_t n = 0;
         for (int j = 0; j < 5; j++) {

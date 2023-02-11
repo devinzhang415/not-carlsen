@@ -11,7 +11,7 @@ static const size_t RTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo ef
 /**
  * Initalizes the threefold repetition hashtable.
  */
-void init_rtable(void) {
+void rtable_init(void) {
     rtable.size = 0;
     rtable.capacity = RTABLE_INIT_CAPACITY;
     rtable.resize = false;
@@ -22,7 +22,7 @@ void init_rtable(void) {
 /**
  * Clear the repetition table entries.
  */
-void clear_rtable(void) {
+void rtable_clear(void) {
     if (rtable.resize) {
         rtable.capacity *= 2;
         rtable.entries = srealloc(rtable.entries, sizeof(RTable_Entry) * rtable.capacity);

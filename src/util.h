@@ -44,6 +44,18 @@ enum TT_Flag {
 };
 
 
+// Various search and config constants
+enum Constant {
+    INVALID = -1,
+    MAX_LOAD_FACTOR_PERCENTAGE = 75, // max load factor for hashtables
+    MATE_SCORE = 20000,
+    MAX_DEPTH = 100,
+    MAX_MOVE_NUM = 218, // largest number of legal moves in a position.
+    MAX_CAPTURE_NUM = 74, // largest number of legal captures in a position.
+    MAX_THREADS = 100
+};
+
+
 /**
  * Representation of a move.
  * 
@@ -145,6 +157,7 @@ typedef struct TTable_Entry {
 
 /**
  * Lockless transposition hashtable structure.
+ * Singleton.
  */
 typedef struct TTable {
     size_t size;
@@ -178,7 +191,8 @@ typedef struct RTable {
 
 /**
  * Parameters to search with for UCI.
- * Most descriptions from http://wbec-ridderkerk.nl/html/UCIProtocol.html
+ * Most descriptions from http://wbec-ridderkerk.nl/html/UCIProtocol.html.
+ * Singleton.
  * 
  * TODO missing commands:
  * - searchmoves
@@ -212,6 +226,19 @@ typedef struct Param {
     int start_depth; // depth to start iterative deepening at
     bool is_main; // whether thread is main thread
 } Param;
+
+
+/**
+ * Basic thread-safe queue to store search
+ * work orders for threads as they come in.
+ * Singleton.
+ */
+typedef struct Work_Queue {
+    int size;
+    int head_idx;
+    int tail_idx;
+    Param entries[MAX_THREADS]; // capacity guaranteed to be MAX_THREADS
+} Work_Queue;
 
 
 extern const bool WHITE;
@@ -281,18 +308,8 @@ extern const uint64_t BB_ANTI_DIAGONALS[15];
 extern uint64_t BB_RAYS[64][64];
 extern const Move NULL_MOVE;
 
-enum Constant {
-    INVALID = -1,
-    MAX_LOAD_FACTOR_PERCENTAGE = 75, // max load factor for hashtables
-    MATE_SCORE = 20000,
-    MAX_DEPTH = 100,
-    MAX_MOVE_NUM = 218, // largest number of legal moves in a position.
-    MAX_CAPTURE_NUM = 74, // largest number of legal captures in a position.
-    MAX_THREADS = 100
-};
 
-
-void init_rays(void);
+void rays_init(void);
 
 void* smalloc(size_t size);
 void* scalloc(size_t n, size_t size);

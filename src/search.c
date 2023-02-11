@@ -37,7 +37,8 @@ static __thread Move tt_move; // Hash move from transposition table saved global
  * Searches the position with iterative depths.
  * 
  * @param args search parameters wrapped in Param struct.
- *             some parameters will be NULL if thread is main.
+ *             See Param in util.h for full description.
+ *             Some parameters will be NULL if thread is main.
  */
 void* _iterative_deepening(void* args) {
     // Instantiate thread-local variables
@@ -167,9 +168,9 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
         // Null move pruning
         if (_is_null_move_ok(in_check)) {
-            push(NULL_MOVE);
+            stack_push(NULL_MOVE);
             score = -_PVS(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start, nodes, &new_pv);
-            pop();
+            stack_pop();
             if (score >= beta) return score;
         }
 
@@ -187,7 +188,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
             int r = (_is_reduction_ok(move, depth, i, has_failed_high, in_check)) ? LRM_R : 0; // Late move reduction
 
-            push(move);
+            stack_push(move);
             if (i == 0) {
                 score = -_PVS(depth - 1 - r, -beta, -alpha, true, color, is_main, start, nodes, &new_pv);
             } else {
@@ -196,7 +197,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
                     score = -_PVS(depth - 1 - r, -beta, -alpha, false, color, is_main, start, nodes, &new_pv);
                 }
             }
-            pop();
+            stack_pop();
 
             if (score > alpha) {
                 alpha = score;
@@ -280,9 +281,9 @@ static int _qsearch(int alpha, int beta, bool pv_node, bool color, bool is_main,
         // Static Exchange Evaluation
         if (_SEE(board.turn, from, to) < SEE_THRESHOLD) continue;
 
-        push(moves[i]);
+        stack_push(moves[i]);
         int score = -_qsearch(-beta, -alpha, (i == 0), color, is_main, start, nodes);
-        pop();
+        stack_pop();
 
         if (score >= beta) return beta;
         alpha = max(score, alpha);
@@ -518,9 +519,9 @@ static bool _is_reduction_ok(Move move, int depth, int moves_searched, bool has_
 
     if (in_check) return false;
 
-    push(move);
+    stack_push(move);
     bool gives_check = is_check(board.turn);
-    pop();
+    stack_pop();
     if (gives_check) return false;
 
     return (depth >= DEPTH_THRESHOLD && moves_searched >= FULL_MOVE_THRESHOLD);

@@ -4,8 +4,8 @@
 #include "util.h"
 
 
-void init_rtable(void);
-void clear_rtable(void);
+void rtable_init(void);
+void rtable_clear(void);
 
 RTable_Entry rtable_get(uint64_t key);
 void rtable_add(uint64_t key);

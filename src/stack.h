@@ -5,11 +5,11 @@
 #include "rtable.h"
 
 
-void init_stack(void);
-void clear_stack(void);
+void stack_init(void);
+void stack_clear(void);
 
-void push(Move move);
-void pop(void);
+void stack_push(Move move);
+void stack_pop(void);
 
 static void _seed(void);
 

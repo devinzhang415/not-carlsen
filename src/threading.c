@@ -8,8 +8,12 @@ extern __thread Stack stack;
 extern __thread RTable rtable;
 extern Info info;
 
-pthread_t threads[MAX_THREADS];
 bool thread_exit = false; // set by main thread to tell the other threads to exit.
+
+static Work_Queue work_queue;
+static pthread_t threads[MAX_THREADS];
+static pthread_cond_t cond;
+static pthread_mutex_t mutex;
 
 
 /**
@@ -23,7 +27,6 @@ bool thread_exit = false; // set by main thread to tell the other threads to exi
  * Multiple threads at long times blunders. Lack of voting?
  */
 void parallel_search(void) {
-    pthread_t threads[info.threads - 1];
     thread_exit = false;
     clock_t start = clock();
     int start_depth = 1;
@@ -53,4 +56,33 @@ void parallel_search(void) {
     for (int i = 0; i < info.threads - 1; i++) {
         pthread_join(threads[i], NULL);
     }
+}
+
+
+/**
+ * @brief 
+ * 
+ * @return void* 
+ */
+static void* _do_work(void* args) {
+    while (true) {
+        pthread_mutex_lock(&mutex);
+
+        
+
+        pthread_mutex_unlock(&mutex);
+    }
+
+    pthread_exit(NULL);
+}
+
+
+/**
+ * 
+ */
+void work_queue_init(void) {
+    work_queue.size = 0;
+    work_queue.head_idx = 0;
+    work_queue.tail_idx = 0;
+    memset(work_queue.entries, 0, MAX_THREADS * sizeof(Param)); // capacity guaranteed to be MAX_THREADS
 }

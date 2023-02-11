@@ -11,7 +11,7 @@ static const size_t TTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo ef
 /**
  * Initalizes the transposition table.
  */
-void init_ttable(void) {
+void ttable_init(void) {
     ttable.size = 0;
     ttable.capacity = TTABLE_INIT_CAPACITY;
     ttable.resize = false;
@@ -22,7 +22,7 @@ void init_ttable(void) {
 /**
  * Clear the transposition table entries.
  */
-void clear_ttable(void) {
+void ttable_clear(void) {
     if (ttable.resize) {
         ttable.capacity *= 2;
         ttable.entries = srealloc(ttable.entries, ttable.capacity * sizeof(TTable_Entry));

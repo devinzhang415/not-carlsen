@@ -6,8 +6,8 @@
 #include "util.h"
 
 
-void init_board(const char* fen);
-void init_zobrist_table(void);
+void board_init(const char* fen);
+void zobrist_table_init(void);
 
 void make_move(Move move);
 

@@ -94,7 +94,7 @@ static uint64_t BISHOP_ATTACK_SHIFTS[64];
  * Initalizes the bishop attack magic bitboard
  * @author github.com/nkarve
  */
-void init_bishop_attacks(void) {
+void bishop_attacks_init(void) {
     for (int square = A1; square <= H8; square++) {
         uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
                          ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
@@ -120,7 +120,7 @@ void init_bishop_attacks(void) {
  * Initalizes the rook attack magic bitboard
  * @author github.com/nkarve
  */
-void init_rook_attacks(void) {
+void rook_attacks_init(void) {
     for (int square = A1; square <= H8; square++) {
         uint64_t edges = ((BB_RANK_1 | BB_RANK_8) & ~BB_RANKS[rank_of(square)]) |
                          ((BB_FILE_A | BB_FILE_H) & ~BB_FILES[file_of(square)]);
@@ -236,14 +236,14 @@ uint64_t print_divided_perft(int depth) {
     int n = gen_legal_moves(moves, board.turn);
 
     for (int i = 0; i < n; i++) {
-        push(moves[i]);
+        stack_push(moves[i]);
         if (is_draw()) break;
 
         print_move(moves[i]);
         uint64_t nodes = _perft(depth - 1);
         total_nodes += nodes;
         printf(": %llu\n", nodes);
-        pop();
+        stack_pop();
     }
     printf("\nNodes searched: %llu\n", total_nodes);
 
@@ -270,11 +270,11 @@ static uint64_t _perft(int depth) {
     if (depth == 1) return n;
 
     for (int i = 0; i < n; i++) {
-        push(moves[i]);
+        stack_push(moves[i]);
         if (is_draw()) break;
 
         nodes += _perft(depth - 1);
-        pop();
+        stack_pop();
     }
     return nodes;
 }
@@ -438,9 +438,9 @@ int gen_legal_moves(Move* moves, bool color) {
                     // For example en passant is illegal here:
                     // 8/8/8/8/k2Pp2Q/8/8/3K4 b - d3 0 1
                     // k7/1q6/8/3pP3/8/5K2/8/8 w - d6 0 1
-                    push(move);
+                    stack_push(move);
                     bool invalid = is_check(color);
-                    pop();
+                    stack_pop();
                     if (invalid) continue;
                 }
 
@@ -568,9 +568,9 @@ int gen_legal_captures(Move* moves, bool color) {
                     // For example en passant is illegal here:
                     // 8/8/8/8/k2Pp2Q/8/8/3K4 b - d3 0 1
                     // k7/1q6/8/3pP3/8/5K2/8/8 w - d6 0 1
-                    push(move);
+                    stack_push(move);
                     bool invalid = is_check(color);
-                    pop();
+                    stack_pop();
                     if (invalid) continue;
                 }
 

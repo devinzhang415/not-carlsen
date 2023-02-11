@@ -4,8 +4,8 @@
 #include "util.h"
 
 
-void init_ttable(void);
-void clear_ttable(void);
+void ttable_init(void);
+void ttable_clear(void);
 
 TTable_Entry ttable_get(uint64_t key);
 void ttable_add(uint64_t key, int depth, Move move, int score, int flag);

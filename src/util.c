@@ -95,7 +95,7 @@ const Move NULL_MOVE = {A1, A1, PASS};
  * Initalizes BB_RAYS[64][64] with all rays that connect from one square to another.
  * For example, there is a ray between a1 and c3, but not betweem a1 and b3.
  */
-void init_rays(void) {
+void rays_init(void) {
     for (int square1 = A1; square1 <= H8; square1++) {
         for (int square2 = A1; square2 <= H8; square2++) {
             if (square1 == square2) {

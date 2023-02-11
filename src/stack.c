@@ -15,7 +15,7 @@ static const size_t STACK_INIT_CAPACITY = 256ULL; // Power of 2 for modulo effic
 /**
  * Initalizes the stack.
  */
-void init_stack() {
+void stack_init() {
     stack.size = 0;
     stack.capacity = STACK_INIT_CAPACITY;
     stack.entries = scalloc(STACK_INIT_CAPACITY, sizeof(Stack_Entry));
@@ -26,7 +26,7 @@ void init_stack() {
 /**
  * Clear the stack.
  */
-void clear_stack(void) {
+void stack_clear(void) {
     stack.size = 0;
     memset(stack.entries, 0, stack.capacity * sizeof(Stack_Entry));
     _seed();
@@ -39,7 +39,7 @@ void clear_stack(void) {
  * TODO only store irrevocable info, not whole board state
  * @param move
  */
-void push(Move move) {
+void stack_push(Move move) {
     // Update move stack
     if (stack.size == stack.capacity) {
         stack.capacity *= 2;
@@ -58,7 +58,7 @@ void push(Move move) {
 /**
  * Unmakes the most recent move and updates the tables.
  */
-void pop(void) {
+void stack_pop(void) {
     rtable_remove(board.zobrist);
     
     // Update move stack

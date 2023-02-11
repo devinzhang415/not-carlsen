@@ -9,7 +9,7 @@
 | `rtable` | Repetition table functions |
 | `search` | Single-threaded tree search related functions |
 | `stack` | Move/game hisory stack functions |
-| `threading` | Multithreaded search and thread management operations |
+| `threading` | Multithreaded search and thread management operations, with queue implementation |
 | `timeman` | Time management functions |
 | `ttable` | Transposition table functions |
 | `uci` | **Main** loop, communication protocol with the GUI, and table initiations |
