@@ -41,12 +41,23 @@ int main(void) {
     int size = 256;
     char* input = (char*) smalloc(size);
 
+    // Use stdin.txt as a buffer of preset inputs.
+    // For testing purposes.
+    // If this file exists, read line by line from the file
+    // for inputs instead of from console
+    FILE* stdin_file = fopen("stdin.txt", "r");
+    bool has_stdin_file = (stdin_file != NULL);
+    int current_line = 1;
+
     while (true) {
         fflush(stdout);
 
         int c = EOF;
         int i = 0;
-        while ((c = getchar()) != '\n' && c != EOF) {
+        while ((has_stdin_file ?
+                    (c = fgetc(stdin_file)) != '\n' :
+                    (c = getchar()) != '\n') &&
+                c != EOF) {
             input[i++] = (char) c;
             if (i == size) {
                 size *= 2;
@@ -54,6 +65,9 @@ int main(void) {
             }
         }
         input[i] = '\0';
+
+        if (i == 0) break;
+        if (has_stdin_file) printf("%d: %s\n", current_line++, input);
 
         if (!strncmp(input, "ucinewgame", 10)) {
             _reset_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
@@ -91,6 +105,8 @@ int main(void) {
                 if (fen) {
                     fen += 4; // Move pointer to beginning of FEN
                     _reset_structs(fen);
+                } else {
+                    continue;
                 }
             }
 
@@ -159,6 +175,8 @@ int main(void) {
             break;
         }
     }
+
+    if (has_stdin_file) fclose(stdin_file);
 
     return 0;
 }

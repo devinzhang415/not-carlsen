@@ -61,9 +61,6 @@ static const int* EG_PSQTS[12] = {W_EG_PAWN_TABLE, W_EG_KNIGHT_TABLE, W_EG_BISHO
  * - PSQTs
  * - Tapered evaluation
  * 
- * TODO
- * replace with NNUE Half-KP
- * 
  * @param color 
  * @return the advantage for the color in the given position, in centipawns.
  * A positive value means the color has advantage, and not that strictly

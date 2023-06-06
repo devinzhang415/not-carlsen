@@ -1,4 +1,4 @@
-# Not-Carlsen
+# not-carlsen
 Successor of the Not-Magnus chess engine, now written in C(arlsen). Whereas Not-Magnus's goal was to learn the popular algorithims and techniques in modern chess engines, this engine will efficently implement them. Thus, the goal of this engine is simply to be strong while providing me an opportunity to solidify my C programming skills.
 
 Special thanks to:
@@ -14,11 +14,26 @@ Compile with the makefile:
 
 > mingw32-make
 
-Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol. The engine also supports:
+not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol. Aside from the standard commands, not-carlsen also supports:
 - #### go perft \[x]
   Prints out the divided perft results for the initialized position for depth \[x].
 - #### setoption name Threads \[x]
   Sets the number of threads to search with.
+
+not-carlsen also supports the use of an `stdin.txt` debug file. If found in src, not-carlsen will read from the contents of this file instead of console when looking for input. An example stdin.txt file can be formatted as following:
+
+```
+uci
+isready
+ucinewgame
+position startpos
+position startpos moves c2c4
+isready
+go wtime 60000 btime 60000 movestogo 40
+position startpos moves c2c4 e7e5 b1c3
+isready
+...
+```
 
 ------
 
@@ -49,12 +64,17 @@ Not-Carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
-2/11/13 v2.5
+6/5/23 v2.5.1
+> Added new debug functionality through stdin.txt file. See feature spotlight above for more details.
+>
+> Instead of using NNUE Half-KP, not-carlsen will move forward with a classical evaluation function which will be the focus of the next few updates.
+
+2/11/23 v2.5
 > Implemented a thread pool so threads are saved and managed between searches instead of being unnecessarily destroyed just to be recreated. Special thanks to @bodokaiser for their excellent framework.
 >
 > Cannot reproduce crashing issue from v2.4. Marking as resolved.
 
-2/10/22 v2.4.2
+2/10/23 v2.4.2
 > New year, slightly new file structure. Improved consistency across files and moved multithreading operations, including multithreaded search, over to the new threading.c/.h files in preparation of adding a thread pool.
 
 12/25/22 v2.4.1

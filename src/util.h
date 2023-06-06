@@ -236,9 +236,9 @@ typedef struct Param {
 typedef struct Work_Queue {
     size_t size;
     size_t capacity; // capacity = MAX_THREADS
-    int head_idx;
-    int tail_idx;
-    Param* entries[MAX_THREADS];
+    int head_idx; // head pointer
+    int tail_idx; // tail pointer
+    Param* entries[MAX_THREADS]; // work that needs to be done
 } Work_Queue;
 
 
