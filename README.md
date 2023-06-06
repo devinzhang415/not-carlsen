@@ -61,6 +61,11 @@ isready
 - Tapered evaluation
 - Threefold repetition hashtable
 
+## Active Developing Features
+- Dynamic time management
+- Classical evaluation function
+- Bug where engine becomes unresponsive after `isready`
+
 ------
 
 ## Devlog
