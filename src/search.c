@@ -139,7 +139,8 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         tt_move = tt.move;
         switch (tt.flag) {
             case EXACT:
-                if (pv_node) return tt.score;
+                if (!pv_node) return tt.score;
+                break;
             case LOWERBOUND:
                 alpha = max(alpha, tt.score);
                 break;

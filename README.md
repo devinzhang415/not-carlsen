@@ -69,6 +69,9 @@ isready
 ------
 
 ## Devlog
+6/6/23 v2.5.2
+> Resolved typo in returning exact transposition matches during search where instead of forcing the search to continue at a pv node, it was forcing it to terminate with the transposition result.
+
 6/5/23 v2.5.1
 > Added new debug functionality through stdin.txt file. See feature spotlight above for more details.
 >
