@@ -53,4 +53,4 @@ Mkfile.old
 dkms.conf
 
 # VS Code
-*.json
+.vscode/
