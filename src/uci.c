@@ -24,20 +24,6 @@ Info info; // Move generation parameter information
 
 
 int main(void) {
-    // Initialize misc
-    srand(time(NULL));
-    bishop_attacks_init();
-    rook_attacks_init();
-    rays_init();
-    zobrist_table_init();
-    work_queue_init();
-
-    // Initialize structs
-    board_init("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    stack_init();
-    ttable_init();
-    rtable_init();
-
     int size = 256;
     char* input = (char*) smalloc(size);
 
@@ -70,11 +56,24 @@ int main(void) {
         if (has_stdin_file) printf("%d: %s\n", current_line++, input);
 
         if (!strncmp(input, "ucinewgame", 10)) {
-            _reset_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            // Initialize misc
+            // srand(time(NULL));
+            srand(0);
+
+            bishop_attacks_init();
+            rook_attacks_init();
+            rays_init();
+            zobrist_table_init();
+            work_queue_init();
+
+            // Initialize structs
+            board_init("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            stack_init();
+            ttable_init();
+            rtable_init();
 
             // Set default options
-            // info.threads = 1;
-            info.threads = 12;
+            info.threads = 1;
         }
 
         else if (!strncmp(input, "uci", 3)) {

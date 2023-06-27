@@ -69,6 +69,9 @@ isready
 ------
 
 ## Devlog
+6/26/23 v2.5.3
+> Moved struct initialization to run on `ucinewgame` command and temporary disabled multithreading and seed randomization to better debug. Consistent crash position found in `c4 Nh6 2. Nc3 e5 3. e3 Nf5 4. d4 exd4 5. exd4 c6 6. Nf3 Be7 7. g3 a5 8. Bg2 d6 9. Bf4 g5 10. Bd2 g4 11. Nh4 Nxh4 12. gxh4 Bxh4 13. O-O (40 moves in 1 min)`
+
 6/6/23 v2.5.2
 > Resolved typo in returning exact transposition matches during search where instead of forcing the search to continue at a pv node, it was forcing it to terminate with the transposition result.
 
