@@ -5,7 +5,7 @@
 
 extern volatile TTable ttable;
 
-static const size_t TTABLE_INIT_CAPACITY = 65536ULL; // Power of 2 for modulo efficiency
+static const size_t TTABLE_INIT_CAPACITY = 1 << 16; // Power of 2 for modulo efficiency
 
 
 /**
