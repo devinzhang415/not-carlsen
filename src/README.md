@@ -12,5 +12,6 @@
 | `threading` | Multithreaded search and thread management operations, with queue implementation |
 | `timeman` | Time management functions |
 | `ttable` | Transposition table functions |
+| `types` | Type definitions; structs and enums |
 | `uci` | **Main** loop, communication protocol with the GUI, and table initiations |
-| `util` | Types, constants, tables, and helper functions |
+| `util` | Constants and helper functions |

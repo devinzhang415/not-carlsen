@@ -2,6 +2,7 @@
 #define TTABLE_H
 
 #include "util.h"
+#include "types.h"
 
 
 void ttable_init(void);

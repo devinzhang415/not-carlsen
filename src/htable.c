@@ -4,7 +4,7 @@
 #include "util.h"
 
 
-extern __thread int* htable;
+extern _Thread_local int* htable;
 
 
 /**

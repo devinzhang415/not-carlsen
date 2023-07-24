@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "util.h"
+#include "types.h"
 
 
 int eval(bool color);

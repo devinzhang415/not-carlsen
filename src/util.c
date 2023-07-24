@@ -6,7 +6,7 @@
 #include <assert.h>
 #include "util.h"
 
-extern __thread Board board;
+extern _Thread_local Board board;
 extern Info info;
 
 const bool WHITE = true;
@@ -30,24 +30,26 @@ const uint64_t BB_LIGHT_SQUARES = 0x55aa55aa55aa55aa;
 const uint64_t BB_DARK_SQUARES = 0xaa55aa55aa55aa55;
 
 const uint64_t BB_FILE_A = 0x0101010101010101;
-const uint64_t BB_FILE_B = BB_FILE_A << 1;
-const uint64_t BB_FILE_C = BB_FILE_A << 2;
-const uint64_t BB_FILE_D = BB_FILE_A << 3;
-const uint64_t BB_FILE_E = BB_FILE_A << 4;
-const uint64_t BB_FILE_F = BB_FILE_A << 5;
-const uint64_t BB_FILE_G = BB_FILE_A << 6;
-const uint64_t BB_FILE_H = BB_FILE_A << 7;
-const uint64_t BB_FILES[8] = {BB_FILE_A, BB_FILE_B, BB_FILE_C, BB_FILE_D, BB_FILE_E, BB_FILE_F, BB_FILE_G, BB_FILE_H};
+const uint64_t BB_FILE_B = 0x202020202020202;
+const uint64_t BB_FILE_C = 0x404040404040404;
+const uint64_t BB_FILE_D = 0x808080808080808;
+const uint64_t BB_FILE_E = 0x1010101010101010;
+const uint64_t BB_FILE_F = 0x2020202020202020;
+const uint64_t BB_FILE_G = 0x4040404040404040;
+const uint64_t BB_FILE_H = 0x8080808080808080;
+const uint64_t BB_FILES[8] = {0x0101010101010101, 0x202020202020202, 0x404040404040404, 0x808080808080808,
+                              0x1010101010101010, 0x2020202020202020, 0x4040404040404040, 0x8080808080808080};
 
 const uint64_t BB_RANK_1 = 0xff;
-const uint64_t BB_RANK_2 = BB_RANK_1 << 8;
-const uint64_t BB_RANK_3 = BB_RANK_1 << 16;
-const uint64_t BB_RANK_4 = BB_RANK_1 << 24;
-const uint64_t BB_RANK_5 = BB_RANK_1 << 32;
-const uint64_t BB_RANK_6 = BB_RANK_1 << 40;
-const uint64_t BB_RANK_7 = BB_RANK_1 << 48;
-const uint64_t BB_RANK_8 = BB_RANK_1 << 56;
-const uint64_t BB_RANKS[8] = {BB_RANK_1, BB_RANK_2, BB_RANK_3, BB_RANK_4, BB_RANK_5, BB_RANK_6, BB_RANK_7, BB_RANK_8};
+const uint64_t BB_RANK_2 = 0xff00;
+const uint64_t BB_RANK_3 = 0xff0000;
+const uint64_t BB_RANK_4 = 0xff000000;
+const uint64_t BB_RANK_5 = 0xff00000000;
+const uint64_t BB_RANK_6 = 0xff0000000000;
+const uint64_t BB_RANK_7 = 0xff000000000000;
+const uint64_t BB_RANK_8 = 0xff00000000000000;
+const uint64_t BB_RANKS[8] = {0xff, 0xff00, 0xff0000, 0xff000000,
+                              0xff00000000, 0xff0000000000, 0xff000000000000, 0xff00000000000000};
 
 const uint64_t BB_DIAGONAL_1 = 0x80; // Numbered from lower right to upper left
 const uint64_t BB_DIAGONAL_2 = 0x8040;
@@ -64,9 +66,10 @@ const uint64_t BB_DIAGONAL_12 = 0x804020100000000;
 const uint64_t BB_DIAGONAL_13 = 0x402010000000000;
 const uint64_t BB_DIAGONAL_14 = 0x201000000000000;
 const uint64_t BB_DIAGONAL_15 = 0x100000000000000;
-const uint64_t BB_DIAGONALS[15] = {BB_DIAGONAL_1, BB_DIAGONAL_2, BB_DIAGONAL_3, BB_DIAGONAL_4, BB_DIAGONAL_5, BB_DIAGONAL_6, 
-                                   BB_DIAGONAL_7, BB_DIAGONAL_8, BB_DIAGONAL_9, BB_DIAGONAL_10, BB_DIAGONAL_11, BB_DIAGONAL_12,
-                                   BB_DIAGONAL_13, BB_DIAGONAL_14, BB_DIAGONAL_15};
+const uint64_t BB_DIAGONALS[15] = {0x80, 0x8040, 0x804020, 0x80402010, 0x8040201008, 
+                                   0x804020100804, 0x80402010080402, 0x8040201008040201, 0x4020100804020100,
+                                   0x2010080402010000, 0x1008040201000000, 0x804020100000000,
+                                   0x402010000000000, 0x201000000000000, 0x100000000000000};
 
 const uint64_t BB_ANTI_DIAGONAL_1 = 0x1; // Numbered from lower left to upper right
 const uint64_t BB_ANTI_DIAGONAL_2 = 0x102;
@@ -83,9 +86,10 @@ const uint64_t BB_ANTI_DIAGONAL_12 = 0x1020408000000000;
 const uint64_t BB_ANTI_DIAGONAL_13 = 0x2040800000000000;
 const uint64_t BB_ANTI_DIAGONAL_14 = 0x4080000000000000;
 const uint64_t BB_ANTI_DIAGONAL_15 = 0x8000000000000000;
-const uint64_t BB_ANTI_DIAGONALS[15] = {BB_ANTI_DIAGONAL_1, BB_ANTI_DIAGONAL_2, BB_ANTI_DIAGONAL_3, BB_ANTI_DIAGONAL_4, BB_ANTI_DIAGONAL_5, BB_ANTI_DIAGONAL_6, 
-                                        BB_ANTI_DIAGONAL_7, BB_ANTI_DIAGONAL_8, BB_ANTI_DIAGONAL_9, BB_ANTI_DIAGONAL_10, BB_ANTI_DIAGONAL_11, BB_ANTI_DIAGONAL_12,
-                                        BB_ANTI_DIAGONAL_13, BB_ANTI_DIAGONAL_14, BB_ANTI_DIAGONAL_15};
+const uint64_t BB_ANTI_DIAGONALS[15] = {0x1, 0x102, 0x10204, 0x1020408, 0x102040810, 0x10204081020, 
+                                        0x1020408102040, 0x102040810204080, 0x204081020408000,
+                                        0x408102040800000, 0x810204080000000, 0x1020408000000000,
+                                        0x2040800000000000, 0x4080000000000000, 0x8000000000000000};
 
 uint64_t BB_RAYS[64][64];
 const Move NULL_MOVE = {A1, A1, PASS};

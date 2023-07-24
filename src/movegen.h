@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "util.h"
+#include "types.h"
 
 
 void bishop_attacks_init(void);

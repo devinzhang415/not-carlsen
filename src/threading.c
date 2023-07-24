@@ -3,9 +3,9 @@
 #include "util.h"
 #include "search.h"
 
-extern __thread Board board;
-extern __thread Stack stack;
-extern __thread RTable rtable;
+extern _Thread_local Board board;
+extern _Thread_local Stack stack;
+extern _Thread_local RTable rtable;
 extern Info info;
 
 bool thread_exit = false; // set by main thread to tell the other threads to exit.

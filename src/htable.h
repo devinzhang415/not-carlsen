@@ -2,6 +2,7 @@
 #define HTABLE_H
 
 #include "util.h"
+#include "types.h"
 
 
 int htable_get(int color, int from, int to);

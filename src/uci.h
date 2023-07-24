@@ -3,6 +3,7 @@
 
 #include <time.h>
 #include "util.h"
+#include "types.h"
 
 
 int main(void);

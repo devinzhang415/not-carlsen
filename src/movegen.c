@@ -9,7 +9,7 @@
 #include "stack.h"
 
 
-extern __thread Board board;
+extern _Thread_local Board board;
 
 
 // Pseudo-legal bitboards indexed by square to determine where that piece can attack

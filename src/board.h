@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "util.h"
+#include "types.h"
 
 
 void board_init(const char* fen);

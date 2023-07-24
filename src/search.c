@@ -14,11 +14,11 @@
 #include "ttable.h"
 #include "timeman.h"
 
-extern __thread Board board;
+extern _Thread_local Board board;
 extern volatile TTable ttable;
-extern __thread Stack stack;
-extern __thread RTable rtable;
-extern __thread int* htable;
+extern _Thread_local Stack stack;
+extern _Thread_local RTable rtable;
+extern _Thread_local int* htable;
 extern Info info;
 
 extern bool thread_exit;
@@ -168,7 +168,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         bool in_check = is_check(board.turn);
 
         // Null move pruning
-        if (_is_null_move_ok(in_check)) {
+        if (_is_null_move_ok((stack_peep().flag != PASS), in_check)) {
             stack_push(NULL_MOVE);
             score = -_PVS(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start_time, nodes, &new_pv);
             stack_pop();
@@ -479,10 +479,11 @@ static int _get_piece_score(char piece) {
  * @return true if conditions are ok for null move pruning:
  * - side to move is not in check
  * 
+ * @param is_prev_null_move whether the previous move was also a null move to avoid double null move.
  * @param in_check whether the side to move is in check.
  */
-static bool _is_null_move_ok(bool in_check) {
-    return !in_check; // TODO do not use in endgame (use Tapered score, score in board struct?)
+static bool _is_null_move_ok(bool is_prev_null_move, bool in_check) {
+    return (!is_prev_null_move && !in_check); // TODO do not use in endgame (use Tapered score, score in board struct?)
 }
 
 

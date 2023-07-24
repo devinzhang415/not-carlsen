@@ -2,6 +2,7 @@
 #define THREADING_H
 
 #include "util.h"
+#include "types.h"
 
 
 void parallel_search(void);

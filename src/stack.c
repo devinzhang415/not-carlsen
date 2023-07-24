@@ -6,10 +6,10 @@
 #include "board.h"
 #include "rtable.h"
 
-extern __thread Board board;
-extern __thread Stack stack;
+extern _Thread_local Board board;
+extern _Thread_local Stack stack;
 
-static const size_t STACK_INIT_CAPACITY = 256ULL; // Power of 2 for modulo efficiency
+static const size_t STACK_INIT_CAPACITY = 1 << 8; // Power of 2 for modulo efficiency
 
 
 /**
@@ -52,6 +52,14 @@ void stack_push(Move move) {
     stack.entries[stack.size].move = move;
 
     rtable_add(board.zobrist);
+}
+
+
+/**
+ * @return the move at the top of the stack. 
+ */
+Move stack_peep(void) {
+    return stack.entries[stack.size].move;
 }
 
 

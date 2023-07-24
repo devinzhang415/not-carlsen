@@ -15,11 +15,11 @@
 #include "evaluate.h"
 #include "threading.h"
 
-__thread Board board; // Board structure
-__thread Stack stack; // Move and board history structure
+_Thread_local Board board; // Board structure
+_Thread_local Stack stack; // Move and board history structure
 volatile TTable ttable; // Transposition table
-__thread RTable rtable; // Threefold-repetition hashtable
-__thread int* htable; // History heuristic table
+_Thread_local RTable rtable; // Threefold-repetition hashtable
+_Thread_local int* htable; // History heuristic table
 Info info; // Move generation parameter information
 
 
@@ -52,13 +52,16 @@ int main(void) {
         }
         input[i] = '\0';
 
-        if (i == 0) break;
+        if (i == 0) {
+            has_stdin_file = false;
+            continue;
+        }
         if (has_stdin_file) printf("%d: %s\n", current_line++, input);
 
         if (!strncmp(input, "ucinewgame", 10)) {
             // Initialize misc
-            // srand(time(NULL));
-            srand(0);
+            srand(time(NULL));
+            // srand(0); // TODO
 
             bishop_attacks_init();
             rook_attacks_init();

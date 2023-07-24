@@ -6,7 +6,7 @@
 #include "board.h"
 
 
-extern __thread Board board;
+extern _Thread_local Board board;
 
 // Weights for final scoring
 static const double MATERIAL_WEIGHT = 1;

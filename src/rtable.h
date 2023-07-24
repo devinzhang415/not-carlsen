@@ -2,6 +2,7 @@
 #define RTABLE_H
 
 #include "util.h"
+#include "types.h"
 
 
 void rtable_init(void);
