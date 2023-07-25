@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <ctype.h>
+#include <pthread.h>
 #include "uci.h"
 #include "util.h"
 #include "board.h"
@@ -40,6 +41,7 @@ int main(void) {
 
         int c = EOF;
         int i = 0;
+        // TODO add thread to process input while thinking
         while ((has_stdin_file ?
                     (c = fgetc(stdin_file)) != '\n' :
                     (c = getchar()) != '\n') &&
@@ -60,8 +62,8 @@ int main(void) {
 
         if (!strncmp(input, "ucinewgame", 10)) {
             // Initialize misc
-            srand(time(NULL));
-            // srand(0); // TODO
+            // srand(time(NULL));
+            srand(0); // TODO
 
             bishop_attacks_init();
             rook_attacks_init();

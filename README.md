@@ -70,7 +70,7 @@ isready
 
 ## Devlog
 7/23/23 v2.5.4
-> Refactored to C17, changed thread syntax, moved type definitions to `types.h`, and disabled double null moves.
+> Refactored to C17, changed thread syntax, moved type definitions to `types.h`, and disabled double null moves. Crash position has changed, and believe issue is slow response time due to lack of separate thread taking in input instead of segfault.
 
 6/26/23 v2.5.3
 > Moved struct initialization to run on `ucinewgame` command and temporary disabled multithreading and seed randomization to better debug. Consistent crash position found in `c4 Nh6 2. Nc3 e5 3. e3 Nf5 4. d4 exd4 5. exd4 c6 6. Nf3 Be7 7. g3 a5 8. Bg2 d6 9. Bf4 g5 10. Bd2 g4 11. Nh4 Nxh4 12. gxh4 Bxh4 13. O-O (40 moves in 1 min)`
