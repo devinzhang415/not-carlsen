@@ -44,6 +44,8 @@ int main(void) {
             zobrist_table_init();
             work_queue_init();
 
+            pthread_mutex_init(&info_lock, NULL);
+
             // Initialize structs
             board_init("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             stack_init();
@@ -61,10 +63,12 @@ int main(void) {
             printf("id name Not-Carlsen\n");
             printf("id author Devin Zhang\n");
             printf("uciok\n");
+            fflush(stdout);
         }
 
         else if (!strncmp(input, "isready", 7)) {
             printf("readyok\n");
+            fflush(stdout);
         }
 
         else if (!strncmp(input, "setoption name", 14)) {
@@ -146,8 +150,6 @@ int main(void) {
         else if (!strncmp(input, "quit", 4)) {
             break;
         }
-
-        fflush(stdout);
     }
 
     return 0;
@@ -173,7 +175,7 @@ static bool _get_input(void) {
 
 
 /**
- * @brief 
+ * Launches the search in a separate thread.
  * @param param thread-local copies of various structures.
  */
 static void* _go(void* param) {
@@ -237,6 +239,7 @@ void print_info(int depth, int score, uint64_t nodes, double time, const PV* pv)
         printf(" ");
     }
     printf("\n");
+    fflush(stdout);
 }
 
 

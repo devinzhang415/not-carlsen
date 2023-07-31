@@ -92,6 +92,7 @@ void* _iterative_deepening(void* param) {
         printf("bestmove ");
         print_move(best_move);
         printf("\n");
+        fflush(stdout);
     } else {
         free(stack.entries);
         free(rtable.entries);
