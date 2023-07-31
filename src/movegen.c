@@ -352,8 +352,8 @@ int gen_legal_moves(Move* moves, bool color) {
                         }
                     }
                 }
-            }
                 break;
+            }
             case 'N':
                 moves_bb = get_knight_moves(color, from) & checkmask & pinmask;
                 break;
@@ -526,8 +526,8 @@ int gen_legal_captures(Move* moves, bool color) {
                         }
                     }
                 }
-            }
                 break;
+            }
             case 'N':
                 moves_bb = get_knight_moves(color, from) & checkmask & pinmask & enemy_bb;
                 break;
