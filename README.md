@@ -57,6 +57,8 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 7/30/23 v2.5.5
 > Optimized setting up a new position and moved searching to another thread to allow main thread to listen for input.
 >
+> Fixed issue with GUI output where statements weren't being properly registered due to improper buffer flushing.
+>
 > Added `stop` UCI functionality, telling the engine to stop calculating as soon as possible.
 >
 > Turned off null move pruning in pv nodes.
