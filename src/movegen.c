@@ -338,7 +338,7 @@ int gen_legal_moves(Move* moves, bool color) {
 
         uint64_t moves_bb;
         switch (piece) {
-            case 'P':
+            case 'P': {
                 uint64_t pawn_moves = get_pawn_moves(color, from);
                 moves_bb = pawn_moves & checkmask & pinmask;
 
@@ -352,7 +352,7 @@ int gen_legal_moves(Move* moves, bool color) {
                         }
                     }
                 }
-
+            }
                 break;
             case 'N':
                 moves_bb = get_knight_moves(color, from) & checkmask & pinmask;
@@ -512,7 +512,7 @@ int gen_legal_captures(Move* moves, bool color) {
 
         uint64_t moves_bb;
         switch (piece) {
-            case 'P':
+            case 'P': {
                 uint64_t pawn_moves = get_pawn_moves(color, from);
                 moves_bb = pawn_moves & checkmask & pinmask & enemy_bb;
 
@@ -526,7 +526,7 @@ int gen_legal_captures(Move* moves, bool color) {
                         }
                     }
                 }
-
+            }
                 break;
             case 'N':
                 moves_bb = get_knight_moves(color, from) & checkmask & pinmask & enemy_bb;
