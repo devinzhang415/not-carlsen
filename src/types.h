@@ -206,6 +206,7 @@ typedef struct Info {
     int nodes; // search x nodes only 
     clock_t movetime; // search exactly x mseconds
     int threads; // how many threads to search with
+    bool stop; // if true, stop the search as soon as possible
 } Info;
 
 

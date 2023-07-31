@@ -20,21 +20,6 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - #### setoption name Threads \[x]
   Sets the number of threads to search with.
 
-not-carlsen also supports the use of an `stdin.txt` debug file. If found in src, not-carlsen will read from the contents of this file instead of console when looking for input. An example stdin.txt file can be formatted as following:
-
-```
-uci
-isready
-ucinewgame
-position startpos
-position startpos moves c2c4
-isready
-go wtime 60000 btime 60000 movestogo 40
-position startpos moves c2c4 e7e5 b1c3
-isready
-...
-```
-
 ------
 
 ## Current Features
@@ -69,8 +54,21 @@ isready
 ------
 
 ## Devlog
+7/30/23 v2.5.5
+> Optimized setting up a new position and moved searching to another thread to allow main thread to listen for input.
+>
+> Added `stop` UCI functionality, telling the engine to stop calculating as soon as possible.
+>
+> Turned off null move pruning in pv nodes.
+> 
+> Removed `stdin.txt` functionality to reduce code clutter and lack of helpfulness.
+
 7/23/23 v2.5.4
-> Refactored to C17, changed thread syntax, moved type definitions to `types.h`, and disabled double null moves. Crash position has changed, and believe issue is slow response time due to lack of separate thread taking in input instead of segfault.
+> Disabled double null moves.
+>
+> Refactoring: changed thread syntax to C17 and moved type definitions to `types.h`.
+>
+> Crash position has changed, and believe issue is slow response time due to lack of separate thread taking in input instead of segfault.
 
 6/26/23 v2.5.3
 > Moved struct initialization to run on `ucinewgame` command and temporary disabled multithreading and seed randomization to better debug. Consistent crash position found in `c4 Nh6 2. Nc3 e5 3. e3 Nf5 4. d4 exd4 5. exd4 c6 6. Nf3 Be7 7. g3 a5 8. Bg2 d6 9. Bf4 g5 10. Bd2 g4 11. Nh4 Nxh4 12. gxh4 Bxh4 13. O-O (40 moves in 1 min)`

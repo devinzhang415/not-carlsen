@@ -21,49 +21,22 @@ _Thread_local Stack stack; // Move and board history structure
 volatile TTable ttable; // Transposition table
 _Thread_local RTable rtable; // Threefold-repetition hashtable
 _Thread_local int* htable; // History heuristic table
+
 Info info; // Move generation parameter information
+static pthread_mutex_t info_lock;
+
+
+static char input[8192];
 
 
 int main(void) {
-    int size = 256;
-    char* input = (char*) smalloc(size);
 
-    // Use stdin.txt as a buffer of preset inputs.
-    // For testing purposes.
-    // If this file exists, read line by line from the file
-    // for inputs instead of from console
-    FILE* stdin_file = fopen("stdin.txt", "r");
-    bool has_stdin_file = (stdin_file != NULL);
-    int current_line = 1;
-
-    while (true) {
-        fflush(stdout);
-
-        int c = EOF;
-        int i = 0;
-        // TODO add thread to process input while thinking
-        while ((has_stdin_file ?
-                    (c = fgetc(stdin_file)) != '\n' :
-                    (c = getchar()) != '\n') &&
-                c != EOF) {
-            input[i++] = (char) c;
-            if (i == size) {
-                size *= 2;
-                input = (char*) srealloc(input, size);
-            }
-        }
-        input[i] = '\0';
-
-        if (i == 0) {
-            has_stdin_file = false;
-            continue;
-        }
-        if (has_stdin_file) printf("%d: %s\n", current_line++, input);
+    while (_get_input()) {
+        if (input[0] == "\n") continue;
 
         if (!strncmp(input, "ucinewgame", 10)) {
             // Initialize misc
-            // srand(time(NULL));
-            srand(0); // TODO
+            srand(time(NULL));
 
             bishop_attacks_init();
             rook_attacks_init();
@@ -78,7 +51,9 @@ int main(void) {
             rtable_init();
 
             // Set default options
+            pthread_mutex_lock(&info_lock);
             info.threads = 1;
+            pthread_mutex_unlock(&info_lock);
         }
 
         else if (!strncmp(input, "uci", 3)) {
@@ -95,7 +70,9 @@ int main(void) {
             char* token = NULL;
 
             if (token = strstr(input, "Threads value")) {
+                pthread_mutex_lock(&info_lock);
                 info.threads = min(atoi(token + 14), MAX_THREADS);
+                pthread_mutex_unlock(&info_lock);
                 continue;
             }
         }
@@ -117,72 +94,127 @@ int main(void) {
             char* ptr = strstr(input, "moves");
             if (ptr) {
                 ptr += 6;
-                char* moves = strdup(ptr);
-
-                char* token = strtok_r(moves, " ", &moves);
-                while (token != NULL) {
-                    int from = 8 * (token[1] - '0' - 1) + (token[0] - 'a');
-                    int to = 8 * (token[3] - '0' - 1) + (token[2] - 'a');
+                while (ptr && (*ptr != '\0')) {
+                    int from = 8 * (*(ptr + 1) - '0' - 1) + (*ptr - 'a');
+                    int to = 8 * (*(ptr + 3) - '0' - 1) + (*(ptr + 2) - 'a');
                     int flag;
 
-                    char promotion = token[4];
+                    char promotion = *(ptr + 4);
                     switch (promotion) {
                         case 'q':
                             flag = PR_QUEEN;
+                            ptr++;
                             break;
                         case 'r':
                             flag = PR_ROOK;
+                            ptr++;
                             break;
                         case 'b':
                             flag = PR_BISHOP;
+                            ptr++;
                             break;
                         case 'n':
                             flag = PR_KNIGHT;
+                            ptr++;
                             break;
                         default:
                             flag = get_flag(toupper(board.mailbox[from]), from, to);
                     }
 
+                    ptr += 5;
+
                     Move move = {from, to, flag};
                     stack_push(move);
-
-                    token = strtok_r(moves, " ", &moves);
                 }
-                free(moves);
             }
         }
         
         else if (!strncmp(input, "go", 2)) {
-            char* token = NULL;
+            pthread_t go_thread;
+            Param* main_param = create_param(0, 0, true);
+            pthread_create(&go_thread, NULL, _go, (void*) main_param);
+            pthread_detach(go_thread);
+        }
 
-            if (token = strstr(input, "perft")) {
-                int depth = atoi(token + 6);
-                print_divided_perft(depth);
-                continue;
-            }
-
-            // Set search parameters
-            info.wtime = (token = strstr(input, "wtime")) ? atoi(token + 6) : 0;
-            info.btime = (token = strstr(input, "btime")) ? atoi(token + 6) : 0;
-            info.winc = (token = strstr(input, "winc")) ? atoi(token + 5) : 0;
-            info.binc = (token = strstr(input, "binc")) ? atoi(token + 5) : 0;
-            info.movestogo = (token = strstr(input, "movestogo")) ? atoi(token + 10) : 40;
-            info.depth = min((token = strstr(input, "depth")) ? atoi(token + 6) + 1 : MAX_DEPTH, MAX_DEPTH);
-            info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : 0;
-            info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : 0;
-
-            // Begin search
-            parallel_search();
+        else if (!strncmp(input, "stop", 4)) {
+            pthread_mutex_lock(&info_lock);
+            info.stop = true;
+            pthread_mutex_unlock(&info_lock);
         }
 
         else if (!strncmp(input, "quit", 4)) {
             break;
         }
+
+        fflush(stdout);
     }
 
-    if (has_stdin_file) fclose(stdin_file);
-
     return 0;
+}
+
+
+/**
+ * Reads stdin into the input buffer.
+ * @return true if read successfully, return false (and terminate program) otherwise.
+ */
+static bool _get_input(void) {
+    if (!fgets(input, 8192, stdin)) {
+        return false;
+    }
+
+    int input_length = strcspn(input, "\n\r");
+    if (input_length < strlen(input)) {
+        input[input_length] = '\0';
+    }
+
+    return true;
+}
+
+
+/**
+ * @brief 
+ * @param param thread-local copies of various structures.
+ */
+static void* _go(void* param) {
+    char* token = NULL;
+
+    if (token = strstr(input, "perft")) {
+        int depth = atoi(token + 6);
+        print_divided_perft(depth);
+    }
+    
+    else {
+        // Set structures
+        Param* args = (Param*) param;
+        board = *(args->board);
+
+        stack = *(args->stack);
+        stack.entries = smalloc(stack.capacity * sizeof(Stack_Entry));
+        memcpy(stack.entries, args->stack->entries, stack.capacity * sizeof(Stack_Entry));
+
+        rtable = *(args->rtable);
+        rtable.entries = smalloc(rtable.capacity * sizeof(RTable_Entry));
+        memcpy(rtable.entries, args->rtable->entries, rtable.capacity * sizeof(RTable_Entry));
+
+        // Set search parameters
+        pthread_mutex_lock(&info_lock);
+        info.wtime = (token = strstr(input, "wtime")) ? atoi(token + 6) : 0;
+        info.btime = (token = strstr(input, "btime")) ? atoi(token + 6) : 0;
+        info.winc = (token = strstr(input, "winc")) ? atoi(token + 5) : 0;
+        info.binc = (token = strstr(input, "binc")) ? atoi(token + 5) : 0;
+        info.movestogo = (token = strstr(input, "movestogo")) ? atoi(token + 10) : 40;
+        info.depth = min((token = strstr(input, "depth")) ? atoi(token + 6) + 1 : MAX_DEPTH, MAX_DEPTH);
+        info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : 0;
+        info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : 0;
+        info.stop = false;
+        pthread_mutex_unlock(&info_lock);
+
+        // Begin search
+        parallel_search();
+    }
+
+    free(param);
+    pthread_exit(NULL);
 }
 
 

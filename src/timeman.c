@@ -19,11 +19,15 @@ extern Info info;
  * @return true if a search can be exited due to too much x having passed.
  */
 bool can_exit(bool color, clock_t start_time, int cur_nodes) {
-    clock_t elapsed = clock() - start_time;
-    
+    if (info.stop) {
+        return true;
+    }
+
     if (info.depth < MAX_DEPTH) {
         return false;
     }
+
+    clock_t elapsed = clock() - start_time;
     if (info.movetime) {
         return (elapsed >= info.movetime);
     }
@@ -32,5 +36,6 @@ bool can_exit(bool color, clock_t start_time, int cur_nodes) {
     }
 
     double time_left = (color == WHITE) ? info.wtime : info.btime;
+
     return (elapsed >= time_left / info.movestogo);
 }

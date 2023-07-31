@@ -16,7 +16,7 @@ static int _cmp_moves(const void* elem1, const void* elem2);
 static int _score_move(Move move);
 static int _get_piece_score(char piece);
 
-static bool _is_null_move_ok(bool is_prev_null_move, bool in_check);
+static bool _is_null_move_ok(bool is_prev_null_move, bool in_check, bool is_pv_node);
 static bool _is_reduction_ok(Move move, int depth, int moves_searched, bool has_failed_high, bool in_check);
 
 

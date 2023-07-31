@@ -12,8 +12,8 @@ bool thread_exit = false; // set by main thread to tell the other threads to exi
 
 static Work_Queue work_queue;
 static pthread_t threads[MAX_THREADS];
-static pthread_cond_t cond;
-static pthread_mutex_t mutex;
+static pthread_cond_t work_queue_not_empty;
+static pthread_mutex_t work_queue_lock;
 
 
 /**
@@ -40,7 +40,7 @@ void parallel_search(void) {
         start_depth = (start_depth == 1 ? 2 : 1);
     }
 
-    Param* main_param = _create_param(start_time, start_depth, true);
+    Param* main_param = create_param(start_time, start_depth, true);
     _iterative_deepening(main_param);
 }
 
@@ -51,10 +51,10 @@ void parallel_search(void) {
  */
 static void* _worker(void) {
     while (true) {
-        pthread_mutex_lock(&mutex);
-        while (work_queue.size == 0) pthread_cond_wait(&cond, &mutex);
+        pthread_mutex_lock(&work_queue_lock);
+        while (work_queue.size == 0) pthread_cond_wait(&work_queue_not_empty, &work_queue_lock);
         Param* param = _work_queue_pop();
-        pthread_mutex_unlock(&mutex);
+        pthread_mutex_unlock(&work_queue_lock);
         
         _iterative_deepening(param);
     }
@@ -71,8 +71,8 @@ void work_queue_init(void) {
     work_queue.head_idx = 0; // index 0 is initial head, new entries get added to 1, 2, 3...
     work_queue.tail_idx = 0;
 
-    pthread_mutex_init(&mutex, NULL);
-    pthread_cond_init(&cond, NULL);
+    pthread_mutex_init(&work_queue_lock, NULL);
+    pthread_cond_init(&work_queue_not_empty, NULL);
 }
 
 
@@ -84,9 +84,9 @@ void work_queue_init(void) {
  * @param is_main whether this thread is the main thread or not.
  */
 static void _work_queue_add(clock_t start_time, int start_depth, bool is_main) {
-    Param* param = _create_param(start_time, start_depth, is_main);
+    Param* param = create_param(start_time, start_depth, is_main);
 
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&work_queue_lock);
 
     bool added;
     if (work_queue.size >= work_queue.capacity) {
@@ -97,9 +97,9 @@ static void _work_queue_add(clock_t start_time, int start_depth, bool is_main) {
         added = true;
     }
 
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&work_queue_lock);
 
-    if (added) pthread_cond_signal(&cond);
+    if (added) pthread_cond_signal(&work_queue_not_empty);
 }
 
 
@@ -125,7 +125,7 @@ static Param* _work_queue_pop(void) {
  * @param start_depth the depth to start searching at.
  * @param is_main whether this thread is the main thread or not.
  */
-static Param* _create_param(clock_t start_time, int start_depth, bool is_main) {
+Param* create_param(clock_t start_time, int start_depth, bool is_main) {
     Param* param = smalloc(sizeof(Param)); // Threads are responsible for freeing args
     param->start = start_time;
     param->start_depth = start_depth;

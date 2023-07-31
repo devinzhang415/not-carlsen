@@ -30,7 +30,7 @@ static const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search b
 static const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 static const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
 
-static __thread Move tt_move; // Hash move from transposition table saved globally for move ordering.
+static _Thread_local Move tt_move; // Hash move from transposition table saved globally for move ordering.
 
 
 /**
@@ -108,7 +108,7 @@ void* _iterative_deepening(void* param) {
  * - MVV-LVA + history heuristic move ordering
  * - Null move pruning
  * - Late move reduction
- * // TODO futility, razoring, aspiration (?)
+ * // TODO (reverse) futility, razoring, aspiration (?)
  * 
  * @param depth how many ply to search.
  * @param alpha lowerbound of the score. Initially -MATE_SCORE.
@@ -168,7 +168,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         bool in_check = is_check(board.turn);
 
         // Null move pruning
-        if (_is_null_move_ok((stack_peep().flag != PASS), in_check)) {
+        if (_is_null_move_ok((stack_peep().flag != PASS), in_check, pv_node)) {
             stack_push(NULL_MOVE);
             score = -_PVS(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start_time, nodes, &new_pv);
             stack_pop();
@@ -478,12 +478,15 @@ static int _get_piece_score(char piece) {
 /**
  * @return true if conditions are ok for null move pruning:
  * - side to move is not in check
+ * - previous move was not a null move
+ * - node is not a pv node
  * 
  * @param is_prev_null_move whether the previous move was also a null move to avoid double null move.
  * @param in_check whether the side to move is in check.
+ * @param is_pv_node whether the node is the first node at a given depth.
  */
-static bool _is_null_move_ok(bool is_prev_null_move, bool in_check) {
-    return (!is_prev_null_move && !in_check); // TODO do not use in endgame (use Tapered score, score in board struct?)
+static bool _is_null_move_ok(bool is_prev_null_move, bool in_check, bool is_pv_node) {
+    return (!is_prev_null_move && !in_check && !is_pv_node); // TODO do not use in endgame (use Tapered score, score in board struct?)
 }
 
 

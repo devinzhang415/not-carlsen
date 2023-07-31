@@ -9,6 +9,7 @@
 extern _Thread_local Board board;
 extern Info info;
 
+
 const bool WHITE = true;
 const bool BLACK = false;
 
