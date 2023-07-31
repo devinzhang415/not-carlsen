@@ -53,7 +53,6 @@ int main(void) {
             rtable_init();
 
             // Set default options
-            pthread_mutex_init(&info_lock, NULL);
             pthread_mutex_lock(&info_lock);
             info.threads = 1;
             pthread_mutex_unlock(&info_lock);
