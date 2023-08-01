@@ -40,7 +40,7 @@ void stack_clear(void) {
 void stack_push(Move move) {
     // Update move stack
     if (stack.size == stack.capacity) {
-        stack.capacity *= 2;
+        stack.capacity << 1;
         stack.entries = srealloc(stack.entries, sizeof(Stack_Entry) * stack.capacity);
     }
 

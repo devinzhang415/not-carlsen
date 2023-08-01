@@ -88,44 +88,44 @@ int main(void) {
             } else {
                 char* fen = strstr(input, "fen");
                 if (fen) {
-                    fen += 4; // Move pointer to beginning of FEN
+                    fen += 4;
                     _reset_structs(fen);
                 } else {
                     continue;
                 }
             }
 
-            char* ptr = strstr(input, "moves");
-            if (ptr) {
-                ptr += 6;
-                while (ptr && (*ptr != '\0')) {
-                    int from = 8 * (*(ptr + 1) - '0' - 1) + (*ptr - 'a');
-                    int to = 8 * (*(ptr + 3) - '0' - 1) + (*(ptr + 2) - 'a');
+            char* moves = strstr(input, "moves");
+            if (moves) {
+                moves += 6;
+                while (moves && (*moves != '\0')) {
+                    int from = 8 * (*(moves + 1) - '0' - 1) + (*moves - 'a');
+                    int to = 8 * (*(moves + 3) - '0' - 1) + (*(moves + 2) - 'a');
                     int flag;
 
-                    char promotion = *(ptr + 4);
+                    char promotion = *(moves + 4);
                     switch (promotion) {
                         case 'q':
                             flag = PR_QUEEN;
-                            ptr++;
+                            moves++;
                             break;
                         case 'r':
                             flag = PR_ROOK;
-                            ptr++;
+                            moves++;
                             break;
                         case 'b':
                             flag = PR_BISHOP;
-                            ptr++;
+                            moves++;
                             break;
                         case 'n':
                             flag = PR_KNIGHT;
-                            ptr++;
+                            moves++;
                             break;
                         default:
                             flag = get_flag(toupper(board.mailbox[from]), from, to);
                     }
 
-                    ptr += 5;
+                    moves += 5;
 
                     Move move = {from, to, flag};
                     stack_push(move);

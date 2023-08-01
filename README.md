@@ -46,14 +46,12 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - Tapered evaluation
 - Threefold repetition hashtable
 
-## Active Developing Features
-- Dynamic time management
-- Classical evaluation function
-- Bug where engine becomes unresponsive after `isready`
-
 ------
 
 ## Devlog
+7/31/22 v2.5.6
+> Discovered crashes were consistent on searching for the 14th move, and found cause was mistakenly did not reset the transposition table's size after clearing it, resulting in the capacity growing dramatically. Goodbye bug from December '22.
+
 7/30/23 v2.5.5
 > Optimized setting up a new position and moved searching to another thread to allow main thread to listen for input.
 >

@@ -5,7 +5,7 @@
 
 extern volatile TTable ttable;
 
-static const size_t TTABLE_INIT_CAPACITY = 1 << 16; // Power of 2 for modulo efficiency
+static const size_t TTABLE_INIT_CAPACITY = 1 << 20; // Power of 2 for modulo efficiency
 
 
 /**
@@ -24,10 +24,11 @@ void ttable_init(void) {
  */
 void ttable_clear(void) {
     if (ttable.resize) {
-        ttable.capacity *= 2;
+        ttable.capacity << 1;
         ttable.entries = srealloc(ttable.entries, ttable.capacity * sizeof(TTable_Entry));
         ttable.resize = false;
     }
+    ttable.size = 0;
     memset(ttable.entries, 0, ttable.capacity * sizeof(TTable_Entry));
 }
 

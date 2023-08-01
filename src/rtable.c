@@ -24,10 +24,11 @@ void rtable_init(void) {
  */
 void rtable_clear(void) {
     if (rtable.resize) {
-        rtable.capacity *= 2;
+        rtable.capacity << 1;
         rtable.entries = srealloc(rtable.entries, sizeof(RTable_Entry) * rtable.capacity);
         rtable.resize = false;
     }
+    rtable.size = 0;
     memset(rtable.entries, 0, rtable.capacity * sizeof(RTable_Entry));
 }
 
