@@ -541,7 +541,7 @@ int gen_legal_captures(Move* moves, bool color) {
                 moves_bb = get_queen_moves(color, from) & checkmask & pinmask & enemy_bb;
                 break;
             case 'K':
-                moves_bb = get_king_moves(color, from) & ~attackmask & enemy_bb;
+                moves_bb = get_king_moves_no_castle(color, from) & ~attackmask & enemy_bb;
                 break;
         }
 
@@ -895,6 +895,15 @@ uint64_t get_king_moves(bool color, int square) {
     } else {
         if (board.b_kingside_castling_rights) set_bit(&moves, G8);
         if (board.b_queenside_castling_rights) set_bit(&moves, C8);
+        return moves & ~board.b_occupied;
+    }
+}
+
+uint64_t get_king_moves_no_castle(bool color, int square) {
+    uint64_t moves = BB_KING_ATTACKS[square];
+    if (color == WHITE) {
+        return moves & ~board.w_occupied;
+    } else {
         return moves & ~board.b_occupied;
     }
 }

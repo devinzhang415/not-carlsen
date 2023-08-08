@@ -372,9 +372,30 @@ void make_move(Move move) {
 
     if (victim != '-') {
         reset_halfmove = true;
-        uint64_t* victim_bb = get_bitboard(victim);
+        uint64_t *victim_bb = get_bitboard(victim);
         clear_bit(victim_bb, to);
-        board.zobrist ^= ZOBRIST_VALUES[64*parse_piece(victim) + to];
+        board.zobrist ^= ZOBRIST_VALUES[64 * parse_piece(victim) + to];
+        if (board.w_kingside_castling_rights) {
+            if (to == H1) {
+                board.w_kingside_castling_rights = false;
+                board.zobrist ^= ZOBRIST_VALUES[769];
+            }
+        } else if (board.w_queenside_castling_rights) {
+            if (to == A1) {
+                board.w_queenside_castling_rights = false;
+                board.zobrist ^= ZOBRIST_VALUES[770];
+            }
+        } else if (board.b_queenside_castling_rights) {
+            if (to == A8) {
+                board.b_queenside_castling_rights = false;
+                board.zobrist ^= ZOBRIST_VALUES[771];
+            }
+        } else if (board.b_kingside_castling_rights) {
+            if (to == H8) {
+                board.b_kingside_castling_rights = false;
+                board.zobrist ^= ZOBRIST_VALUES[772];
+            }
+        }
     }
 
     board.w_occupied = board.w_pawns | board.w_knights | board.w_bishops | board.w_rooks | board.w_queens | board.w_king;
