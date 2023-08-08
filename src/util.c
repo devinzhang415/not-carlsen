@@ -292,6 +292,16 @@ char* parse_move(Move move) {
 
 
 /**
+ * @param move1 
+ * @param move2
+ * @return if move1 and move2 are the same move
+ */
+bool move_equals(Move move1, Move move2) {
+    return (move1.from == move2.from && move1.to == move2.to && move1.flag == move1.flag);
+}
+
+
+/**
  * @param bb the bitboard.
  * @param square the square or indice of the bit.
  * @return the bit from the bitboard at the given square.

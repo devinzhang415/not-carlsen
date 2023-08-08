@@ -232,9 +232,8 @@ void print_info(int depth, int score, uint64_t nodes, double time, const PV* pv)
     printf("info depth %d score cp %d nodes %llu nps %.0f time %d pv ",
             depth, score, nodes, nodes / time, (int) (time * 1000));
 
-    int length = pv->length;
-    for (int move_i = 0; move_i < length; move_i++) {
-        print_move(pv->table[move_i]);
+    for (int i = 0; i < pv->length; i++) {
+        print_move(pv->table[i]);
         printf(" ");
     }
     printf("\n");

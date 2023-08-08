@@ -5,7 +5,8 @@
 
 extern _Thread_local RTable rtable;
 
-static const size_t RTABLE_INIT_CAPACITY = 1 << 16; // Power of 2 for modulo efficiency
+static const size_t RTABLE_INIT_CAPACITY = 1 << 16; // Initial capacity of the table. Power of 2 for modulo efficiency
+static const double MAX_LOAD_FACTOR = .75; // Maximum percentage of the table that should be filled
 
 
 /**
@@ -54,7 +55,7 @@ RTable_Entry rtable_get(uint64_t key) {
  * @param key the zobrist hash of the position. 
  */
 void rtable_add(uint64_t key) {
-    if (!rtable.size && (double) rtable.size / rtable.capacity > MAX_LOAD_FACTOR_PERCENTAGE / 100) {
+    if (!rtable.size && (double) rtable.size / rtable.capacity > MAX_LOAD_FACTOR) {
         rtable.resize = true; // Avoid rehashing as cost is likely not worth it, just resize table for next iteration
     }
 

@@ -375,6 +375,7 @@ void make_move(Move move) {
         uint64_t *victim_bb = get_bitboard(victim);
         clear_bit(victim_bb, to);
         board.zobrist ^= ZOBRIST_VALUES[64 * parse_piece(victim) + to];
+        
         if (board.w_kingside_castling_rights) {
             if (to == H1) {
                 board.w_kingside_castling_rights = false;

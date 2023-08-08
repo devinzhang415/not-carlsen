@@ -88,6 +88,8 @@ int parse_square(const char* square);
 int parse_piece(char piece);
 char* parse_move(Move move);
 
+bool move_equals(Move move1, Move move2);
+
 bool get_bit(uint64_t bb, int square);
 void set_bit(uint64_t* bb, int square);
 void clear_bit(uint64_t* bb, int square);

@@ -46,7 +46,6 @@ enum TT_Flag {
 // Various search and config constants
 enum Constant {
     INVALID = -1,
-    MAX_LOAD_FACTOR_PERCENTAGE = 75, // max load factor for hashtables
     MATE_SCORE = 20000,
     MAX_DEPTH = 100,
     MAX_MOVE_NUM = 218, // largest number of legal moves in a position.

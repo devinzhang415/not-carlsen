@@ -65,7 +65,7 @@ void* _iterative_deepening(void* param) {
         memcpy(rtable.entries, args->rtable->entries, rtable.capacity * sizeof(RTable_Entry));
     }
 
-    htable = scalloc(2 * 64 * 64, sizeof(int));
+    htable = scalloc(2 * 64 * 64, sizeof(int)); // Number of sides (2) * number of origin squares (64) * number of destination squares (64)
     
     // Begin search
     for (int d = start_depth; d < info.depth; d++) {
@@ -76,6 +76,10 @@ void* _iterative_deepening(void* param) {
 
         if (is_mate(score, d)) thread_exit = true;
         if (is_main) {
+            if (!move_equals(best_move, pv.table[0])) {
+                inc_nodes_not_curr_best_move(nodes);
+            }
+
             best_move = pv.table[0];
 
             clock_t elapsed = clock() - start;
@@ -181,14 +185,14 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         bool has_failed_high = false;
 
         Move moves[MAX_MOVE_NUM];
-        int n = gen_legal_moves(moves, board.turn);
-        if (n == 0) return (in_check ? -MATE_SCORE + depth : 0); // Checkmate or stalemate, respectively
-        qsort(moves, n, sizeof(Move), _cmp_moves);
+        int num_moves = gen_legal_moves(moves, board.turn);
+        if (num_moves == 0) return (in_check ? -MATE_SCORE + depth : 0); // Checkmate or stalemate, respectively
+        qsort(moves, num_moves, sizeof(Move), _cmp_moves);
 
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < num_moves; i++) {
             Move move = moves[i];
 
-            int r = (_is_reduction_ok(move, depth, i, has_failed_high, in_check)) ? LRM_R : 0; // Late move reduction
+            int r = _is_reduction_ok(move, depth, i, has_failed_high, in_check) ? LRM_R : 0; // Late move reduction factor
 
             stack_push(move);
             if (i == 0) {
@@ -203,13 +207,17 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
             if (score > alpha) {
                 alpha = score;
-                best_move = move;
-                if (is_main) { // Update PV
+
+                if (is_main) {
+                    best_move = move;
+
+                    // Update PV
                     pv->table[0] = best_move;
                     memcpy(pv->table + 1, new_pv.table, new_pv.length * sizeof(Move));
                     pv->length = new_pv.length + 1;
                 }
             }
+
             if (alpha >= beta) {
                 has_failed_high = true;
                 if (is_capture(move)) {
@@ -290,6 +298,7 @@ static int _qsearch(int alpha, int beta, bool pv_node, bool color, bool is_main,
         if (score >= beta) return beta;
         alpha = max(score, alpha);
     }
+    
     return alpha;
 }
 

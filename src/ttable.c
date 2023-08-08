@@ -5,7 +5,8 @@
 
 extern volatile TTable ttable;
 
-static const size_t TTABLE_INIT_CAPACITY = 1 << 20; // Power of 2 for modulo efficiency
+static const size_t TTABLE_INIT_CAPACITY = 1 << 20; // Initial capacity of the table. Power of 2 for modulo efficiency
+static const double MAX_LOAD_FACTOR = .75; // Maximum percentage of the table that should be filled
 
 
 /**
@@ -58,7 +59,7 @@ TTable_Entry ttable_get(uint64_t key) {
  * @param flag the type of node the position is.
  */
 void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
-    if (!ttable.resize && (double) ttable.size / ttable.capacity > MAX_LOAD_FACTOR_PERCENTAGE / 100) {
+    if (!ttable.resize && (double) ttable.size / ttable.capacity > MAX_LOAD_FACTOR) {
         ttable.resize = true; // Avoid rehashing as cost is likely not worth it, just resize table for next iteration
     }
 
