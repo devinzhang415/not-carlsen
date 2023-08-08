@@ -49,7 +49,10 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
-7/31/22 v2.5.6
+8/8/23 v2.5.7
+> Fixed bug in move generation which failed to remove castling rights when appropriate rook is captured and generated castling moves in quiescence search.
+
+7/31/23 v2.5.6
 > Discovered crashes were consistent on searching for the 14th move, and found cause was mistakenly did not reset the transposition table's size after clearing it, resulting in the capacity growing dramatically. Goodbye bug from December '22.
 
 7/30/23 v2.5.5
