@@ -51,8 +51,9 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ## Devlog
 8/8/23 v2.6
 > Heavily improved time management with dynamic time control techniques, allocating less or more time to a search based on the confidence of a result. This is done by computing a stability percentage, the percent of nodes the current best move has been the best move. The higher the stability, the higher the confidence.
-
-8/8/23 v2.5.7
+>
+> Implemented UCI `infinite` command.
+>
 > Fixed bug in move generation which failed to remove castling rights when appropriate rook is captured and generated castling moves in quiescence search.
 
 7/31/23 v2.5.6

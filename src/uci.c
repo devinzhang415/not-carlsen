@@ -208,6 +208,7 @@ static void* _go(void* param) {
         info.depth = min((token = strstr(input, "depth")) ? atoi(token + 6) + 1 : MAX_DEPTH, MAX_DEPTH);
         info.nodes = (token = strstr(input, "nodes")) ? atoi(token + 6) : 0;
         info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : 0;
+        info.infinite = (token = strstr(input, "infinite")) ? true : false;
         info.stop = false;
         pthread_mutex_unlock(&info_lock);
 

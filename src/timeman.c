@@ -27,6 +27,9 @@ bool can_exit(bool color, clock_t start_time, uint64_t cur_nodes) {
     if (info.stop) {
         return true;
     }
+    if (info.infinite) {
+        return false;
+    }
     if (info.depth < MAX_DEPTH) {
         return false;
     }
