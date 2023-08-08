@@ -73,6 +73,7 @@ int main(void) {
         else if (!strncmp(input, "setoption name", 14)) {
             char* token = NULL;
 
+            // TODO bug: can only get single digit value
             if (token = strstr(input, "Threads value")) {
                 pthread_mutex_lock(&info_lock);
                 info.threads = min(atoi(token + 14), MAX_THREADS);

@@ -18,7 +18,7 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - #### go perft \[x]
   Prints out the divided perft results for the initialized position for depth \[x].
 - #### setoption name Threads \[x]
-  Sets the number of threads to search with.
+  Sets the number of threads to search with. Default 1.
 
 ------
 
