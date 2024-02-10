@@ -4,6 +4,7 @@
 | --- | --- |
 | `board` | Functions associated with getting the board state and zobrist |
 | `evaluate` | Numerical analysis of the board and piece value constants |
+| `evaluate_nnue` | Numerical analysis of the board using NNUE |
 | `htable` | History heuristic table functions |
 | `movegen` | Tables and functions for all move generation and perft |
 | `rtable` | Repetition table functions |
