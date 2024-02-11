@@ -4,10 +4,13 @@
 #include "evaluate.h"
 #include "util.h"
 #include "board.h"
+#include "nnue.h"
 
 
 extern _Thread_local Board board;
+extern bool nnue_ok;
 
+// Evaluation constants for classical evaluation
 // Weights for final scoring
 static const double MATERIAL_WEIGHT = 1;
 static const double PSQT_WEIGHT = .1;
@@ -56,6 +59,19 @@ static const int* EG_PSQTS[12] = {W_EG_PAWN_TABLE, W_EG_KNIGHT_TABLE, W_EG_BISHO
 
 
 /**
+ * Evaluate a position using either NNUE or classical evaluation.
+ * 
+ * @param color 
+ * @return the advantage for the color in the given position, in centipawns.
+ * A positive value means the color has advantage, and not that strictly
+ * white has advantage.
+ */
+int eval(bool color) {
+    return (nnue_ok) ? eval_nnue(color) : eval_classic(color);
+}
+
+
+/**
  * Evaluation function using:
  * - Material score
  * - PSQTs
@@ -66,7 +82,7 @@ static const int* EG_PSQTS[12] = {W_EG_PAWN_TABLE, W_EG_KNIGHT_TABLE, W_EG_BISHO
  * A positive value means the color has advantage, and not that strictly
  * white has advantage.
  */
-int eval(bool color) {
+int eval_classic(bool color) {
     // Tapered evaluation
     int phase = TOTAL_PHASE;
 
@@ -109,6 +125,78 @@ int eval(bool color) {
     score = MATERIAL_WEIGHT*material_score + PSQT_WEIGHT*psqt_score;
 
     return score;
+}
+
+
+/**
+ * Evaluation function using NNUE
+ * 
+ * @param color 
+ * @return the advantage for the color in the given position, in centipawns.
+ * A positive value means the color has advantage, and not that strictly
+ * white has advantage.
+ */
+int eval_nnue(bool color) {
+    // NNUE input vectors
+    int i = 0;
+    int squares[64 + 1]; // array of occupied squares
+    int pieces[32 + 1]; // array of pieces denoting what is on the occupied square
+
+    for (int rank = 7; rank >= 0; rank--) {
+        for (int file = 0; file <= 7; file++) {
+            int square = 8*rank + file;
+            char c_piece = board.mailbox[square];
+            int i_piece = 0;
+            switch (c_piece) {
+                case 'K':
+                    i_piece = 1;
+                    break;
+                case 'Q':
+                    i_piece = 2;
+                    break;
+                case 'R':
+                    i_piece = 3;
+                    break;
+                case 'B':
+                    i_piece = 4;
+                    break;
+                case 'N':
+                    i_piece = 5;
+                    break;
+                case 'P':
+                    i_piece = 6;
+                    break;
+                case 'k':
+                    i_piece = 7;
+                    break;
+                case 'q':
+                    i_piece = 8;
+                    break;
+                case 'r':
+                    i_piece = 9;
+                    break;
+                case 'b':
+                    i_piece = 10;
+                    break;
+                case 'n':
+                    i_piece = 11;
+                    break;
+                case 'p':
+                    i_piece = 12;
+                    break;
+                default:
+                    break;
+            }
+
+            squares[i] = square;
+            pieces[i] = i_piece;
+            i++;
+        }
+    }
+    squares[i] = 0;
+    pieces[i] = 0;
+
+    return nnue_evaluate((color == WHITE ? 0 : 1), pieces, squares);
 }
 
 

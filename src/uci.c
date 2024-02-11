@@ -15,6 +15,7 @@
 #include "ttable.h"
 #include "evaluate.h"
 #include "threading.h"
+#include "nnue.h"
 
 _Thread_local Board board; // Board structure
 _Thread_local Stack stack; // Move and board history structure
@@ -24,6 +25,8 @@ _Thread_local int* htable; // History heuristic table
 
 Info info; // Move generation parameter information
 static pthread_mutex_t info_lock;
+
+bool nnue_ok; // Use NNUE evaluation?
 
 
 static char input[8192];
@@ -51,6 +54,9 @@ int main(void) {
             stack_init();
             ttable_init();
             rtable_init();
+
+            // Initialize NNUE
+            nnue_ok = nnue_init("nn-04cf2b4ed1da.nnue");
 
             // Set default options
             pthread_mutex_lock(&info_lock);
@@ -181,16 +187,22 @@ static bool _get_input(void) {
 static void* _go(void* param) {
     char* token = NULL;
 
+    // Set structures
+    Param* args = (Param*) param;
+    board = *(args->board);
+
     if (token = strstr(input, "perft")) {
         int depth = atoi(token + 6);
         print_divided_perft(depth);
     }
+
+    else if (token = strstr(input, "eval")) {
+        int score = eval(board.turn);
+        printf("%d\n", score);
+    }
     
     else {
         // Set structures
-        Param* args = (Param*) param;
-        board = *(args->board);
-
         stack = *(args->stack);
         stack.entries = smalloc(stack.capacity * sizeof(Stack_Entry));
         memcpy(stack.entries, args->stack->entries, stack.capacity * sizeof(Stack_Entry));

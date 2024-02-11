@@ -5,6 +5,7 @@ Special thanks to:
 - [github.com/Disservin](https://github.com/Disservin) for their continual support and inspiration.
 - [github.com/nkarve](https://github.com/nkarve) for their magic bitboard generation.
 - Peter Jones for their [guide on legal move generation](https://peterellisjones.com/posts/generating-legal-chess-moves-efficiently/).
+- [github.com/dshawul](https://github.com/dshawul) for their NNUE probe.
 - The [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page).
 
 ------
@@ -17,6 +18,8 @@ Compile with the makefile:
 not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocol. Aside from the standard commands, not-carlsen also supports:
 - #### go perft \[x]
   Prints out the divided perft results for the initialized position for depth \[x].
+- #### go eval
+  Prints out the evaluation score for the initialized position.
 - #### setoption name Threads \[x]
   Sets the number of threads to search with. Default 1.
 
@@ -27,6 +30,7 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - UCI communication protocol
 - Magic bitboard legal move generator (92 million nps)
 - Lazy SMP parallel search
+- NNUE evaluation
 - Thread pool
 - Principal variation search (PVS)
 - Fail soft alpha-beta negamax
@@ -49,6 +53,11 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+2/11/24 v3.0
+> 
+>
+> Fixed bug in perft causing nothing to be outputted.
+
 8/8/23 v2.6
 > Heavily improved time management with dynamic time control techniques, allocating less or more time to a search based on the confidence of a result. This is done by computing a stability percentage, the percent of nodes the current best move has been the best move. The higher the stability, the higher the confidence.
 >

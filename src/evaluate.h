@@ -7,6 +7,8 @@
 
 
 int eval(bool color);
+int eval_classic(bool color);
+int eval_nnue(bool color);
 
 int get_material_value(char piece);
 

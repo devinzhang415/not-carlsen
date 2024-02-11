@@ -573,7 +573,7 @@ uint64_t get_attackers(bool color, int square) {
 /**
  * Prints the labeled representation of the mailbox board.
  */
-void print_board(void) {
+void print_mailbox(void) {
     for (int rank = 7; rank >= 0; rank--) {
         for (int file = 0; file <= 7; file++) {
             printf("%c ", board.mailbox[8*rank + file]);

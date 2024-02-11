@@ -4,9 +4,10 @@
 | --- | --- |
 | `board` | Functions associated with getting the board state and zobrist |
 | `evaluate` | Numerical analysis of the board and piece value constants |
-| `evaluate_nnue` | Numerical analysis of the board using NNUE |
 | `htable` | History heuristic table functions |
+| `misc` | Helper functions for `nnue` by `dshawul` |
 | `movegen` | Tables and functions for all move generation and perft |
+| `nnue` | NNUE reading and probing by `dshawul` |
 | `rtable` | Repetition table functions |
 | `search` | Single-threaded tree search related functions |
 | `stack` | Move/game hisory stack functions |
