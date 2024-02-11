@@ -7,7 +7,7 @@
 #include "nnue.h"
 
 
-extern _Thread_local Board board;
+extern Board board;
 extern bool nnue_ok;
 
 // Evaluation constants for classical evaluation
@@ -145,6 +145,7 @@ int eval_nnue(bool color) {
     for (int rank = 7; rank >= 0; rank--) {
         for (int file = 0; file <= 7; file++) {
             int square = 8*rank + file;
+
             char c_piece = board.mailbox[square];
             int i_piece = 0;
             switch (c_piece) {
@@ -187,10 +188,11 @@ int eval_nnue(bool color) {
                 default:
                     break;
             }
-
-            squares[i] = square;
-            pieces[i] = i_piece;
-            i++;
+            if (i_piece != 0) {
+                squares[i] = square;
+                pieces[i] = i_piece;
+                i++;
+            }
         }
     }
     squares[i] = 0;

@@ -1,5 +1,5 @@
 TARGET = not-carlsen
-LIBS = -lm -lpthread
+LIBS = -lm
 CC = gcc
 CFLAGS = -O3 -w
 # CFLAGS = -g -O0 -Wl,--stack,67108864 -w # GDB Debug Flags; gdb not-carlsen.exe, run
