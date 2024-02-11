@@ -1320,5 +1320,6 @@ int nnue_evaluate_fen(const char* fen)
 {
   int pieces[33],squares[33],player,castle,fifty,move_number;
   decode_fen((char*)fen,&player,&castle,&fifty,&move_number,pieces,squares);;
+
   return nnue_evaluate(player,pieces,squares);
 }

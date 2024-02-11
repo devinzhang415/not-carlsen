@@ -13,6 +13,8 @@ extern Info info;
 const bool WHITE = true;
 const bool BLACK = false;
 
+const int MAX_PIECE_NUM = 32;
+
 // Bitboards
 const uint64_t BB_SQUARES[64] = {
     1ULL << A1, 1ULL << B1, 1ULL << C1, 1ULL << D1, 1ULL << E1, 1ULL << F1, 1ULL << G1, 1ULL << H1,

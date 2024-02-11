@@ -138,10 +138,15 @@ int eval_classic(bool color) {
  */
 int eval_nnue(bool color) {
     // NNUE input vectors
-    int i = 0;
-    int squares[64 + 1]; // array of occupied squares
-    int pieces[32 + 1]; // array of pieces denoting what is on the occupied square
+    int squares[MAX_PIECE_NUM + 1]; // array of occupied squares
+    int pieces[MAX_PIECE_NUM + 1]; // array of pieces denoting what is on the occupied square
 
+    squares[0] = board.w_king_square;
+    pieces[0] = 1;
+    squares[1] = board.b_king_square;
+    pieces[1] = 7;
+
+    int i = 2;
     for (int rank = 7; rank >= 0; rank--) {
         for (int file = 0; file <= 7; file++) {
             int square = 8*rank + file;
@@ -150,8 +155,7 @@ int eval_nnue(bool color) {
             int i_piece = 0;
             switch (c_piece) {
                 case 'K':
-                    i_piece = 1;
-                    break;
+                    continue;
                 case 'Q':
                     i_piece = 2;
                     break;
@@ -168,8 +172,7 @@ int eval_nnue(bool color) {
                     i_piece = 6;
                     break;
                 case 'k':
-                    i_piece = 7;
-                    break;
+                    continue;
                 case 'q':
                     i_piece = 8;
                     break;

@@ -10,6 +10,9 @@
 extern const bool WHITE;
 extern const bool BLACK;
 
+extern const int SQUARE_NUM;
+extern const int MAX_PIECE_NUM;
+
 extern const uint64_t BB_SQUARES[64];
 
 extern const uint64_t BB_ALL;

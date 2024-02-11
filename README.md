@@ -52,6 +52,9 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+2/11/24 v3.0.2
+> Fixed NNUE returning incorrect results due to faulty input vector initializations.
+
 2/11/24 v3.0.1
 > Added evaluation UCI option for direct FEN input.
 >
