@@ -25,7 +25,7 @@ uint64_t get_occ_bitboard(bool color);
 
 uint64_t get_attackers(bool color, int square);
 
-void print_board(void);
+void print_mailbox(void);
 
 
 #endif

@@ -204,39 +204,9 @@ typedef struct Info {
     int depth; // search x plies only
     int nodes; // search x nodes only 
     clock_t movetime; // search exactly x mseconds
-    int threads; // how many threads to search with
     bool infinite; // If true, don't stop searching until stop received
     bool stop; // if true, stop the search as soon as possible
 } Info;
-
-
-/**
- * Initial condition of structs before multithreading.
- * As well as other arguments to pass into threads.
- */
-typedef struct Param {
-    Board* board;
-    Stack* stack;
-    RTable* rtable;
-
-    clock_t start; // time search started
-    int start_depth; // depth to start iterative deepening at
-    bool is_main; // whether thread is main thread
-} Param;
-
-
-/**
- * Basic thread-safe queue to store search
- * work orders for threads as they come in.
- * Singleton.
- */
-typedef struct Work_Queue {
-    size_t size;
-    size_t capacity; // capacity = MAX_THREADS
-    int head_idx; // head pointer
-    int tail_idx; // tail pointer
-    Param* entries[MAX_THREADS]; // work that needs to be done
-} Work_Queue;
 
 
 #endif

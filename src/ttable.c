@@ -65,10 +65,8 @@ void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
 
     for (size_t i = 0; i < ttable.capacity; i++) {
         size_t index = (key + i) & (ttable.capacity - 1); // (key + i) % ttable.capacity
-        TTable_Entry entry = ttable.entries[index];
-        if (entry.initialized) {
-            if (entry.key ^ entry.depth ^ entry.score ^ entry.flag == key) { // Replace existing entry
-                ttable.entries[index].key = key ^ depth ^ score ^ flag;
+        if (ttable.entries[index].initialized) {
+            if (ttable.entries[index].key == key) { // Replace existing entry
                 ttable.entries[index].depth = depth;
                 ttable.entries[index].move = move;
                 ttable.entries[index].score = score;
@@ -76,7 +74,7 @@ void ttable_add(uint64_t key, int depth, Move move, int score, int flag) {
                 break;
             }
         } else {
-            ttable.entries[index].key = key ^ depth ^ score ^ flag; // Lockless transposition table hack
+            ttable.entries[index].key = key;
             ttable.entries[index].depth = depth;
             ttable.entries[index].move = move;
             ttable.entries[index].score = score;

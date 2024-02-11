@@ -2,7 +2,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 #include "uci.h"
 #include "search.h"
 #include "util.h"
@@ -14,14 +13,14 @@
 #include "ttable.h"
 #include "timeman.h"
 
-extern _Thread_local Board board;
+extern Board board;
 extern volatile TTable ttable;
-extern _Thread_local Stack stack;
-extern _Thread_local RTable rtable;
-extern _Thread_local int* htable;
+extern Stack stack;
+extern RTable rtable;
+extern int htable[2][64][64];
 extern Info info;
 
-extern bool thread_exit;
+static bool exiting;
 
 static const int NULL_MOVE_R = 2; // Depth to reduce by in null move pruning.
 static const int LRM_R = 1; // Depth to reduce by in late move reduction.
@@ -30,77 +29,46 @@ static const int FULL_MOVE_THRESHOLD = 4; // Minimum number of moves to search b
 static const int DELTA_MARGIN = 200; // The amount of leeway in terms of score to give a capture for delta pruning.
 static const int SEE_THRESHOLD = -100; // The amount of leeway in terms of score to give SEE exchanges.
 
-static _Thread_local Move tt_move; // Hash move from transposition table saved globally for move ordering.
+static Move tt_move; // Hash move from transposition table saved globally for move ordering.
 
 
 /**
  * Searches the position with iterative depths.
- * 
- * @param param search parameters wrapped in Param struct.
- *             See Param in util.h for full description.
- *             Board, stack, rtable will be NULL if thread is main.
  */
-void* _iterative_deepening(void* param) {
-    // Instantiate thread-local variables
-    Param* args = (Param*) param;
-
-    bool is_main = args->is_main;
-    clock_t start = args->start;
-    int start_depth = args->start_depth;
-
+void* iterative_deepening(void) {
     PV pv;
     pv.length = 0;
     Move best_move = NULL_MOVE;
     uint64_t nodes = 0;
 
-    if (!is_main) {
-        board = *(args->board);
-
-        stack = *(args->stack);
-        stack.entries = smalloc(stack.capacity * sizeof(Stack_Entry));
-        memcpy(stack.entries, args->stack->entries, stack.capacity * sizeof(Stack_Entry));
-
-        rtable = *(args->rtable);
-        rtable.entries = smalloc(rtable.capacity * sizeof(RTable_Entry));
-        memcpy(rtable.entries, args->rtable->entries, rtable.capacity * sizeof(RTable_Entry));
-    }
-
-    htable = scalloc(2 * 64 * 64, sizeof(int)); // Number of sides (2) * number of origin squares (64) * number of destination squares (64)
+    clock_t start_time = clock();
+    exiting = false;
     
     // Begin search
-    for (int d = start_depth; d < info.depth; d++) {
-        if (thread_exit) break;
+    for (int d = 1; d < info.depth; d++) {
+        if (exiting) break;
 
-        int score = _PVS(d, -MATE_SCORE, MATE_SCORE, true, board.turn, is_main, start, &nodes, &pv);
-        if (thread_exit) break;
+        int score = _PVS(d, -MATE_SCORE, MATE_SCORE, true, board.turn, start_time, &nodes, &pv);
+        if (exiting) break;
 
-        if (is_mate(score, d)) thread_exit = true;
-        if (is_main) {
-            if (!move_equals(best_move, pv.table[0])) {
-                inc_nodes_not_curr_best_move(nodes);
-            }
-
-            best_move = pv.table[0];
-
-            clock_t elapsed = clock() - start;
-            double time = (double) elapsed / CLOCKS_PER_SEC;
-            if (time == 0) time = .1;
-            
-            print_info(d, score, nodes, time, &pv);
+        if (is_mate(score, d)) exiting = true;
+        if (!move_equals(best_move, pv.table[0])) {
+            inc_nodes_not_curr_best_move(nodes);
         }
+
+        best_move = pv.table[0];
+
+        clock_t elapsed_time = clock() - start_time;
+        double time = (double) elapsed_time / CLOCKS_PER_SEC;
+        if (time == 0) time = .1;
+        
+        print_info(d, score * (board.turn == WHITE ? 1 : -1), nodes, time, &pv);
     }
 
-    free(htable);
-    free(args);
-    if (is_main) {
-        printf("bestmove ");
-        print_move(best_move);
-        printf("\n");
-        fflush(stdout);
-    } else {
-        free(stack.entries);
-        free(rtable.entries);
-    }
+    printf("bestmove ");
+    print_move(best_move);
+    printf("\n");
+    fflush(stdout);
 }
 
 
@@ -120,17 +88,16 @@ void* _iterative_deepening(void* param) {
  * @param beta upperbound of the score. Initially MATE_SCORE.
  * @param pv_node is this node the first node at this depth?
  * @param color the side to search for a move for.
- * @param is_main is the thread running this the main thread?
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @param pv the best line of moves found.
  * @return the best score.
  */
-static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start_time, uint64_t* nodes, PV* pv) {
+static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, clock_t start_time, uint64_t* nodes, PV* pv) {
     // Stop searching if main thread meets parameters
-    if (thread_exit) return 0;
-    if (is_main && can_exit(color, start_time, *nodes)) {
-        thread_exit = true;
+    if (exiting) return 0;
+    if (can_exit(color, start_time, *nodes)) {
+        exiting = true;
         return 0;
     }
 
@@ -140,7 +107,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
     // Search for position in the transposition table
     TTable_Entry tt = ttable_get(board.zobrist);
     if (tt.initialized && tt.depth >= depth) {
-        if (is_main) (*nodes)++;
+        (*nodes)++;
         tt_move = tt.move;
         switch (tt.flag) {
             case EXACT:
@@ -159,12 +126,12 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
     // Base case
     if (is_draw()) {
-        if (is_main) (*nodes)++;
+        (*nodes)++;
         return 0;
     }
     if (depth <= 0) {
         pv->length = 0;
-        return _qsearch(alpha, beta, pv_node, color, is_main, start_time, nodes);
+        return _qsearch(alpha, beta, pv_node, color, start_time, nodes);
     }
     
     // Recursive case
@@ -175,7 +142,7 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
         // Null move pruning
         if (_is_null_move_ok((stack_peep().flag != PASS), in_check, pv_node)) {
             stack_push(NULL_MOVE);
-            score = -_PVS(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, is_main, start_time, nodes, &new_pv);
+            score = -_PVS(depth - 1 - NULL_MOVE_R, -beta, -beta + 1, true, color, start_time, nodes, &new_pv);
             stack_pop();
             if (score >= beta) return score;
         }
@@ -196,26 +163,23 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
 
             stack_push(move);
             if (i == 0) {
-                score = -_PVS(depth - 1 - r, -beta, -alpha, true, color, is_main, start_time, nodes, &new_pv);
+                score = -_PVS(depth - 1 - r, -beta, -alpha, true, color, start_time, nodes, &new_pv);
             } else {
-                score = -_PVS(depth - 1 - r, -alpha - 1, -alpha, false, color, is_main, start_time, nodes, &new_pv);
+                score = -_PVS(depth - 1 - r, -alpha - 1, -alpha, false, color, start_time, nodes, &new_pv);
                 if (score > alpha && score < beta) {
-                    score = -_PVS(depth - 1 - r, -beta, -alpha, false, color, is_main, start_time, nodes, &new_pv);
+                    score = -_PVS(depth - 1 - r, -beta, -alpha, false, color, start_time, nodes, &new_pv);
                 }
             }
             stack_pop();
 
             if (score > alpha) {
                 alpha = score;
+                best_move = move;
 
-                if (is_main) {
-                    best_move = move;
-
-                    // Update PV
-                    pv->table[0] = best_move;
-                    memcpy(pv->table + 1, new_pv.table, new_pv.length * sizeof(Move));
-                    pv->length = new_pv.length + 1;
-                }
+                // Update PV
+                pv->table[0] = best_move;
+                memcpy(pv->table + 1, new_pv.table, new_pv.length * sizeof(Move));
+                pv->length = new_pv.length + 1;
             }
 
             if (alpha >= beta) {
@@ -255,17 +219,16 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, bool i
  * @param beta upperbound of the score. Initially MATE_SCORE.
  * @param pv_node is this node the first node at this depth?
  * @param color the side to search for a move for.
- * @param is_main is the thread running this the main thread?
  * @param start the time the iterative deepening function started running, in ms.
  * @param nodes number of leaf nodes visited.
  * @return value of depth 0 node.
  */
-static int _qsearch(int alpha, int beta, bool pv_node, bool color, bool is_main, clock_t start, uint64_t* nodes) {
+static int _qsearch(int alpha, int beta, bool pv_node, bool color, clock_t start, uint64_t* nodes) {
     if (can_exit(color, start, *nodes)) {
         return 0;
     }
 
-    if (is_main) (*nodes)++;
+    (*nodes)++;
 
     if (is_draw()) {
         return 0;
@@ -292,7 +255,7 @@ static int _qsearch(int alpha, int beta, bool pv_node, bool color, bool is_main,
         if (_SEE(board.turn, from, to) < SEE_THRESHOLD) continue;
 
         stack_push(moves[i]);
-        int score = -_qsearch(-beta, -alpha, (i == 0), color, is_main, start, nodes);
+        int score = -_qsearch(-beta, -alpha, (i == 0), color, start, nodes);
         stack_pop();
 
         if (score >= beta) return beta;
