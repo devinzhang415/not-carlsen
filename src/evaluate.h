@@ -9,6 +9,7 @@
 int eval(bool color);
 int eval_classic(bool color);
 int eval_nnue(bool color);
+int eval_nnue_fen(const char* fen);
 
 int get_material_value(char piece);
 

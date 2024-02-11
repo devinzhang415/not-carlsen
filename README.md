@@ -20,6 +20,8 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
   Prints out the divided perft results for the initialized position for depth \[x].
 - #### go eval
   Prints out the evaluation score for the initialized position.
+- #### go eval \[fen]
+  Prints out the evaluation score for the FEN position.
 
 ------
 
@@ -50,6 +52,11 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 ------
 
 ## Devlog
+2/11/24 v3.0.1
+> Added evaluation UCI option for direct FEN input.
+>
+> Changed node counting logic to just count search calls.
+
 2/11/24 v3.0
 > Implemented NNUE evaluation with probing library. Thank you dshawul!
 > 

@@ -161,7 +161,15 @@ static void* _go(void) {
     }
 
     else if (token = strstr(input, "eval")) {
-        int score = eval(board.turn);
+        int score = 0;
+
+        char* fen = strstr(input, "fen");
+        if (fen) {
+            fen += 4;
+            score = eval_nnue_fen(fen);
+        } else {
+            score = eval(board.turn);
+        }
         printf("%d\n", score);
     }
     

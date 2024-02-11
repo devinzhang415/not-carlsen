@@ -101,13 +101,14 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         return 0;
     }
 
+    (*nodes)++;
+
     PV new_pv;
     new_pv.length = 0;
 
     // Search for position in the transposition table
     TTable_Entry tt = ttable_get(board.zobrist);
     if (tt.initialized && tt.depth >= depth) {
-        (*nodes)++;
         tt_move = tt.move;
         switch (tt.flag) {
             case EXACT:
@@ -126,7 +127,6 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, clock_
 
     // Base case
     if (is_draw()) {
-        (*nodes)++;
         return 0;
     }
     if (depth <= 0) {
@@ -159,7 +159,8 @@ static int _PVS(int depth, int alpha, int beta, bool pv_node, bool color, clock_
         for (int i = 0; i < num_moves; i++) {
             Move move = moves[i];
 
-            int r = _is_reduction_ok(move, depth, i, has_failed_high, in_check) ? LRM_R : 0; // Late move reduction factor
+            // int r = _is_reduction_ok(move, depth, i, has_failed_high, in_check) ? LRM_R : 0; // Late move reduction factor
+            int r = 0;
 
             stack_push(move);
             if (i == 0) {
@@ -227,9 +228,6 @@ static int _qsearch(int alpha, int beta, bool pv_node, bool color, clock_t start
     if (can_exit(color, start, *nodes)) {
         return 0;
     }
-
-    (*nodes)++;
-
     if (is_draw()) {
         return 0;
     }

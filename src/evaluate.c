@@ -203,6 +203,18 @@ int eval_nnue(bool color) {
 
 
 /**
+ * Evaluation function using NNUE
+ * 
+ * @param fen 
+ * @return the advantage for the color in the given fen position, in centipawns.
+ * A positive value means white has advantage, a negative value that black has advantage.
+ */
+int eval_nnue_fen(const char* fen) {
+    return nnue_evaluate_fen(fen);
+}
+
+
+/**
  * @param piece 'Q', 'r', 'p', etc
  * @return the material value of the given piece.
  */
