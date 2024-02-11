@@ -4,7 +4,25 @@
 #include "util.h"
 
 
-extern _Thread_local int* htable;
+extern int* htable;
+
+static const size_t HTABLE_CAPACITY = 2 * 64 * 64; // sides * squares from * squares to
+
+
+/**
+ * Initalizes the history heuristic table.
+ */
+void htable_init(void) {
+    htable = scalloc(HTABLE_CAPACITY, sizeof(int));
+}
+
+
+/**
+ * Clears the history heuristic table.
+ */
+void htable_clear(void) {
+    memset(htable, 0, HTABLE_CAPACITY * sizeof(int));
+}
 
 
 /**

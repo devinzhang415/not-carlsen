@@ -20,8 +20,6 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
   Prints out the divided perft results for the initialized position for depth \[x].
 - #### go eval
   Prints out the evaluation score for the initialized position.
-- #### setoption name Threads \[x]
-  Sets the number of threads to search with. Default 1.
 
 ------
 
@@ -29,7 +27,6 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 - FEN board initialization
 - UCI communication protocol
 - Magic bitboard legal move generator (92 million nps)
-- Lazy SMP parallel search
 - NNUE evaluation
 - Thread pool
 - Principal variation search (PVS)
@@ -54,9 +51,11 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 
 ## Devlog
 2/11/24 v3.0
+> Implemented NNUE evaluation with probing library. Thank you dshawul!
 > 
+> Rolled back parallel search due to tech debt and unfamiliarity after months of non-development, now only single threaded.
 >
-> Fixed bug in perft causing nothing to be outputted.
+> Fixed bug in perft causing nothing to be outputted due to incorrect timing in copying main thread's state.
 
 8/8/23 v2.6
 > Heavily improved time management with dynamic time control techniques, allocating less or more time to a search based on the confidence of a result. This is done by computing a stability percentage, the percent of nodes the current best move has been the best move. The higher the stability, the higher the confidence.
@@ -320,7 +319,7 @@ not-carlsen uses the [Universal Chess Interface (UCI)](http://wbec-ridderkerk.nl
 > Board structure now includes a "mailbox" representation of the board to easily determine what piece is on a given square.
 
 4/27/22 v0.1.2
-> Implemented sliding move generation using magic bitboards. Credit to github.com/nkarve.
+> Implemented sliding move generation using magic bitboards. Thank you github.com/nkarve!
 
 3/27/22 v0.1.1
 > Defined bitboard constants for all squares, files, and ranks.

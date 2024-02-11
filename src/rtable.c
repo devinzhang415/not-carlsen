@@ -3,7 +3,7 @@
 #include <string.h>
 #include "rtable.h"
 
-extern _Thread_local RTable rtable;
+extern RTable rtable;
 
 static const size_t RTABLE_INIT_CAPACITY = 1 << 16; // Initial capacity of the table. Power of 2 for modulo efficiency
 static const double MAX_LOAD_FACTOR = .75; // Maximum percentage of the table that should be filled

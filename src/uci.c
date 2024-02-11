@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <ctype.h>
-#include <pthread.h>
 #include "uci.h"
 #include "util.h"
 #include "board.h"
@@ -14,17 +13,15 @@
 #include "search.h"
 #include "ttable.h"
 #include "evaluate.h"
-#include "threading.h"
 #include "nnue.h"
 
-_Thread_local Board board; // Board structure
-_Thread_local Stack stack; // Move and board history structure
+Board board; // Board structure
+Stack stack; // Move and board history structure
 volatile TTable ttable; // Transposition table
-_Thread_local RTable rtable; // Threefold-repetition hashtable
-_Thread_local int* htable; // History heuristic table
+RTable rtable; // Threefold-repetition hashtable
+int* htable; // History heuristic table
 
 Info info; // Move generation parameter information
-static pthread_mutex_t info_lock;
 
 bool nnue_ok; // Use NNUE evaluation?
 
@@ -45,23 +42,12 @@ int main(void) {
             rook_attacks_init();
             rays_init();
             zobrist_table_init();
-            work_queue_init();
-
-            pthread_mutex_init(&info_lock, NULL);
 
             // Initialize structs
-            board_init("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-            stack_init();
-            ttable_init();
-            rtable_init();
+            _init_structs("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
             // Initialize NNUE
             nnue_ok = nnue_init("nn-04cf2b4ed1da.nnue");
-
-            // Set default options
-            pthread_mutex_lock(&info_lock);
-            info.threads = 1;
-            pthread_mutex_unlock(&info_lock);
         }
 
         else if (!strncmp(input, "uci", 3)) {
@@ -74,18 +60,6 @@ int main(void) {
         else if (!strncmp(input, "isready", 7)) {
             printf("readyok\n");
             fflush(stdout);
-        }
-
-        else if (!strncmp(input, "setoption name", 14)) {
-            char* token = NULL;
-
-            // TODO bug: can only get single digit
-            if (token = strstr(input, "Threads value")) {
-                pthread_mutex_lock(&info_lock);
-                info.threads = min(atoi(token + 14), MAX_THREADS);
-                pthread_mutex_unlock(&info_lock);
-                continue;
-            }
         }
 
         else if (!strncmp(input, "position", 8)) {
@@ -141,16 +115,11 @@ int main(void) {
         }
         
         else if (!strncmp(input, "go", 2)) {
-            pthread_t go_thread;
-            Param* main_param = create_param(0, 0, true);
-            pthread_create(&go_thread, NULL, _go, (void*) main_param);
-            pthread_detach(go_thread);
+            _go();
         }
 
         else if (!strncmp(input, "stop", 4)) {
-            pthread_mutex_lock(&info_lock);
             info.stop = true;
-            pthread_mutex_unlock(&info_lock);
         }
 
         else if (!strncmp(input, "quit", 4)) {
@@ -182,14 +151,9 @@ static bool _get_input(void) {
 
 /**
  * Launches the search in a separate thread.
- * @param param thread-local copies of various structures.
  */
-static void* _go(void* param) {
+static void* _go(void) {
     char* token = NULL;
-
-    // Set structures
-    Param* args = (Param*) param;
-    board = *(args->board);
 
     if (token = strstr(input, "perft")) {
         int depth = atoi(token + 6);
@@ -202,17 +166,7 @@ static void* _go(void* param) {
     }
     
     else {
-        // Set structures
-        stack = *(args->stack);
-        stack.entries = smalloc(stack.capacity * sizeof(Stack_Entry));
-        memcpy(stack.entries, args->stack->entries, stack.capacity * sizeof(Stack_Entry));
-
-        rtable = *(args->rtable);
-        rtable.entries = smalloc(rtable.capacity * sizeof(RTable_Entry));
-        memcpy(rtable.entries, args->rtable->entries, rtable.capacity * sizeof(RTable_Entry));
-
         // Set search parameters
-        pthread_mutex_lock(&info_lock);
         info.wtime = (token = strstr(input, "wtime")) ? atoi(token + 6) : 0;
         info.btime = (token = strstr(input, "btime")) ? atoi(token + 6) : 0;
         info.winc = (token = strstr(input, "winc")) ? atoi(token + 5) : 0;
@@ -223,14 +177,10 @@ static void* _go(void* param) {
         info.movetime = (token = strstr(input, "movetime")) ? atoi(token + 9) : 0;
         info.infinite = (token = strstr(input, "infinite")) ? true : false;
         info.stop = false;
-        pthread_mutex_unlock(&info_lock);
 
         // Begin search
-        parallel_search();
+        iterative_deepening();
     }
-
-    free(param);
-    pthread_exit(NULL);
 }
 
 
@@ -256,6 +206,19 @@ void print_info(int depth, int score, uint64_t nodes, double time, const PV* pv)
 
 
 /**
+ * Set the board to the given fen and initialize the struct entries.
+ * @param fen 
+ */
+static void _init_structs(const char* fen) {
+    board_init(fen);
+    stack_init();
+    ttable_init();
+    rtable_init();
+    htable_init();
+}
+
+
+/**
  * Reset the board to the given fen and clear the struct entries.
  * @param fen 
  */
@@ -264,4 +227,5 @@ static void _reset_structs(const char* fen) {
     ttable_clear();
     stack_clear();
     rtable_clear();
+    htable_clear();
 }
