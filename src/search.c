@@ -62,7 +62,7 @@ void* iterative_deepening(void) {
         double time = (double) elapsed_time / CLOCKS_PER_SEC;
         if (time == 0) time = .1;
         
-        print_info(d, score * (board.turn == WHITE ? 1 : -1), nodes, time, &pv);
+        print_info(d, score, nodes, time, &pv);
     }
 
     printf("bestmove ");
